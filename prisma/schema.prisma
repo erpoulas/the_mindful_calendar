@@ -1,0 +1,237 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model Intention {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  color     String?
+  isSystem  Boolean  @default(false) // true for the automatic "Journal" intention
+  createdAt DateTime @default(now())
+
+  projects        ProjectIntention[]
+  events          EventIntention[]
+  workoutRoutines WorkoutRoutine[]
+  savedMeals      SavedMeal[]
+
+  @@index([userId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  userId      String
+  title       String
+  endGoal     String
+  dueDate     DateTime?
+  status      ProjectStatus @default(ACTIVE)
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tasks      ProjectTask[]
+  intentions ProjectIntention[]
+  events     CalendarEvent[]
+
+  @@index([userId])
+}
+
+model ProjectTask {
+  id        String   @id @default(uuid())
+  projectId String
+  text      String
+  done      Boolean  @default(false)
+  order     Int
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectIntention {
+  projectId   String
+  intentionId String
+
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  intention Intention @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, intentionId])
+  @@index([intentionId])
+}
+
+model CalendarEvent {
+  id            String    @id @default(uuid())
+  userId        String
+  title         String
+  startAt       DateTime?
+  endAt         DateTime?
+  isAllDay      Boolean   @default(false)
+  location      String?
+  notes         String?
+  projectId     String?
+  googleEventId String?   @unique
+  lastSyncedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  intentions   EventIntention[]
+  journalEntry JournalEntry?
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model EventIntention {
+  eventId     String
+  intentionId String
+
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  intention Intention     @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, intentionId])
+  @@index([intentionId])
+}
+
+model Journal {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  prompts JournalPrompt[]
+  entries JournalEntry[]
+
+  @@index([userId])
+}
+
+model JournalPrompt {
+  id        String   @id @default(uuid())
+  journalId String
+  text      String
+  createdAt DateTime @default(now())
+
+  journal Journal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+
+  @@index([journalId])
+}
+
+model JournalEntry {
+  id              String   @id @default(uuid())
+  userId          String
+  journalId       String
+  calendarEventId String   @unique
+  promptText      String?
+  content         String?
+  mediaUrls       String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  journal Journal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  event   CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([journalId])
+}
+
+model Season {
+  id             String    @id @default(uuid())
+  userId         String
+  name           String
+  startDate      DateTime?
+  endDate        DateTime?
+  note           String?
+  reflectionText String?
+  reflectedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model QuickList {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  items QuickListItem[]
+
+  @@index([userId])
+}
+
+model QuickListItem {
+  id          String   @id @default(uuid())
+  quickListId String
+  text        String
+  done        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  quickList QuickList @relation(fields: [quickListId], references: [id], onDelete: Cascade)
+
+  @@index([quickListId])
+}
+
+model Exercise {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  videoUrl     String
+  startSeconds Int?
+  endSeconds   Int?
+  createdAt    DateTime @default(now())
+
+  routineLinks WorkoutRoutineExercise[]
+
+  @@index([userId])
+}
+
+model WorkoutRoutine {
+  id                 String   @id @default(uuid())
+  userId             String
+  name               String
+  defaultIntentionId String?
+  createdAt          DateTime @default(now())
+
+  defaultIntention Intention?               @relation(fields: [defaultIntentionId], references: [id], onDelete: SetNull)
+  exercises        WorkoutRoutineExercise[]
+
+  @@index([userId])
+}
+
+model WorkoutRoutineExercise {
+  id         String @id @default(uuid())
+  routineId  String
+  exerciseId String
+  order      Int
+
+  routine  WorkoutRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([routineId])
+  @@index([exerciseId])
+}
+
+model SavedMeal {
+  id                 String   @id @default(uuid())
+  userId             String
+  name               String
+  note               String?
+  defaultIntentionId String?
+  createdAt          DateTime @default(now())
+
+  defaultIntention Intention? @relation(fields: [defaultIntentionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
