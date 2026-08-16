@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
-import { createProject, listProjects } from "./projects";
+import { createProject, getProjectDetail, listProjects } from "./projects";
 
 describe("createProject", () => {
   it("creates a project with the required fields", async () => {
@@ -143,6 +143,83 @@ describe("listProjects", () => {
       const result = await listProjects(tx, "test-user-1");
 
       expect(result.map((p) => p.title)).toEqual(["Mine"]);
+    });
+  });
+});
+
+describe("getProjectDetail", () => {
+  it("returns null when the project doesn't exist", async () => {
+    await withRollback(async (tx) => {
+      const result = await getProjectDetail(tx, {
+        userId: "test-user-1",
+        projectId: "does-not-exist",
+      });
+      expect(result).toBeNull();
+    });
+  });
+
+  it("returns null when the project belongs to another user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+      });
+
+      const result = await getProjectDetail(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  it("returns the project with its linked intentions", async () => {
+    await withRollback(async (tx) => {
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const family = await createIntention(tx, { userId: "test-user-1", name: "Family" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Weekly family walk",
+        endGoal: "n/a",
+        intentionIds: [health.id, family.id],
+      });
+
+      const result = await getProjectDetail(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+      });
+
+      expect(result?.title).toBe("Weekly family walk");
+      expect(result?.intentions.map((pi) => pi.intentionId).sort()).toEqual(
+        [health.id, family.id].sort(),
+      );
+    });
+  });
+
+  it("returns tasks ordered by their order field", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Creativity" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Learn guitar",
+        endGoal: "Play one full song start to finish",
+        intentionIds: [intention.id],
+        starterTasks: ["Learn G, C, D chords", "Learn 3 songs"],
+      });
+
+      const result = await getProjectDetail(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+      });
+
+      expect(result?.tasks.map((t) => t.text)).toEqual([
+        "Learn G, C, D chords",
+        "Learn 3 songs",
+      ]);
     });
   });
 });

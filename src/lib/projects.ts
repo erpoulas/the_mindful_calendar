@@ -38,3 +38,16 @@ export async function listProjects(client: DbClient, userId: string) {
     orderBy: { createdAt: "asc" },
   });
 }
+
+export async function getProjectDetail(
+  client: DbClient,
+  params: { userId: string; projectId: string },
+) {
+  return client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+    include: {
+      intentions: true,
+      tasks: { orderBy: { order: "asc" } },
+    },
+  });
+}
