@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
-import { createProject, getProjectDetail, listProjects } from "./projects";
+import {
+  addProjectTask,
+  createProject,
+  getProjectDetail,
+  listProjects,
+  toggleProjectTask,
+} from "./projects";
 
 describe("createProject", () => {
   it("creates a project with the required fields", async () => {
@@ -220,6 +226,135 @@ describe("getProjectDetail", () => {
         "Learn G, C, D chords",
         "Learn 3 songs",
       ]);
+    });
+  });
+});
+
+describe("addProjectTask", () => {
+  it("adds a task to the project", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+
+      const task = await addProjectTask(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+        text: "Buy running shoes",
+      });
+
+      expect(task?.text).toBe("Buy running shoes");
+      expect(task?.done).toBe(false);
+    });
+  });
+
+  it("appends after existing tasks", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Creativity" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Learn guitar",
+        endGoal: "Play a song",
+        intentionIds: [intention.id],
+        starterTasks: ["Learn G, C, D chords", "Learn 3 songs"],
+      });
+
+      await addProjectTask(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+        text: "Play for a friend",
+      });
+
+      const detail = await getProjectDetail(tx, { userId: "test-user-1", projectId: project.id });
+      expect(detail?.tasks.map((t) => t.text)).toEqual([
+        "Learn G, C, D chords",
+        "Learn 3 songs",
+        "Play for a friend",
+      ]);
+    });
+  });
+
+  it("returns null when the project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+      });
+
+      const task = await addProjectTask(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+        text: "Sneaky task",
+      });
+
+      expect(task).toBeNull();
+    });
+  });
+});
+
+describe("toggleProjectTask", () => {
+  it("marks a not-done task as done", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy running shoes"],
+      });
+      const [task] = project.tasks;
+
+      const updated = await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+
+      expect(updated?.done).toBe(true);
+    });
+  });
+
+  it("marks a done task as not-done (reversible)", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy running shoes"],
+      });
+      const [task] = project.tasks;
+
+      await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+      const revertedBack = await toggleProjectTask(tx, {
+        userId: "test-user-1",
+        taskId: task.id,
+      });
+
+      expect(revertedBack?.done).toBe(false);
+    });
+  });
+
+  it("returns null when the task's project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+        starterTasks: ["Sneaky task"],
+      });
+      const [task] = project.tasks;
+
+      const result = await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+
+      expect(result).toBeNull();
     });
   });
 });

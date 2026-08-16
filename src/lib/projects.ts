@@ -51,3 +51,41 @@ export async function getProjectDetail(
     },
   });
 }
+
+export async function addProjectTask(
+  client: DbClient,
+  params: { userId: string; projectId: string; text: string },
+) {
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  const lastTask = await client.projectTask.findFirst({
+    where: { projectId: params.projectId },
+    orderBy: { order: "desc" },
+  });
+
+  return client.projectTask.create({
+    data: {
+      projectId: params.projectId,
+      text: params.text,
+      order: (lastTask?.order ?? -1) + 1,
+    },
+  });
+}
+
+export async function toggleProjectTask(
+  client: DbClient,
+  params: { userId: string; taskId: string },
+) {
+  const task = await client.projectTask.findFirst({
+    where: { id: params.taskId, project: { userId: params.userId } },
+  });
+  if (!task) return null;
+
+  return client.projectTask.update({
+    where: { id: task.id },
+    data: { done: !task.done },
+  });
+}
