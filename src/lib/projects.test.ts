@@ -3,9 +3,12 @@ import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
 import {
   addProjectTask,
+  completeProject,
   createProject,
   getProjectDetail,
   listProjects,
+  pauseProject,
+  resumeProject,
   toggleProjectTask,
 } from "./projects";
 
@@ -353,6 +356,133 @@ describe("toggleProjectTask", () => {
       const [task] = project.tasks;
 
       const result = await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("pauseProject", () => {
+  it("sets an active project's status to PAUSED", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+
+      const paused = await pauseProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      expect(paused?.status).toBe("PAUSED");
+    });
+  });
+
+  it("returns null when the project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+      });
+
+      const result = await pauseProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("resumeProject", () => {
+  it("sets a paused project's status back to ACTIVE", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+      await pauseProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      const resumed = await resumeProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      expect(resumed?.status).toBe("ACTIVE");
+    });
+  });
+
+  it("returns null when the project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+      });
+
+      const result = await resumeProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("completeProject", () => {
+  it("marks a project COMPLETED and stamps completedAt", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+
+      const completed = await completeProject(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+      });
+
+      expect(completed?.status).toBe("COMPLETED");
+      expect(completed?.completedAt).not.toBeNull();
+    });
+  });
+
+  it("can complete a paused project too (independent of pause/resume)", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+      await pauseProject(tx, { userId: "test-user-1", projectId: project.id });
+
+      const completed = await completeProject(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+      });
+
+      expect(completed?.status).toBe("COMPLETED");
+    });
+  });
+
+  it("returns null when the project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+      });
+
+      const result = await completeProject(tx, { userId: "test-user-1", projectId: project.id });
 
       expect(result).toBeNull();
     });

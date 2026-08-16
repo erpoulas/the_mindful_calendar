@@ -75,6 +75,51 @@ export async function addProjectTask(
   });
 }
 
+export async function pauseProject(
+  client: DbClient,
+  params: { userId: string; projectId: string },
+) {
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  return client.project.update({
+    where: { id: project.id },
+    data: { status: "PAUSED" },
+  });
+}
+
+export async function resumeProject(
+  client: DbClient,
+  params: { userId: string; projectId: string },
+) {
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  return client.project.update({
+    where: { id: project.id },
+    data: { status: "ACTIVE" },
+  });
+}
+
+export async function completeProject(
+  client: DbClient,
+  params: { userId: string; projectId: string },
+) {
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  return client.project.update({
+    where: { id: project.id },
+    data: { status: "COMPLETED", completedAt: new Date() },
+  });
+}
+
 export async function toggleProjectTask(
   client: DbClient,
   params: { userId: string; taskId: string },
