@@ -31,3 +31,10 @@ export async function createProject(
     include: { intentions: true, tasks: true },
   });
 }
+
+export async function listProjects(client: DbClient, userId: string) {
+  return client.project.findMany({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+  });
+}

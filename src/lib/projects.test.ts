@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
-import { createProject } from "./projects";
+import { createProject, listProjects } from "./projects";
 
 describe("createProject", () => {
   it("creates a project with the required fields", async () => {
@@ -89,6 +89,60 @@ describe("createProject", () => {
           intentionIds: [],
         }),
       ).rejects.toThrow();
+    });
+  });
+});
+
+describe("listProjects", () => {
+  it("returns an empty list for a user with no projects", async () => {
+    await withRollback(async (tx) => {
+      const result = await listProjects(tx, "test-user-1");
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("returns all of the given user's projects", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+      });
+      await createProject(tx, {
+        userId: "test-user-1",
+        title: "Learn guitar",
+        endGoal: "Play a song",
+        intentionIds: [intention.id],
+      });
+
+      const result = await listProjects(tx, "test-user-1");
+
+      expect(result.map((p) => p.title).sort()).toEqual(["Learn guitar", "Train for a 5k"]);
+    });
+  });
+
+  it("never returns another user's projects", async () => {
+    await withRollback(async (tx) => {
+      const mine = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const theirs = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      await createProject(tx, {
+        userId: "test-user-1",
+        title: "Mine",
+        endGoal: "n/a",
+        intentionIds: [mine.id],
+      });
+      await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [theirs.id],
+      });
+
+      const result = await listProjects(tx, "test-user-1");
+
+      expect(result.map((p) => p.title)).toEqual(["Mine"]);
     });
   });
 });
