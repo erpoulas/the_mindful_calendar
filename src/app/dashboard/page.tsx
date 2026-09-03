@@ -22,6 +22,9 @@ export default async function DashboardPage() {
         <Link href="/quicklists" className="underline">
           Quick Lists
         </Link>
+        <Link href="/seasons" className="underline">
+          Seasons
+        </Link>
       </div>
       <form action={logout}>
         <Button type="submit">Log out</Button>
