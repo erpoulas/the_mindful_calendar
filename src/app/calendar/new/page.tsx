@@ -6,7 +6,10 @@ import { listIntentions } from "@/lib/intentions";
 import { listProjects } from "@/lib/projects";
 import { EventForm } from "../event-form";
 
-export default async function NewEventPage() {
+export default async function NewEventPage({
+  searchParams,
+}: PageProps<"/calendar/new">) {
+  const { title } = await searchParams;
   const userId = await getCurrentUserId();
   const [projects, intentions] = await Promise.all([
     listProjects(db, userId),
@@ -26,6 +29,20 @@ export default async function NewEventPage() {
         pendingLabel="Adding..."
         projects={projects}
         intentions={intentions}
+        initialValues={
+          typeof title === "string"
+            ? {
+                title,
+                startAt: null,
+                endAt: null,
+                isAllDay: false,
+                location: null,
+                notes: null,
+                projectId: null,
+                intentionIds: [],
+              }
+            : undefined
+        }
       />
     </div>
   );
