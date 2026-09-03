@@ -235,3 +235,30 @@ model SavedMeal {
 
   @@index([userId])
 }
+
+model DopamineMenuItem {
+  id        String   @id @default(uuid())
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Affirmation {
+  id        String   @id @default(uuid())
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// One row per user: holds a "just for today" affirmation override that
+// doesn't touch the permanent Affirmation pool. setAt's calendar date
+// decides whether the override is still valid for today.
+model TodayAffirmation {
+  userId String   @id
+  text   String
+  setAt  DateTime @default(now())
+}
