@@ -31,6 +31,9 @@ export default async function DashboardPage() {
         <Link href="/affirmations" className="underline">
           Affirmations
         </Link>
+        <Link href="/journals" className="underline">
+          Journals
+        </Link>
       </div>
       <form action={logout}>
         <Button type="submit">Log out</Button>
