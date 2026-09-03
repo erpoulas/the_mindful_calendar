@@ -57,9 +57,14 @@ export default async function CalendarPage({
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Calendar</h1>
-        <Link href="/calendar/new" className={buttonVariants()}>
-          New event
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/calendar/month" className={buttonVariants({ variant: "outline" })}>
+            Month view
+          </Link>
+          <Link href="/calendar/new" className={buttonVariants()}>
+            New event
+          </Link>
+        </div>
       </div>
 
       <form action={quickAddEventAction} className="flex gap-2">
