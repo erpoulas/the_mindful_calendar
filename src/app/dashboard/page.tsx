@@ -25,6 +25,12 @@ export default async function DashboardPage() {
         <Link href="/seasons" className="underline">
           Seasons
         </Link>
+        <Link href="/dopamine-menu" className="underline">
+          Dopamine Menu
+        </Link>
+        <Link href="/affirmations" className="underline">
+          Affirmations
+        </Link>
       </div>
       <form action={logout}>
         <Button type="submit">Log out</Button>
