@@ -16,6 +16,9 @@ export default async function DashboardPage() {
         <Link href="/projects" className="underline">
           Projects
         </Link>
+        <Link href="/calendar" className="underline">
+          Calendar
+        </Link>
       </div>
       <form action={logout}>
         <Button type="submit">Log out</Button>
