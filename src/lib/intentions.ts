@@ -8,6 +8,15 @@ export async function createIntention(
   return client.intention.create({ data });
 }
 
+// Every journal entry ties to this intention automatically, with zero setup
+// required from the user -- created lazily on first use.
+export async function getOrCreateJournalIntention(client: DbClient, userId: string) {
+  const existing = await client.intention.findFirst({ where: { userId, isSystem: true } });
+  if (existing) return existing;
+
+  return client.intention.create({ data: { userId, name: "Journal", isSystem: true } });
+}
+
 export async function listIntentions(client: DbClient, userId: string) {
   return client.intention.findMany({
     where: { userId },

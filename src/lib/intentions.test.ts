@@ -6,6 +6,7 @@ import {
   createIntention,
   deleteIntention,
   getIntentionDetail,
+  getOrCreateJournalIntention,
   listIntentions,
   updateIntention,
 } from "./intentions";
@@ -247,6 +248,30 @@ describe("deleteIntention", () => {
       await expect(
         deleteIntention(tx, { userId: "test-user-1", intentionId: journal.id }),
       ).rejects.toThrow();
+    });
+  });
+});
+
+describe("getOrCreateJournalIntention", () => {
+  it("creates the system Journal intention when none exists", async () => {
+    await withRollback(async (tx) => {
+      const journal = await getOrCreateJournalIntention(tx, "test-user-1");
+
+      expect(journal.name).toBe("Journal");
+      expect(journal.isSystem).toBe(true);
+      expect(journal.userId).toBe("test-user-1");
+    });
+  });
+
+  it("returns the existing system intention instead of creating a second one", async () => {
+    await withRollback(async (tx) => {
+      const first = await getOrCreateJournalIntention(tx, "test-user-1");
+      const second = await getOrCreateJournalIntention(tx, "test-user-1");
+
+      expect(second.id).toBe(first.id);
+
+      const all = await listIntentions(tx, "test-user-1");
+      expect(all.filter((i) => i.isSystem)).toHaveLength(1);
     });
   });
 });
