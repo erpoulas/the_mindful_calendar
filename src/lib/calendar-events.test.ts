@@ -7,6 +7,7 @@ import {
   deleteCalendarEvent,
   getCalendarEvent,
   listCalendarEvents,
+  moveCalendarEvent,
   updateCalendarEvent,
 } from "./calendar-events";
 
@@ -332,6 +333,92 @@ describe("deleteCalendarEvent", () => {
       const result = await deleteCalendarEvent(tx, {
         userId: "test-user-1",
         eventId: created.id,
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("moveCalendarEvent", () => {
+  it("moves the event to a new start time, leaving endAt unset when it had none", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+      });
+      const newStartAt = new Date("2026-09-11T14:00:00Z");
+
+      const moved = await moveCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        startAt: newStartAt,
+        endAt: null,
+      });
+
+      expect(moved?.startAt).toEqual(newStartAt);
+      expect(moved?.endAt).toBeNull();
+    });
+  });
+
+  it("moves the event and updates endAt, preserving duration", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+        endAt: new Date("2026-09-10T10:00:00Z"),
+      });
+      const newStartAt = new Date("2026-09-11T14:00:00Z");
+      const newEndAt = new Date("2026-09-11T15:00:00Z");
+
+      const moved = await moveCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        startAt: newStartAt,
+        endAt: newEndAt,
+      });
+
+      expect(moved?.startAt).toEqual(newStartAt);
+      expect(moved?.endAt).toEqual(newEndAt);
+    });
+  });
+
+  it("doesn't touch other fields like title or location", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+        location: "Riverside trail",
+      });
+
+      const moved = await moveCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        startAt: new Date("2026-09-11T14:00:00Z"),
+        endAt: null,
+      });
+
+      expect(moved?.title).toBe("Long run");
+      expect(moved?.location).toBe("Riverside trail");
+    });
+  });
+
+  it("returns null when the event doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+      });
+
+      const result = await moveCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        startAt: new Date("2026-09-11T14:00:00Z"),
+        endAt: null,
       });
 
       expect(result).toBeNull();

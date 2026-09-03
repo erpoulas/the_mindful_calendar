@@ -106,3 +106,22 @@ export async function deleteCalendarEvent(
   await client.calendarEvent.delete({ where: { id: event.id } });
   return event;
 }
+
+// A focused partial update for drag-and-drop on the time-grid -- only
+// touches startAt/endAt (endAt explicitly nullable, unlike
+// updateCalendarEvent's full-replace shape) so a drag never disturbs the
+// event's other fields.
+export async function moveCalendarEvent(
+  client: DbClient,
+  params: { userId: string; eventId: string; startAt: Date; endAt: Date | null },
+) {
+  const event = await client.calendarEvent.findFirst({
+    where: { id: params.eventId, userId: params.userId },
+  });
+  if (!event) return null;
+
+  return client.calendarEvent.update({
+    where: { id: event.id },
+    data: { startAt: params.startAt, endAt: params.endAt },
+  });
+}
