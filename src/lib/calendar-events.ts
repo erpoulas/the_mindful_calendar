@@ -44,3 +44,65 @@ export async function listCalendarEvents(
     orderBy: { startAt: "asc" },
   });
 }
+
+export async function getCalendarEvent(
+  client: DbClient,
+  params: { userId: string; eventId: string },
+) {
+  return client.calendarEvent.findFirst({
+    where: { id: params.eventId, userId: params.userId },
+    include: { intentions: true },
+  });
+}
+
+export async function updateCalendarEvent(
+  client: DbClient,
+  params: {
+    userId: string;
+    eventId: string;
+    title: string;
+    startAt?: Date;
+    endAt?: Date;
+    isAllDay?: boolean;
+    location?: string;
+    notes?: string;
+    projectId?: string;
+    intentionIds?: string[];
+  },
+) {
+  const event = await client.calendarEvent.findFirst({
+    where: { id: params.eventId, userId: params.userId },
+  });
+  if (!event) return null;
+
+  return client.calendarEvent.update({
+    where: { id: event.id },
+    data: {
+      title: params.title,
+      startAt: params.startAt,
+      endAt: params.endAt,
+      isAllDay: params.isAllDay ?? false,
+      location: params.location,
+      notes: params.notes,
+      projectId: params.projectId,
+      intentions: {
+        deleteMany: {},
+        create: (params.intentionIds ?? []).map((intentionId) => ({ intentionId })),
+      },
+    },
+    include: { intentions: true },
+  });
+}
+
+export async function deleteCalendarEvent(
+  client: DbClient,
+  params: { userId: string; eventId: string },
+) {
+  const event = await client.calendarEvent.findFirst({
+    where: { id: params.eventId, userId: params.userId },
+  });
+  if (!event) return null;
+
+  await client.calendarEvent.delete({ where: { id: event.id } });
+  return event;
+}

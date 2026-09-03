@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
 import { createProject } from "./projects";
-import { createCalendarEvent, listCalendarEvents } from "./calendar-events";
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarEvent,
+  listCalendarEvents,
+  updateCalendarEvent,
+} from "./calendar-events";
 
 describe("createCalendarEvent", () => {
   it("creates an event with only a title", async () => {
@@ -188,6 +194,147 @@ describe("listCalendarEvents", () => {
       });
 
       expect(result).toEqual([]);
+    });
+  });
+});
+
+describe("getCalendarEvent", () => {
+  it("returns the event with its intentions", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        intentionIds: [intention.id],
+      });
+
+      const result = await getCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+      });
+
+      expect(result?.title).toBe("Long run");
+      expect(result?.intentions.map((ei) => ei.intentionId)).toEqual([intention.id]);
+    });
+  });
+
+  it("returns null when the event doesn't exist", async () => {
+    await withRollback(async (tx) => {
+      const result = await getCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: "does-not-exist",
+      });
+      expect(result).toBeNull();
+    });
+  });
+
+  it("returns null when the event belongs to another user", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+      });
+
+      const result = await getCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("updateCalendarEvent", () => {
+  it("updates the event's fields", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+      });
+      const startAt = new Date("2026-09-10T14:00:00Z");
+
+      const updated = await updateCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        title: "Longer run",
+        startAt,
+        location: "Riverside trail",
+      });
+
+      expect(updated?.title).toBe("Longer run");
+      expect(updated?.startAt).toEqual(startAt);
+      expect(updated?.location).toBe("Riverside trail");
+    });
+  });
+
+  it("replaces the linked intentions with the new set", async () => {
+    await withRollback(async (tx) => {
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const family = await createIntention(tx, { userId: "test-user-1", name: "Family" });
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        intentionIds: [health.id],
+      });
+
+      const updated = await updateCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        title: "Long run",
+        intentionIds: [family.id],
+      });
+
+      expect(updated?.intentions.map((ei) => ei.intentionId)).toEqual([family.id]);
+    });
+  });
+
+  it("returns null when the event doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+      });
+
+      const result = await updateCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        title: "Hijacked",
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("deleteCalendarEvent", () => {
+  it("deletes the event", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+      });
+
+      await deleteCalendarEvent(tx, { userId: "test-user-1", eventId: created.id });
+
+      const result = await getCalendarEvent(tx, { userId: "test-user-1", eventId: created.id });
+      expect(result).toBeNull();
+    });
+  });
+
+  it("returns null when the event doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+      });
+
+      const result = await deleteCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+      });
+
+      expect(result).toBeNull();
     });
   });
 });
