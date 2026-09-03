@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import { createIntention } from "./intentions";
 import { createProject } from "./projects";
-import { createCalendarEvent } from "./calendar-events";
+import { createCalendarEvent, listCalendarEvents } from "./calendar-events";
 
 describe("createCalendarEvent", () => {
   it("creates an event with only a title", async () => {
@@ -91,6 +91,103 @@ describe("createCalendarEvent", () => {
       });
 
       expect(event.intentions).toEqual([]);
+    });
+  });
+});
+
+describe("listCalendarEvents", () => {
+  const weekStart = new Date("2026-09-07T00:00:00Z");
+  const weekEnd = new Date("2026-09-14T00:00:00Z");
+
+  it("returns an empty list when nothing falls in the range", async () => {
+    await withRollback(async (tx) => {
+      const result = await listCalendarEvents(tx, {
+        userId: "test-user-1",
+        start: weekStart,
+        end: weekEnd,
+      });
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("returns events within the range, ordered by start time", async () => {
+    await withRollback(async (tx) => {
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Later in the week",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+      });
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Earlier in the week",
+        startAt: new Date("2026-09-08T09:00:00Z"),
+      });
+
+      const result = await listCalendarEvents(tx, {
+        userId: "test-user-1",
+        start: weekStart,
+        end: weekEnd,
+      });
+
+      expect(result.map((e) => e.title)).toEqual([
+        "Earlier in the week",
+        "Later in the week",
+      ]);
+    });
+  });
+
+  it("excludes events outside the range", async () => {
+    await withRollback(async (tx) => {
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Last week",
+        startAt: new Date("2026-08-31T09:00:00Z"),
+      });
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Next week",
+        startAt: new Date("2026-09-14T09:00:00Z"),
+      });
+
+      const result = await listCalendarEvents(tx, {
+        userId: "test-user-1",
+        start: weekStart,
+        end: weekEnd,
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("excludes undated events, since they can't be placed on the week grid", async () => {
+    await withRollback(async (tx) => {
+      await createCalendarEvent(tx, { userId: "test-user-1", title: "Quick add, no time yet" });
+
+      const result = await listCalendarEvents(tx, {
+        userId: "test-user-1",
+        start: weekStart,
+        end: weekEnd,
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("never returns another user's events", async () => {
+    await withRollback(async (tx) => {
+      await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        startAt: new Date("2026-09-08T09:00:00Z"),
+      });
+
+      const result = await listCalendarEvents(tx, {
+        userId: "test-user-1",
+        start: weekStart,
+        end: weekEnd,
+      });
+
+      expect(result).toEqual([]);
     });
   });
 });

@@ -31,3 +31,16 @@ export async function createCalendarEvent(
     include: { intentions: true },
   });
 }
+
+export async function listCalendarEvents(
+  client: DbClient,
+  params: { userId: string; start: Date; end: Date },
+) {
+  return client.calendarEvent.findMany({
+    where: {
+      userId: params.userId,
+      startAt: { gte: params.start, lt: params.end },
+    },
+    orderBy: { startAt: "asc" },
+  });
+}
