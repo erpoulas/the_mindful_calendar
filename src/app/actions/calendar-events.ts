@@ -7,6 +7,7 @@ import { CreateCalendarEventSchema, QuickAddEventSchema } from "@/lib/calendar-e
 import {
   createCalendarEvent,
   deleteCalendarEvent,
+  moveCalendarEvent,
   updateCalendarEvent,
 } from "@/lib/calendar-events";
 import { getCurrentUserId } from "@/lib/auth";
@@ -109,4 +110,17 @@ export async function deleteCalendarEventAction(eventId: string) {
 
   revalidatePath("/calendar");
   redirect("/calendar");
+}
+
+// Called directly from the time-grid's drag handler (not a <form>), so it
+// must not redirect -- the grid stays mounted and refreshes itself.
+export async function moveCalendarEventAction(
+  eventId: string,
+  startAt: Date,
+  endAt: Date | null,
+) {
+  const userId = await getCurrentUserId();
+  await moveCalendarEvent(db, { userId, eventId, startAt, endAt });
+
+  revalidatePath("/calendar");
 }

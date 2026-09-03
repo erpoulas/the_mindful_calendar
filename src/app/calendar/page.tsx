@@ -6,19 +6,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getWeekRange } from "@/lib/calendar-week";
 import { listCalendarEvents } from "@/lib/calendar-events";
 import { db } from "@/lib/db";
-
-const DAY_FORMAT: Intl.DateTimeFormatOptions = {
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-};
-
-const TIME_FORMAT: Intl.DateTimeFormatOptions = {
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "UTC",
-};
+import { TimeGrid } from "./time-grid";
 
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -35,22 +23,21 @@ export default async function CalendarPage({
   const { start, end } = getWeekRange(referenceDate);
 
   const events = await listCalendarEvents(db, { userId, start, end });
-
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const dayStart = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-    const dayEvents = events.filter(
-      (event) =>
-        event.startAt && event.startAt >= dayStart && event.startAt < dayEnd,
-    );
-    return { date: dayStart, events: dayEvents };
-  });
+  const allDayEvents = events.filter((event) => event.isAllDay);
+  const timedEvents = events
+    .filter((event) => !event.isAllDay && event.startAt)
+    .map((event) => ({
+      id: event.id,
+      title: event.title,
+      startAt: event.startAt!,
+      endAt: event.endAt,
+    }));
 
   const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
   const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
       <Link href="/dashboard" className="text-sm text-zinc-600 underline">
         ← Dashboard
       </Link>
@@ -81,35 +68,26 @@ export default async function CalendarPage({
         </Link>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {days.map(({ date, events: dayEvents }) => (
-          <div key={date.toISOString()} className="rounded border p-3">
-            <h2 className="text-sm font-medium text-zinc-600">
-              {date.toLocaleDateString(undefined, DAY_FORMAT)}
-            </h2>
-            {dayEvents.length === 0 ? (
-              <p className="mt-1 text-sm text-zinc-400">No events</p>
-            ) : (
-              <ul className="mt-1 flex flex-col gap-1">
-                {dayEvents.map((event) => (
-                  <li key={event.id}>
-                    <Link
-                      href={`/calendar/${event.id}/edit`}
-                      className="flex items-center gap-2 text-sm hover:underline"
-                    >
-                      <span className="text-zinc-500">
-                        {event.isAllDay
-                          ? "All day"
-                          : event.startAt?.toLocaleTimeString(undefined, TIME_FORMAT)}
-                      </span>
-                      <span>{event.title}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+      {allDayEvents.length > 0 && (
+        <div className="rounded border p-2">
+          <h2 className="text-xs font-medium text-zinc-500">All day</h2>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {allDayEvents.map((event) => (
+              <li key={event.id}>
+                <Link
+                  href={`/calendar/${event.id}/edit`}
+                  className="rounded bg-zinc-100 px-2 py-0.5 text-xs hover:bg-zinc-200"
+                >
+                  {event.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="overflow-x-auto rounded border p-2">
+        <TimeGrid weekStart={start} events={timedEvents} />
       </div>
     </div>
   );
