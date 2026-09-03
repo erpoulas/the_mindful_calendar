@@ -1,26 +1,21 @@
 import { describe, expect, it } from "vitest";
 import type { DbClient } from "./db";
 import { withRollback } from "../test/withRollback";
+import { createCalendarEvent } from "./calendar-events";
 import { createIntention, getIntentionDetail, listIntentions } from "./intentions";
 
-// Test-only helper: creates a calendar event and tags it to an intention,
-// the same way the app will once event creation exists as its own feature.
-async function tagEvent(
+// Test-only helper: creates a calendar event tagged to an intention.
+function tagEvent(
   client: DbClient,
   data: { userId: string; intentionId: string; startAt?: Date; projectId?: string },
 ) {
-  const event = await client.calendarEvent.create({
-    data: {
-      userId: data.userId,
-      title: "Test event",
-      startAt: data.startAt,
-      projectId: data.projectId,
-    },
+  return createCalendarEvent(client, {
+    userId: data.userId,
+    title: "Test event",
+    startAt: data.startAt,
+    projectId: data.projectId,
+    intentionIds: [data.intentionId],
   });
-  await client.eventIntention.create({
-    data: { eventId: event.id, intentionId: data.intentionId },
-  });
-  return event;
 }
 
 describe("createIntention", () => {
