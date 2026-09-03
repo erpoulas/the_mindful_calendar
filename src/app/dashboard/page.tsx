@@ -9,9 +9,14 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4">
       <p>Signed in as user {userId}</p>
-      <Link href="/intentions" className="underline">
-        Intentions
-      </Link>
+      <div className="flex gap-4">
+        <Link href="/intentions" className="underline">
+          Intentions
+        </Link>
+        <Link href="/projects" className="underline">
+          Projects
+        </Link>
+      </div>
       <form action={logout}>
         <Button type="submit">Log out</Button>
       </form>
