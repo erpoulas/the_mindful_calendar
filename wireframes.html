@@ -1,0 +1,2145 @@
+<div id="wf-root" style="--wf-border:#999; --wf-bg:#f4f4f4; --wf-panel:#fff; --wf-muted:#888; font-family: Helvetica, Arial, sans-serif; color:#222; background:var(--wf-bg); min-height:100vh; padding:20px; box-sizing:border-box; position:relative;">
+
+  <div style="max-width:1180px; margin:0 auto;">
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding-bottom:12px; border-bottom:2px dashed var(--wf-border);">
+      <button class="wf-nav-btn" data-goto="calendar">🏠 Calendar (home)</button>
+      <button class="wf-nav-btn" data-goto="season">Season</button>
+      <button class="wf-nav-btn" data-goto="intentions">Intentions (full)</button>
+      <button class="wf-nav-btn" data-goto="projects">Projects (full)</button>
+      <button class="wf-nav-btn" data-goto="newitem">New project</button>
+      <button class="wf-nav-btn" data-goto="newevent">New event form</button>
+      <button class="wf-nav-btn" data-goto="journal-entry">Journal entry (full)</button>
+      <button class="wf-nav-btn" data-goto="workouts">Workout library (drag &amp; drop)</button>
+      <button class="wf-nav-btn" data-goto="mealplanning">Meal planning (drag &amp; drop)</button>
+      <button class="wf-nav-btn" data-goto="quicklist">📝 Quick list</button>
+    </div>
+    <div style="font-size:12px; color:var(--wf-muted); margin-bottom:16px;">
+      Low-fidelity flow wireframe. Model: Intention (broad, stable — tracks its own frequency/streak from tagged events, no separate Habit object needed) → Project (flat tasks + optional due date, pausable). Season is just a name and a written note — goals, reminders, how you're feeling — it doesn't manage or select anything.
+    </div>
+
+    <!-- ===================== HOME: CALENDAR ===================== -->
+    <div class="wf-screen" id="screen-calendar">
+      <div class="wf-topbar">This week <span class="wf-crumb">Aug 3 – Aug 9</span></div>
+
+      <div class="wf-homelayout">
+
+        <!-- LEFT SIDEBAR -->
+        <div class="wf-sidebar">
+          <button class="wf-btn-sm" id="wf-customize-toggle" style="align-self:flex-start; margin-bottom:2px;">⚙ Customize panels</button>
+
+          <div class="wf-panelwrap" data-panel="affirmation" data-panel-label="Today's affirmation">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard wf-sidecard-affirm" data-preview="affirmation">
+              <div class="wf-eyebrow">✨ TODAY</div>
+              <div class="wf-title" style="font-size:13px; font-style:italic;">"Progress doesn't have to be loud to count."</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="season" data-panel-label="Current season">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard wf-sidecard-season" data-goto="season">
+              <div class="wf-eyebrow">🍂 CURRENT SEASON</div>
+              <div class="wf-title" style="font-size:14px;">Fall 2026</div>
+              <div class="wf-sub">42 days left · "Slowing down, finish guitar..."</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="breakdown" data-panel-label="Time by intention">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidehead">Time this week, by intention</div>
+            <div class="wf-sidecard wf-sidecard-muted" data-goto="intentions">
+              <div class="wf-intentbar">
+                <div class="wf-intentbar-fill" style="width:40%; background:#4a9a7a;" title="Health"></div>
+                <div class="wf-intentbar-fill" style="width:25%; background:#4a6a99;" title="Creativity"></div>
+                <div class="wf-intentbar-fill" style="width:20%; background:#8a5aa0;" title="Family"></div>
+                <div class="wf-intentbar-fill" style="width:15%; background:#999;" title="Untagged"></div>
+              </div>
+              <div class="wf-intent-legend">
+                <span><span class="wf-dot" style="background:#4a9a7a;"></span>Health 40%</span>
+                <span><span class="wf-dot" style="background:#4a6a99;"></span>Creativity 25%</span>
+                <span><span class="wf-dot" style="background:#8a5aa0;"></span>Family 20%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="projects" data-panel-label="Projects">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidehead">Projects</div>
+            <div class="wf-sidecard" data-goto="projects">
+              <div class="wf-title" style="font-size:13px;">📁 All projects</div>
+              <div class="wf-sub">3 active · click to view any one</div>
+            </div>
+          </div>
+
+          <div class="wf-sidehead" id="wf-quickaccess-head">Quick access</div>
+
+          <div class="wf-panelwrap" data-panel="quicklist" data-panel-label="Quick list">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-goto="quicklist">
+              <div class="wf-title" style="font-size:13px;">📝 Quick list</div>
+              <div class="wf-sub">3 open items · no intention needed</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="workouts" data-panel-label="Workout library">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-goto="workouts">
+              <div class="wf-title" style="font-size:13px;">🏋️ Workout library</div>
+              <div class="wf-sub">Build &amp; schedule a routine</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="mealplanning" data-panel-label="Meal planning">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-goto="mealplanning">
+              <div class="wf-title" style="font-size:13px;">🍽️ Meal planning</div>
+              <div class="wf-sub">Drag a saved meal onto a day</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="journal" data-panel-label="Journal">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-goto="journal-entry">
+              <div class="wf-title" style="font-size:13px;">📓 Journal</div>
+              <div class="wf-sub">Write now, no scheduling needed</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="dopamine" data-panel-label="Dopamine menu">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-preview="dopamine">
+              <div class="wf-title" style="font-size:13px;">🎲 Dopamine menu</div>
+              <div class="wf-sub">Feeling stuck? Get an idea</div>
+            </div>
+          </div>
+
+          <div class="wf-panelwrap" data-panel="review" data-panel-label="Weekly review">
+            <button class="wf-panel-remove" style="display:none;">✕</button>
+            <div class="wf-sidecard" data-preview="review">
+              <div class="wf-title" style="font-size:13px;">📊 Weekly review</div>
+              <div class="wf-sub">Season review in 42 days</div>
+            </div>
+          </div>
+
+          <div id="wf-hidden-panels-area" style="display:none;">
+            <div class="wf-sidehead">Hidden — click to bring back</div>
+            <div id="wf-hidden-panels-list"></div>
+          </div>
+        </div>
+
+        <!-- MAIN CALENDAR -->
+        <div class="wf-mainpanel">
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="text" id="wf-quickadd-input" class="wf-real-input" placeholder="⚡ Quick add — just type a title and hit Enter..." />
+            <button class="wf-btn-primary" id="wf-quickadd-btn">Add</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="wf-btn-sm" id="wf-cal-prev">‹</button>
+              <span class="wf-label" id="wf-cal-label" style="text-transform:none; font-size:13px;">Aug 3 – Aug 9</span>
+              <button class="wf-btn-sm" id="wf-cal-next">›</button>
+              <button class="wf-btn-sm" id="wf-cal-today">Today</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="wf-viewtoggle">
+                <button class="wf-viewtoggle-btn wf-viewtoggle-active" id="wf-view-week" data-view="week">Week</button>
+                <button class="wf-viewtoggle-btn" id="wf-view-month" data-view="month">Month</button>
+              </div>
+              <button class="wf-btn-primary" data-goto="newevent">+ New event (full form)</button>
+            </div>
+          </div>
+          <div class="wf-hint" style="margin-top:-4px; margin-bottom:10px;">Drag any event to a new day and time — drops snap to the nearest 15 minutes. All-day events live in the strip up top, unattached to any hour.</div>
+
+          <div id="wf-timegrid" class="wf-timegrid-wrap"></div>
+          <div id="wf-monthgrid" class="wf-monthgrid-wrap" style="display:none;"></div>
+
+          <div class="wf-legend">
+            <span><span class="wf-dot" style="background:#8a5aa0;"></span> Project</span>
+            <span><span class="wf-dot" style="background:#999;"></span> Just tagged to an intention</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: SEASON ===================== -->
+    <div class="wf-screen" id="screen-season" style="display:none;">
+      <div class="wf-topbar">Fall 2026 <span class="wf-crumb">Sep 1 – Nov 30 · 42 days left</span></div>
+      <div class="wf-panel" style="max-width:560px;">
+        <div class="wf-hint" style="margin-bottom:14px;">A season is just a name and a note — it doesn't manage or own your intentions or projects. Keep picking whatever intention fits when you create things, same as always. This is just a place to write down what this stretch of time is actually about.</div>
+
+        <label class="wf-field-label">Season name</label>
+        <div class="wf-input">Fall 2026</div>
+
+        <label class="wf-field-label">Dates <span class="wf-optional">optional</span></label>
+        <div class="wf-input">Sep 1 – Nov 30</div>
+
+        <label class="wf-field-label" style="margin-top:14px;">What's this season about? <span class="wf-optional">goals, reminders, how you're feeling, what to remember</span></label>
+        <div class="wf-input wf-textarea-season">Slowing down after a chaotic summer. Want to actually finish the guitar project I keep putting off, and stop treating rest like a reward I have to earn. Remember: consistency over intensity.</div>
+
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <button class="wf-btn-primary">Save</button>
+        </div>
+
+        <div class="wf-label" style="margin:22px 0 8px;">How this season's time is dividing so far</div>
+        <div class="wf-intentbar" style="height:14px;">
+          <div class="wf-intentbar-fill" style="width:40%; background:#4a9a7a;" title="Health"></div>
+          <div class="wf-intentbar-fill" style="width:25%; background:#4a6a99;" title="Creativity"></div>
+          <div class="wf-intentbar-fill" style="width:20%; background:#8a5aa0;" title="Family"></div>
+          <div class="wf-intentbar-fill" style="width:15%; background:#999;" title="Untagged"></div>
+        </div>
+        <div class="wf-intent-legend" style="margin-top:8px;">
+          <span><span class="wf-dot" style="background:#4a9a7a;"></span>Health 40%</span>
+          <span><span class="wf-dot" style="background:#4a6a99;"></span>Creativity 25%</span>
+          <span><span class="wf-dot" style="background:#8a5aa0;"></span>Family 20%</span>
+          <span><span class="wf-dot" style="background:#999;"></span>Untagged 15%</span>
+        </div>
+        <div class="wf-hint" style="margin-bottom:16px;">Pulled from whatever intentions you've actually tagged events with since Fall started — not something you configure here.</div>
+
+        <div class="wf-reflectbox" style="cursor:default; margin-bottom:8px;">
+          <div class="wf-label" style="margin-bottom:4px;">📓 Reflection</div>
+          <div style="font-size:12px; color:#555; margin-bottom:8px;"><i>What you set out to do:</i> "Slowing down after a chaotic summer. Want to actually finish the guitar project I keep putting off, and stop treating rest like a reward I have to earn."</div>
+          <label class="wf-field-label" style="margin-top:8px;">Looking back, did you do that? <span class="wf-optional">be honest, not thorough</span></label>
+          <textarea id="wf-season-reflection-input" class="wf-real-textarea" placeholder="Write when you're ready..."></textarea>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <button class="wf-btn-sm" id="wf-season-reflection-save">Save reflection</button>
+            <span id="wf-season-reflection-status" class="wf-hint" style="margin:0;"></span>
+          </div>
+        </div>
+        <div class="wf-hint" style="margin-bottom:16px;">Available anytime — no need to wait until the season officially ends. When Fall does end, this is the natural next step before starting Winter.</div>
+
+        <div>
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: INTENTIONS ===================== -->
+    <div class="wf-screen" id="screen-intentions" style="display:none;">
+      <div class="wf-topbar">Intentions <span class="wf-crumb">Broad, ongoing life domains</span></div>
+      <div class="wf-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="wf-label">What you care about, generally</div>
+          <button class="wf-btn-primary" data-goto="newitem">+ New intention</button>
+        </div>
+        <div class="wf-hint" style="margin-bottom:14px;">An intention gets its substance from whatever you actually attach to it — a Project, journal entries, or events tagged directly to it. Click an intention's frequency line to see its streak, same idea a separate "Habit" used to require an object for.</div>
+
+        <div class="wf-card" style="cursor:default;">
+          <div class="wf-eyebrow" style="color:#4a9a7a;">● HEALTH · 40% of this week</div>
+          <div class="wf-itemrow" data-goto="project-detail"><span class="wf-badge wf-badge-project">Project</span> Train for a 5k — 70% overall</div>
+          <div class="wf-itemrow" data-goto="intention-detail">🔁 4× this week — runs, lifts, anything tagged here directly</div>
+        </div>
+
+        <div class="wf-card" style="cursor:default;">
+          <div class="wf-eyebrow" style="color:#4a6a99;">● CREATIVITY · 25% of this week</div>
+          <div class="wf-itemrow" data-goto="project-detail"><span class="wf-badge wf-badge-project">Project</span> Learn guitar — 43% overall</div>
+          <div class="wf-itemrow" data-goto="intention-detail">🔁 5× this week — practice sessions tagged directly</div>
+        </div>
+
+        <div class="wf-card" style="cursor:default;">
+          <div class="wf-eyebrow" style="color:#8a5aa0;">● FAMILY · 20% of this week</div>
+          <div class="wf-itemrow" data-goto="intention-detail">🔁 6× this month — dinners, game nights, anything tagged here</div>
+        </div>
+
+        <div class="wf-card wf-card-muted">
+          <div class="wf-eyebrow" style="color:#c9a23c;">● CAREER ADVANCEMENT · 0% of this week</div>
+          <div class="wf-itemrow" data-goto="project-detail"><span class="wf-badge wf-badge-project">Project</span> Job search process — due Sep 30</div>
+        </div>
+
+        <div class="wf-card wf-card-muted">
+          <div class="wf-eyebrow" style="color:#b04a6a;">● VOLUNTEERING · 0% of this week</div>
+          <div class="wf-itemrow" data-goto="intention-detail">🔁 Nothing logged this week</div>
+        </div>
+
+        <div class="wf-card" style="cursor:default; background:#f3eef8;">
+          <div class="wf-eyebrow" style="color:#7a5a9a;">● JOURNAL · AUTOMATIC</div>
+          <div class="wf-sub" style="margin-top:2px; margin-bottom:6px;">Every journal entry counts toward this automatically — nothing to set up, nothing to pick.</div>
+          <div class="wf-itemrow" data-goto="journal-entry">2 entries this week across 3 journals</div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: PROJECTS ===================== -->
+    <div class="wf-screen" id="screen-projects" style="display:none;">
+      <div class="wf-topbar">Projects <span class="wf-crumb">All of them, across every intention</span></div>
+      <div class="wf-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="wf-label">Active</div>
+          <button class="wf-btn-primary" data-goto="newitem">+ New project</button>
+        </div>
+
+        <div class="wf-card" data-goto="project-detail">
+          <div class="wf-eyebrow" style="color:#4a6a99;">● CREATIVITY · NO DUE DATE</div>
+          <div class="wf-title">Learn guitar</div>
+          <div class="wf-sub" style="margin-bottom:6px;"><i>End goal:</i> Play one full song start to finish, no stopping</div>
+          <div class="wf-progressbar"><div class="wf-progressfill" style="width:43%; background:#8a5aa0;"></div></div>
+          <div class="wf-sub">3 of 7 tasks done</div>
+        </div>
+
+        <div class="wf-card" data-goto="project-detail">
+          <div class="wf-eyebrow" style="color:#4a9a7a;">● HEALTH · NO DUE DATE</div>
+          <div class="wf-title">Train for a 5k</div>
+          <div class="wf-sub" style="margin-bottom:6px;"><i>End goal:</i> Run the Cedar Falls 5k on Oct 12</div>
+          <div class="wf-progressbar"><div class="wf-progressfill" style="width:70%; background:#8a5aa0;"></div></div>
+          <div class="wf-sub">70% overall</div>
+        </div>
+
+        <div class="wf-card" data-goto="project-detail">
+          <div class="wf-eyebrow" style="color:#c9a23c;">● CAREER ADVANCEMENT · DUE SEP 30</div>
+          <div class="wf-title">Job search process</div>
+          <div class="wf-sub" style="margin-bottom:6px;"><i>End goal:</i> Accept a job offer</div>
+          <div class="wf-progressbar"><div class="wf-progressfill" style="width:20%; background:#8a5aa0;"></div></div>
+          <div class="wf-sub">1 of 5 tasks done</div>
+        </div>
+
+        <div class="wf-hint" style="margin-top:4px; margin-bottom:12px;">Every project shows up here regardless of which intention it belongs to — this is the one place to see everything you're working toward, not just what's under whichever intention you happen to be looking at.</div>
+
+        <div>
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: NEW PROJECT ===================== -->
+    <div class="wf-screen" id="screen-newitem" style="display:none;">
+      <div class="wf-topbar">New project <span class="wf-crumb">Also creates the intention if it's new</span></div>
+      <div class="wf-panel" style="max-width:520px;">
+
+        <div id="wf-convert-banner" class="wf-convert-banner" style="display:none;"></div>
+
+        <label class="wf-field-label">Which intention(s) does this serve? <span class="wf-required">required — pick at least one</span></label>
+        <div id="wf-newitem-intentions" class="wf-intentcheck-group">
+          <label class="wf-intentcheck"><input type="checkbox" value="Creativity" checked /> Creativity</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Health" /> Health</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Family" /> Family</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Career advancement" /> Career advancement</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Volunteering" /> Volunteering</label>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <input type="text" id="wf-newitem-newintention" class="wf-real-input" placeholder="Or type a new intention..." />
+          <button class="wf-btn-sm" id="wf-newitem-addintention">+ Add</button>
+        </div>
+        <div class="wf-hint">Most things serve one intention, but some genuinely serve more. Check as many as actually apply.</div>
+        <div class="wf-hint" style="margin-top:6px;">This is the normal way a new intention gets its first Project. But an intention doesn't strictly require one — journaling under it, tagging events to it directly, or just letting it track frequency from recurring events all count too. This form is only for things with a real finish line.</div>
+
+        <div class="wf-typenote wf-typenote-project" style="display:block; margin-top:16px;">
+          <b>Project</b> — a deliverable with a real finish line. "Done" is a specific, concrete moment — not just a checklist that quietly plateaus. Want to track something recurring instead, like working out or journaling? Just tag events directly to the intention — no Project needed, see the intention's own page for its frequency/streak.
+          <div class="wf-input" style="margin-top:8px;" id="wf-newitem-title-project">Title — e.g. "Train for a 5k"</div>
+          <label class="wf-field-label" style="margin-top:10px;">End goal <span class="wf-required">required</span></label>
+          <div class="wf-input">e.g. "Run the Cedar Falls 5k on Oct 12"</div>
+          <div class="wf-hint" style="margin-top:6px; margin-bottom:0;">This is what marks it done. Want to do it again later — train for a second 5k? That's a new project, not reopening this one. This one stays a closed, finished record.</div>
+          <div class="wf-input" style="margin-top:10px;">Due date <span style="color:var(--wf-muted); font-weight:normal;">(optional)</span></div>
+          <label class="wf-field-label" style="margin-top:10px;">Starter tasks <span class="wf-optional">optional, one per line</span></label>
+          <div class="wf-input wf-textarea-sm">e.g.<br>Buy running shoes<br>Build up mileage weekly<br>Register for the race</div>
+          <div class="wf-hint" style="margin-top:6px;">Only fill this in if you already know what's involved. Skip it entirely and add tasks one at a time from the project page instead — both are fine.</div>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <button class="wf-btn-primary" data-goto="intentions">Create</button>
+          <button class="wf-btn" data-goto="intentions">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: PROJECT DETAIL ===================== -->
+    <div class="wf-screen" id="screen-project-detail" style="display:none;">
+      <div class="wf-topbar" style="justify-content:space-between;">
+        <div style="display:flex; align-items:baseline; gap:10px;">Learn guitar <span class="wf-crumb">Project · Creativity · No due date · Active</span></div>
+        <button class="wf-btn-sm" style="align-self:center;">⏸ Pause project</button>
+      </div>
+      <div class="wf-hint" style="margin-bottom:12px;">Pausing keeps every task and % of progress exactly as-is. Resume anytime — nothing resets. No due date just means no calendar deadline — it still has a real end goal below, not an infinite checklist.</div>
+      <div class="wf-panel">
+
+        <div class="wf-card wf-card-goal">
+          <div class="wf-eyebrow">END GOAL</div>
+          <div class="wf-title" style="font-size:15px;">Play one full song start to finish, no stopping</div>
+          <div class="wf-sub" style="margin-top:6px;">Once this is true, the project is done — closed, not endlessly editable. Want to learn a second song after this? That's a new project.</div>
+        </div>
+
+        <div class="wf-label" style="margin:14px 0 4px;">Progress</div>
+        <div class="wf-progressbar"><div class="wf-progressfill" id="wf-project-progressfill" style="width:43%; background:#8a5aa0;"></div></div>
+        <div class="wf-sub" id="wf-project-progresstext" style="margin-bottom:8px;">3 of 7 tasks done · flat list, no phases</div>
+        <div class="wf-hint" style="margin-top:0; margin-bottom:12px;">Any task can be unchecked and redone — completion isn't one-way. Learned the barre chord song months ago but it's gotten sloppy? Uncheck it, work on it again, recheck it when it's solid.</div>
+
+        <div class="wf-tasklist" id="wf-project-tasklist" style="margin-bottom:14px;">
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" checked /><span class="wf-task-text wf-task-done">Learn G, C, D chords</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" checked /><span class="wf-task-text wf-task-done">Learn 3 songs</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" checked /><span class="wf-task-text wf-task-done">Record a practice clip</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" /><span class="wf-task-text">Drill G→C transition specifically (slowest link)</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" /><span class="wf-task-text">Learn a barre chord song</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" /><span class="wf-task-text">Practice a steady strumming pattern</span></div>
+          <div class="wf-task-row"><input type="checkbox" class="wf-task-check" /><span class="wf-task-text">Play a barre chord song cleanly</span></div>
+        </div>
+        <button class="wf-btn-sm" style="margin-bottom:16px;">+ Add task</button>
+
+        <button class="wf-btn" id="wf-project-markcomplete" style="margin-bottom:4px;">✓ Mark project complete</button>
+        <div class="wf-hint" style="margin-top:6px; margin-bottom:16px;">Marking complete works even if a task or two is still unchecked — you decide when the end goal is actually met, not the checklist.</div>
+
+        <div class="wf-hint" style="margin-bottom:16px;">Recurring practice (like actually sitting down to play) isn't a task on this list — it's just tagged directly to Creativity as its own event, tracked by Creativity's own frequency. Projects only hold specific, one-time tasks.</div>
+
+        <div>
+          <button class="wf-btn" data-goto="intentions">← All intentions</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: INTENTION DETAIL ===================== -->
+    <div class="wf-screen" id="screen-intention-detail" style="display:none;">
+      <div class="wf-topbar">Family <span class="wf-crumb">Intention</span></div>
+      <div class="wf-hint" style="margin-bottom:12px;">Every event tagged directly to this intention counts as a rep — this is what a "Habit" used to require a separate object for. Just tag events here, no extra setup.</div>
+      <div class="wf-panel">
+
+        <div class="wf-card" style="cursor:default;">
+          <div class="wf-eyebrow">THIS MONTH</div>
+          <div class="wf-title" style="font-size:22px;">6 times</div>
+          <div class="wf-sub">Every tagged event counts as a rep — no checklist to complete</div>
+        </div>
+
+        <div class="wf-label" style="margin:14px 0 6px;">Last 8 weeks</div>
+        <div class="wf-streakrow">
+          <div class="wf-streakbar" style="height:10%;" title="0"></div>
+          <div class="wf-streakbar" style="height:40%;" title="1"></div>
+          <div class="wf-streakbar" style="height:70%;" title="2"></div>
+          <div class="wf-streakbar wf-streakbar-current" style="height:100%;" title="3"></div>
+          <div class="wf-streakbar" style="height:40%;" title="1"></div>
+          <div class="wf-streakbar" style="height:70%;" title="2"></div>
+          <div class="wf-streakbar" style="height:55%;" title="1-2"></div>
+          <div class="wf-streakbar wf-streakbar-current" style="height:85%;" title="2"></div>
+        </div>
+        <div class="wf-sub" style="margin-top:4px; margin-bottom:16px;">Bar height = events that week. No target set — just a record of what actually happened.</div>
+
+        <div class="wf-label" style="margin-bottom:8px;">Recent events tagged to Family</div>
+        <div class="wf-card wf-card-muted">
+          <div class="wf-sub">Sun Aug 9 · Family dinner</div>
+        </div>
+        <div class="wf-card wf-card-muted">
+          <div class="wf-sub">Sun Aug 2 · Family game night</div>
+        </div>
+
+        <div class="wf-label" style="margin-bottom:6px; margin-top:16px;">Projects under Family</div>
+        <div class="wf-hint" style="margin-top:0; margin-bottom:10px;">Recurring stuff (like the frequency above) lives directly on this intention — no separate object needed. Anything with a real finish line still gets its own Project.</div>
+
+        <div>
+          <button class="wf-btn" data-goto="intentions">← All intentions</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: NEW EVENT ===================== -->
+    <div class="wf-screen" id="screen-newevent" style="display:none;">
+      <div class="wf-topbar">New event <span class="wf-crumb">Calendar → New</span></div>
+      <div class="wf-panel" style="max-width:520px;">
+        <div id="wf-newevent-banner" class="wf-convert-banner" style="display:none;"></div>
+        <label class="wf-field-label">Title <span class="wf-required">required</span></label>
+        <div class="wf-input" id="wf-newevent-title">Evening run</div>
+
+        <label class="wf-field-label">Date / time <span class="wf-optional">optional</span></label>
+        <div class="wf-input" id="wf-newevent-datetime">Aug 8, 6:00–6:45 PM</div>
+        <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; color:#555; cursor:pointer;">
+          <input type="checkbox" id="wf-newevent-allday" /> No specific time — all-day
+        </label>
+        <label class="wf-field-label">Location <span class="wf-optional">optional</span></label>
+        <div class="wf-input">e.g. Riverside Park</div>
+
+        <label class="wf-field-label">Which intention? <span class="wf-optional">optional — defaults to none</span></label>
+        <div id="wf-newevent-intentions" class="wf-choicerow" style="flex-wrap:wrap;">
+          <div class="wf-choice wf-choice-active" data-intention="None">— None —</div>
+          <div class="wf-choice" data-intention="Health">Health</div>
+          <div class="wf-choice" data-intention="Creativity">Creativity</div>
+          <div class="wf-choice" data-intention="Family">Family</div>
+          <div class="wf-choice" data-intention="Career advancement">Career advancement</div>
+          <div class="wf-choice" data-intention="Volunteering">Volunteering</div>
+        </div>
+
+        <div id="wf-newevent-attachto-block" style="display:none;">
+          <label class="wf-field-label" style="margin-top:14px;">Attach to a Project? <span class="wf-optional">optional</span></label>
+          <div id="wf-newevent-types" class="wf-choicerow">
+            <div class="wf-choice wf-choice-active" data-type="None">No, just this intention</div>
+            <div class="wf-choice" data-type="Project">Yes — a Project</div>
+          </div>
+
+          <div id="wf-newevent-filtered"></div>
+        </div>
+
+        <label class="wf-field-label" style="margin-top:14px;">Schedule a journal entry? <span class="wf-optional">optional</span></label>
+        <div id="wf-newevent-journal-toggle" class="wf-choicerow">
+          <div class="wf-choice wf-choice-active" data-journalsched="no">No</div>
+          <div class="wf-choice" data-journalsched="yes">Yes — pick a journal</div>
+        </div>
+        <div id="wf-newevent-journal-picker" style="display:none;">
+          <div class="wf-input wf-select" style="margin-top:8px;">Daily Reflection ▾</div>
+          <div class="wf-hint">This reserves the time slot. When you actually sit down to write, it opens straight into that journal, ready to go — same as writing spontaneously, just pre-scheduled.</div>
+        </div>
+
+        <label class="wf-field-label" style="margin-top:14px;">Notes <span class="wf-optional">optional</span></label>
+        <div class="wf-input wf-textarea-sm">e.g. "Bring water bottle, check weather first"</div>
+        <div class="wf-hint">Title, location, and notes all sync to Google Calendar. This is different from a journal entry — no prompt, no private reflection, just plain event details, same as any other calendar app.</div>
+
+        <div class="wf-hint">No workout routine field — schedule workouts from the Workout Library instead, and the intention/project come along automatically.</div>
+
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <button class="wf-btn-primary" data-goto="calendar">Save event</button>
+          <button class="wf-btn" data-goto="calendar">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: JOURNAL ENTRY ===================== -->
+    <div class="wf-screen" id="screen-journal-entry" style="display:none;">
+      <div class="wf-topbar">Journal <span class="wf-crumb">Mon, Aug 3 · 8:00 PM</span></div>
+      <div class="wf-panel" style="max-width:520px;">
+        <div class="wf-label" style="margin-bottom:4px;">Automatically tied to: <b>Journal</b></div>
+        <div class="wf-hint" style="margin-top:0; margin-bottom:8px;">Every entry counts toward the Journal intention automatically — no picking required.</div>
+        <div id="wf-journal-extra-intentions" class="wf-intentcheck-group" style="margin-bottom:4px;">
+          <label class="wf-intentcheck"><input type="checkbox" value="Health" /> Health</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Creativity" /> Creativity</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Family" /> Family</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Career advancement" /> Career advancement</label>
+          <label class="wf-intentcheck"><input type="checkbox" value="Volunteering" /> Volunteering</label>
+        </div>
+        <div class="wf-hint" style="margin-top:4px; margin-bottom:12px;">Optional — check any more intentions this specific entry also relates to (e.g. a Food Diary entry might also count toward Health).</div>
+
+        <div id="wf-journal-tabs" class="wf-quicklist-tabs">
+          <button class="wf-quicklist-tab wf-quicklist-tab-active" data-journal="Daily Reflection">Daily Reflection</button>
+          <button class="wf-quicklist-tab" data-journal="Food Diary">Food Diary</button>
+          <button class="wf-quicklist-tab" data-journal="Gratitude">Gratitude</button>
+          <button class="wf-quicklist-tab wf-quicklist-tab-new" id="wf-journal-newtab">+ New journal</button>
+        </div>
+        <div class="wf-hint" style="margin-top:-4px; margin-bottom:12px;">Separate journals for separate kinds of writing — each keeps its own prompt pool and its own entries, same private-by-default rules apply to all of them.</div>
+
+        <div class="wf-card" style="background:#eee; cursor:default;">
+          <div class="wf-eyebrow">PROMPT</div>
+          <div class="wf-title" id="wf-journal-prompt" style="font-size:15px;">What did you protect your energy from today?</div>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="wf-btn-sm" id="wf-journal-choose">📋 Choose a prompt</button>
+            <button class="wf-btn-sm" id="wf-journal-random">🎲 Random prompt</button>
+            <button class="wf-btn-sm">✎ Write my own</button>
+            <button class="wf-btn-sm" id="wf-journal-addprompt">＋ Save a prompt I found</button>
+          </div>
+          <div id="wf-journal-promptlist" class="wf-promptlist" style="display:none;"></div>
+        </div>
+        <div class="wf-hint" style="margin-top:-6px; margin-bottom:12px;">Saw a good prompt somewhere and don't want to lose it? Save it straight into this journal's pool — it'll show up next time you hit "Random prompt" or "Choose a prompt."</div>
+
+        <label class="wf-field-label">Entry</label>
+        <textarea id="wf-journal-entry-text" class="wf-real-textarea" placeholder="Start writing..."></textarea>
+
+        <label class="wf-field-label">Attach photo/video <span class="wf-optional">optional, stored privately</span></label>
+        <div class="wf-dropzone">+ Add media</div>
+
+        <div class="wf-hint">Only the event title and prompt sync to Google Calendar. This entry — and any attached photos or video — stays private to the app.</div>
+        <div class="wf-hint" id="wf-journal-autocal-hint">Writing this right now, unscheduled? Saving it automatically adds a "Journal" event to today's calendar at the current time — you don't have to pre-schedule to have it show up.</div>
+
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <button class="wf-btn-primary" id="wf-journal-save" data-goto="calendar">Save entry</button>
+          <button class="wf-btn" data-goto="calendar">Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: WORKOUT LIBRARY (drag & drop) ===================== -->
+    <div class="wf-screen" id="screen-workouts" style="display:none;">
+      <div class="wf-topbar">Workout library <span class="wf-crumb">The main way to schedule a workout</span></div>
+      <div class="wf-panel">
+
+        <div class="wf-label" style="margin-bottom:8px;">Your exercises · YouTube clips, timestamped</div>
+        <div id="wf-exercise-pool" class="wf-exercisegrid">
+          <div class="wf-exercisecard" draggable="true" data-name="Goblet squats" data-time="0:15–0:55">
+            <div class="wf-exercise-thumb">▶</div>
+            <div class="wf-exercise-name">Goblet squats</div>
+            <div class="wf-exercise-time">0:15–0:55 · YouTube</div>
+          </div>
+          <div class="wf-exercisecard" draggable="true" data-name="Push-ups" data-time="1:02–1:30">
+            <div class="wf-exercise-thumb">▶</div>
+            <div class="wf-exercise-name">Push-ups</div>
+            <div class="wf-exercise-time">1:02–1:30 · YouTube</div>
+          </div>
+          <div class="wf-exercisecard" draggable="true" data-name="Reverse lunges" data-time="2:10–2:50">
+            <div class="wf-exercise-thumb">▶</div>
+            <div class="wf-exercise-name">Reverse lunges</div>
+            <div class="wf-exercise-time">2:10–2:50 · YouTube</div>
+          </div>
+          <div class="wf-exercisecard" draggable="true" data-name="Plank hold" data-time="3:00–3:45">
+            <div class="wf-exercise-thumb">▶</div>
+            <div class="wf-exercise-name">Plank hold</div>
+            <div class="wf-exercise-time">3:00–3:45 · YouTube</div>
+          </div>
+          <div class="wf-exercisecard" draggable="true" data-name="Glute bridges" data-time="4:05–4:35">
+            <div class="wf-exercise-thumb">▶</div>
+            <div class="wf-exercise-name">Glute bridges</div>
+            <div class="wf-exercise-time">4:05–4:35 · YouTube</div>
+          </div>
+        </div>
+        <div class="wf-hint" style="margin-bottom:16px;">Drag any card down into "Build a routine." Reorder by dragging within the list.</div>
+
+        <div class="wf-label" style="margin-bottom:8px;">Build a routine — drag exercises here, in whatever order you feel like today</div>
+        <div id="wf-routine-dropzone" class="wf-dropzone wf-routine-dropzone">Drop exercises here to build a routine</div>
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button class="wf-btn-primary" id="wf-save-routine">Save as routine</button>
+          <button class="wf-btn" id="wf-clear-routine">Clear</button>
+        </div>
+
+        <div class="wf-label" style="margin:22px 0 8px;">Saved routines · drag onto a calendar day</div>
+        <div class="wf-hint" style="margin-top:-4px; margin-bottom:10px;">Dragging a routine onto a day creates the event and fills in its title and intention automatically from the routine's default link — no separate form needed.</div>
+        <div class="wf-routinegrid">
+          <div class="wf-routinecard" draggable="true" data-name="Full body — 20 min">
+            <div class="wf-title" style="font-size:13px;">Full body — 20 min</div>
+            <div class="wf-sub">5 exercises · drag me onto a day</div>
+            <div class="wf-sub" style="margin-top:6px;">🔗 Health</div>
+          </div>
+          <div class="wf-routinecard" draggable="true" data-name="Easy 5k pace">
+            <div class="wf-title" style="font-size:13px;">Easy 5k pace</div>
+            <div class="wf-sub">YouTube run-along · drag me onto a day</div>
+            <div class="wf-sub" style="margin-top:6px;">🔗 Health</div>
+          </div>
+        </div>
+        <div class="wf-hint" style="margin-top:8px;">Both routines link to the same Health intention even though they're completely different activities — a lift session and a run both just tag Health directly, both count toward its frequency/streak.</div>
+
+        <div class="wf-label" style="margin:22px 0 8px;">This week · drop a routine on a day</div>
+        <div class="wf-grid7" id="wf-mini-week">
+          <div class="wf-daycol wf-dropday" data-day="MON"><div class="wf-dayhead">MON 3</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="TUE"><div class="wf-dayhead">TUE 4</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="WED"><div class="wf-dayhead">WED 5</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="THU"><div class="wf-dayhead">THU 6</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="FRI"><div class="wf-dayhead">FRI 7</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="SAT"><div class="wf-dayhead">SAT 8</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="SUN"><div class="wf-dayhead">SUN 9</div><div class="wf-dropslot">drop here</div></div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: MEAL PLANNING ===================== -->
+    <div class="wf-screen" id="screen-mealplanning" style="display:none;">
+      <div class="wf-topbar">Meal planning <span class="wf-crumb">Drag a saved meal onto a day when you don't know what to eat</span></div>
+      <div class="wf-panel">
+
+        <div class="wf-label" style="margin-bottom:8px;">Your saved meals</div>
+        <div class="wf-hint" style="margin-top:-4px; margin-bottom:10px;">Meals you already know you like — no recipe needed, just enough to remember "oh right, I could make that."</div>
+        <div id="wf-meal-pool" class="wf-mealgrid">
+          <div class="wf-mealcard" draggable="true" data-name="Chicken stir fry">
+            <div class="wf-meal-name">Chicken stir fry</div>
+            <div class="wf-meal-note">Quick, ~20 min</div>
+          </div>
+          <div class="wf-mealcard" draggable="true" data-name="Turkey chili">
+            <div class="wf-meal-name">Turkey chili</div>
+            <div class="wf-meal-note">Big batch, good leftovers</div>
+          </div>
+          <div class="wf-mealcard" draggable="true" data-name="Salmon + roasted veggies">
+            <div class="wf-meal-name">Salmon + roasted veggies</div>
+            <div class="wf-meal-note">Feels fancy, isn't</div>
+          </div>
+          <div class="wf-mealcard" draggable="true" data-name="Overnight oats">
+            <div class="wf-meal-name">Overnight oats</div>
+            <div class="wf-meal-note">Breakfast, prep the night before</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:10px; margin-bottom:6px;">
+          <input type="text" id="wf-meal-name-input" class="wf-real-input" placeholder="Meal name..." />
+          <input type="text" id="wf-meal-note-input" class="wf-real-input" placeholder="Short note (optional)..." style="flex:1;" />
+          <button class="wf-btn-primary" id="wf-meal-add-btn">+ Add</button>
+        </div>
+        <div class="wf-hint" style="margin-bottom:16px;">Add whatever you actually eat and like — doesn't need to be a real recipe, "leftover pasta" counts.</div>
+
+        <div class="wf-label" style="margin-bottom:8px;">This week · drop a meal on a day</div>
+        <div class="wf-grid7" id="wf-meal-mini-week">
+          <div class="wf-daycol wf-dropday" data-day="MON"><div class="wf-dayhead">MON 3</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="TUE"><div class="wf-dayhead">TUE 4</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="WED"><div class="wf-dayhead">WED 5</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="THU"><div class="wf-dayhead">THU 6</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="FRI"><div class="wf-dayhead">FRI 7</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="SAT"><div class="wf-dayhead">SAT 8</div><div class="wf-dropslot">drop here</div></div>
+          <div class="wf-daycol wf-dropday" data-day="SUN"><div class="wf-dayhead">SUN 9</div><div class="wf-dropslot">drop here</div></div>
+        </div>
+        <div class="wf-hint" style="margin-top:8px; margin-bottom:16px;">Dropping just creates a plain calendar entry with the meal's name — no intention required, this is pure reference, not something tracked toward anything.</div>
+
+        <div>
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== FULL SCREEN: QUICK LIST ===================== -->
+    <div class="wf-screen" id="screen-quicklist" style="display:none;">
+      <div class="wf-topbar">Quick list <span class="wf-crumb">Errands, notes, anything — no intention needed</span></div>
+      <div class="wf-panel" style="max-width:420px;">
+        <div class="wf-hint" style="margin-bottom:12px;">This isn't tied to any intention, habit, or project — just capture and check off, no setup. Keep separate lists for different kinds of stuff.</div>
+
+        <div id="wf-quicklist-tabs" class="wf-quicklist-tabs">
+          <button class="wf-quicklist-tab wf-quicklist-tab-active" data-list="Errands">Errands</button>
+          <button class="wf-quicklist-tab" data-list="Groceries">Groceries</button>
+          <button class="wf-quicklist-tab" data-list="Random ideas">Random ideas</button>
+          <button class="wf-quicklist-tab wf-quicklist-tab-new" id="wf-quicklist-newlist">+ New list</button>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <input type="text" id="wf-quicklist-input" placeholder="Add an item..." class="wf-real-input" />
+          <button class="wf-btn-primary" id="wf-quicklist-add">Add</button>
+        </div>
+
+        <div id="wf-quicklist-items"></div>
+
+        <div style="margin-top:16px;">
+          <button class="wf-btn" data-goto="calendar">← Back to calendar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== OVERLAY + PREVIEW PANEL ===================== -->
+  <div id="wf-overlay" class="wf-overlay"></div>
+  <div id="wf-preview" class="wf-previewpanel">
+    <button id="wf-preview-close" class="wf-preview-close">✕</button>
+    <div id="wf-preview-body"></div>
+  </div>
+
+</div>
+
+<style>
+  #wf-root .wf-nav-btn { font-family: inherit; font-size:12px; padding:6px 10px; border:1px solid var(--wf-border); background:#fff; cursor:pointer; border-radius:3px; }
+  #wf-root .wf-nav-btn:hover { background:#eee; }
+
+  #wf-root .wf-topbar { font-size:20px; font-weight:bold; margin-bottom:10px; display:flex; align-items:baseline; gap:10px; }
+  #wf-root .wf-crumb { font-size:12px; font-weight:normal; color:var(--wf-muted); }
+
+  #wf-root .wf-panel { background:var(--wf-panel); border:1px solid var(--wf-border); border-radius:4px; padding:20px; }
+  #wf-root .wf-label { font-size:13px; color:var(--wf-muted); text-transform:uppercase; letter-spacing:0.03em; }
+
+  #wf-root .wf-card { border:1px solid var(--wf-border); border-radius:3px; padding:12px 14px; margin-bottom:10px; background:#fafafa; cursor:pointer; }
+  #wf-root .wf-card:hover { background:#f0f0f0; }
+  #wf-root .wf-card-muted { opacity:0.6; }
+  #wf-root .wf-card-goal { background:#eef1ea; border-color:#8a9c7a; cursor:default; }
+  #wf-root .wf-card-goal:hover { background:#eef1ea; }
+  #wf-root .wf-card-season-block { background:#fdfdfb; }
+  #wf-root .wf-card-nestedhabit { background:#eef6f0; border-color:#8fbf9f; }
+
+  #wf-root .wf-eyebrow { font-size:10px; letter-spacing:0.06em; color:var(--wf-muted); margin-bottom:4px; }
+  #wf-root .wf-title { font-size:16px; font-weight:bold; }
+  #wf-root .wf-sub { font-size:12px; color:var(--wf-muted); margin-top:4px; }
+  #wf-root .wf-sub-inline { font-size:11px; color:var(--wf-muted); }
+  #wf-root .wf-link-inline { color:#4a6a45; text-decoration:underline; cursor:pointer; }
+
+  #wf-root .wf-btn, #wf-root .wf-btn-primary, #wf-root .wf-btn-sm { font-family:inherit; font-size:13px; padding:8px 14px; border-radius:3px; cursor:pointer; border:1px solid var(--wf-border); }
+  #wf-root .wf-btn { background:#fff; }
+  #wf-root .wf-btn:hover { background:#eee; }
+  #wf-root .wf-btn-primary { background:#333; color:#fff; border-color:#333; }
+  #wf-root .wf-btn-primary:hover { background:#000; }
+  #wf-root .wf-btn-sm { font-size:11px; padding:5px 9px; background:#fff; }
+
+  #wf-root .wf-homelayout { display:grid; grid-template-columns:210px 1fr; gap:14px; align-items:start; }
+  #wf-root .wf-sidebar { display:flex; flex-direction:column; gap:8px; }
+  #wf-root .wf-panelwrap { position:relative; display:flex; flex-direction:column; gap:8px; }
+  #wf-root .wf-panelwrap.wf-panel-hidden { display:none; }
+  #wf-root .wf-panel-remove { position:absolute; top:-2px; right:-2px; z-index:2; width:18px; height:18px; border-radius:50%; border:1px solid #c33; background:#fff; color:#c33; font-size:10px; line-height:1; cursor:pointer; padding:0; }
+  #wf-root .wf-panel-remove:hover { background:#c33; color:#fff; }
+  #wf-root .wf-customize-active .wf-sidecard { outline:1px dashed #c33; outline-offset:2px; }
+  #wf-root .wf-restore-item { font-size:12px; padding:6px 8px; border:1px dashed var(--wf-border); border-radius:3px; margin-bottom:6px; cursor:pointer; color:#4a6a45; background:#f7faf5; }
+  #wf-root .wf-restore-item:hover { background:#eef4ea; }
+  #wf-root .wf-sidehead { font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--wf-muted); margin:8px 0 -2px; }
+  #wf-root .wf-sidecard { border:1px solid var(--wf-border); border-radius:3px; padding:10px; background:#fff; cursor:pointer; }
+  #wf-root .wf-sidecard:hover { background:#f0f0f0; }
+  #wf-root .wf-sidecard-muted { cursor:pointer; background:#f7f7f7; }
+  #wf-root .wf-sidecard-season { background:#fdf3e7; border-color:#d9a75f; }
+  #wf-root .wf-sidecard-affirm { background:#fdf0f5; border-color:#d98cae; }
+
+  #wf-root .wf-mainpanel { background:var(--wf-panel); border:1px solid var(--wf-border); border-radius:4px; padding:16px; }
+
+  #wf-root .wf-grid7 { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+  #wf-root .wf-daycol { border:1px solid var(--wf-border); border-radius:3px; overflow:hidden; min-height:170px; }
+  #wf-root .wf-dayhead { background:#eee; font-size:11px; font-weight:bold; text-align:center; padding:6px 0; }
+  #wf-root .wf-slot { margin:8px; padding:8px; border:1px solid #bbb; border-radius:3px; font-size:11px; cursor:pointer; background:#fafafa; line-height:1.5; }
+  #wf-root .wf-slot:hover { background:#f0f0f0; }
+  #wf-root .wf-slot[draggable="true"] { cursor:grab; }
+  #wf-root .wf-slot[draggable="true"]:active { cursor:grabbing; }
+  #wf-root .wf-slot.wf-dragging { opacity:0.35; }
+  #wf-root .wf-daycol.wf-dragover { background:#eef4ea; }
+
+  /* Hourly time-grid calendar (main week view) */
+  #wf-root .wf-timegrid-wrap { border:1px solid var(--wf-border); border-radius:3px; overflow:hidden; }
+  #wf-root .wf-viewtoggle { display:flex; border:1px solid var(--wf-border); border-radius:3px; overflow:hidden; }
+  #wf-root .wf-viewtoggle-btn { font-size:12px; padding:6px 12px; border:none; background:#fff; cursor:pointer; color:var(--wf-muted); }
+  #wf-root .wf-viewtoggle-active { background:#333; color:#fff; }
+
+  #wf-root .wf-allday-row { display:flex; border-bottom:1px solid var(--wf-border); background:#fafafa; }
+  #wf-root .wf-allday-label { width:50px; flex-shrink:0; font-size:9px; color:var(--wf-muted); display:flex; align-items:center; justify-content:flex-end; padding-right:6px; }
+  #wf-root .wf-allday-col { flex:1; border-left:1px solid #eee; min-height:28px; padding:3px; display:flex; flex-direction:column; gap:2px; }
+  #wf-root .wf-allday-chip { font-size:9px; padding:2px 5px; border-radius:3px; border-left:3px solid #999; background:#f3f3f3; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #wf-root .wf-allday-chip.wf-timeevent-habit { border-left-color:#4a9a7a; background:#eef6f0; }
+  #wf-root .wf-allday-chip.wf-timeevent-project { border-left-color:#8a5aa0; background:#f5eef8; }
+  #wf-root .wf-allday-chip.wf-timeevent-tag { border-left-color:#999; background:#f3f3f3; }
+
+  #wf-root .wf-monthgrid-wrap { border:1px solid var(--wf-border); border-radius:3px; overflow:hidden; }
+  #wf-root .wf-monthgrid-headerrow { display:grid; grid-template-columns:repeat(7,1fr); background:#eee; }
+  #wf-root .wf-monthgrid-headercell { font-size:10px; font-weight:bold; text-align:center; padding:6px 0; }
+  #wf-root .wf-monthgrid-body { display:grid; grid-template-columns:repeat(7,1fr); }
+  #wf-root .wf-monthgrid-cell { min-height:70px; border-left:1px solid #eee; border-top:1px solid #eee; padding:4px; cursor:pointer; }
+  #wf-root .wf-monthgrid-cell:hover { background:#f7f7f7; }
+  #wf-root .wf-monthgrid-cell.wf-monthgrid-muted { color:#ccc; background:#fafafa; }
+  #wf-root .wf-monthgrid-daynum { font-size:11px; margin-bottom:3px; }
+  #wf-root .wf-monthgrid-dots { display:flex; flex-wrap:wrap; gap:2px; }
+  #wf-root .wf-monthgrid-dot { width:6px; height:6px; border-radius:50%; }
+  #wf-root .wf-timegrid-header { display:flex; border-bottom:1px solid var(--wf-border); background:#eee; }
+  #wf-root .wf-timegrid-corner { width:50px; flex-shrink:0; }
+  #wf-root .wf-timegrid-daylabel { flex:1; text-align:center; font-size:11px; font-weight:bold; padding:6px 0; display:flex; align-items:center; justify-content:center; gap:4px; }
+  #wf-root .wf-daylabel-add { font-size:10px; width:16px; height:16px; line-height:14px; padding:0; border-radius:50%; border:1px solid var(--wf-border); background:#fff; cursor:pointer; color:var(--wf-muted); }
+  #wf-root .wf-daylabel-add:hover { background:#333; color:#fff; }
+  #wf-root .wf-timegrid-body { display:flex; position:relative; }
+  #wf-root .wf-timegrid-hours { width:50px; flex-shrink:0; position:relative; }
+  #wf-root .wf-timegrid-hourlabel { position:absolute; right:6px; font-size:9px; color:var(--wf-muted); transform:translateY(-50%); }
+  #wf-root .wf-timegrid-daycol { flex:1; position:relative; border-left:1px solid #eee; background-image:repeating-linear-gradient(to bottom, #eee, #eee 1px, transparent 1px, transparent 32px); }
+  #wf-root .wf-timegrid-daycol.wf-dragover { background-color:#eef4ea; }
+  #wf-root .wf-timeevent { position:absolute; left:2px; right:2px; border-radius:3px; padding:3px 5px; font-size:10px; line-height:1.3; overflow:hidden; cursor:grab; border-left:3px solid #999; background:#fafafa; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  #wf-root .wf-timeevent:active { cursor:grabbing; }
+  #wf-root .wf-timeevent.wf-dragging { opacity:0.35; }
+  #wf-root .wf-timeevent-habit { border-left-color:#4a9a7a; background:#eef6f0; }
+  #wf-root .wf-timeevent-project { border-left-color:#8a5aa0; background:#f5eef8; }
+  #wf-root .wf-timeevent-tag { border-left-color:#999; background:#f3f3f3; }
+  #wf-root .wf-timeevent-title { font-weight:bold; }
+  #wf-root .wf-timeevent-time { color:var(--wf-muted); font-size:9px; }
+  #wf-root .wf-slot-empty { color:var(--wf-muted); text-align:center; cursor:pointer; background:transparent; border-style:dashed; }
+  #wf-root .wf-slot-habit { border-left:4px solid #4a9a7a; }
+  #wf-root .wf-slot-curriculum { border-left:4px solid #4a6a99; }
+  #wf-root .wf-slot-project { border-left:4px solid #8a5aa0; }
+  #wf-root .wf-slot-tag { border-left:4px solid #999; }
+  #wf-root .wf-slotdot { margin-right:2px; }
+  #wf-root .wf-tag { display:inline-block; margin-top:4px; font-size:9px; background:#ddd; padding:2px 5px; border-radius:2px; }
+
+  #wf-root .wf-legend { display:flex; gap:16px; margin-top:12px; font-size:11px; color:var(--wf-muted); flex-wrap:wrap; }
+  #wf-root .wf-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+
+  #wf-root .wf-field-label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--wf-muted); margin:14px 0 4px; }
+  #wf-root .wf-field-label:first-child { margin-top:0; }
+  #wf-root .wf-required { color:#a33; text-transform:none; font-size:10px; }
+  #wf-root .wf-optional { color:var(--wf-muted); text-transform:none; font-size:10px; }
+  #wf-root .wf-input { border:1px solid var(--wf-border); border-radius:3px; padding:9px 10px; font-size:13px; background:#fcfcfc; color:#555; }
+  #wf-root .wf-select::after { content:" ▾"; }
+  #wf-root .wf-hint { font-size:11px; color:var(--wf-muted); margin-top:8px; line-height:1.5; }
+  #wf-root .wf-dropzone { border:1px dashed var(--wf-border); border-radius:3px; padding:16px; text-align:center; font-size:12px; color:var(--wf-muted); }
+
+  #wf-root .wf-choicerow { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  #wf-root .wf-choicerow-3 .wf-choice { flex:1; text-align:center; }
+  #wf-root .wf-choice { font-size:12px; border:1px solid var(--wf-border); border-radius:3px; padding:7px 10px; background:#fcfcfc; color:var(--wf-muted); cursor:pointer; }
+  #wf-root .wf-choice-active { background:#333; color:#fff; border-color:#333; }
+
+  #wf-root .wf-stepnum { font-size:10px; font-weight:bold; letter-spacing:0.08em; color:#8a9c7a; }
+  #wf-root .wf-textarea-sm { min-height:44px; color:var(--wf-muted); }
+  #wf-root .wf-textarea { min-height:70px; color:var(--wf-muted); }
+  #wf-root .wf-textarea-season { min-height:90px; color:#333; line-height:1.5; }
+  #wf-root .wf-reflectbox { margin-top:10px; font-size:11px; color:#6b7a5e; background:#f2f5ee; border:1px dashed #8a9c7a; border-radius:3px; padding:8px 10px; cursor:pointer; }
+  #wf-root .wf-reflectbox:hover { background:#e9ede2; }
+  #wf-root .wf-promptlist { margin-top:10px; border-top:1px solid #ddd; padding-top:8px; }
+  #wf-root .wf-promptlist-item { font-size:12px; padding:6px 4px; cursor:pointer; border-radius:3px; }
+  #wf-root .wf-promptlist-item:hover { background:#e0e0e0; }
+  #wf-root .wf-fulldesign-block { opacity:0.5; margin-top:14px; padding-top:6px; border-top:1px dashed var(--wf-border); }
+
+  #wf-root .wf-typenote { display:none; font-size:12px; color:#444; background:#f5f5f0; border:1px solid #ccc; border-radius:3px; padding:10px 12px; margin-top:10px; }
+  #wf-root .wf-convert-banner { font-size:12px; background:#fdf3e7; border:1px solid #d9a75f; border-radius:3px; padding:10px 12px; margin-bottom:16px; color:#6a4a1a; }
+
+  #wf-root .wf-progressbar { background:#e5e5e5; border-radius:8px; height:8px; overflow:hidden; margin-top:6px; }
+  #wf-root .wf-progressfill { background:#555; height:100%; }
+
+  #wf-root .wf-intentbar { display:flex; border-radius:8px; height:8px; overflow:hidden; margin-top:8px; }
+  #wf-root .wf-intentbar-fill { height:100%; }
+  #wf-root .wf-intent-legend { display:flex; flex-direction:column; gap:2px; margin-top:6px; font-size:10px; color:var(--wf-muted); }
+  #wf-root .wf-intent-legend .wf-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+
+  #wf-root .wf-tasklist { margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+  #wf-root .wf-task { font-size:12px; padding:4px 0; }
+  #wf-root .wf-task-done { color:var(--wf-muted); text-decoration:line-through; }
+  #wf-root .wf-task-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:4px 0; }
+  #wf-root .wf-task-check { cursor:pointer; }
+  #wf-root .wf-task-text { flex:1; }
+
+  #wf-root .wf-streakrow { display:flex; align-items:flex-end; gap:8px; height:70px; padding:0 4px; }
+  #wf-root .wf-streakbar { flex:1; background:#c9d4e0; border-radius:3px 3px 0 0; min-height:4px; }
+  #wf-root .wf-streakbar-current { background:#4a9a7a; }
+
+  #wf-root .wf-badge { display:inline-block; font-size:9px; font-weight:bold; letter-spacing:0.03em; padding:2px 6px; border-radius:3px; margin-right:6px; color:#fff; }
+  #wf-root .wf-badge-habit { background:#4a9a7a; }
+  #wf-root .wf-badge-project { background:#8a5aa0; }
+  #wf-root .wf-badge-continuing { background:#999; }
+
+  #wf-root .wf-itemrow { font-size:13px; padding:6px 0; cursor:pointer; }
+  #wf-root .wf-itemrow:hover { text-decoration:underline; }
+  #wf-root .wf-seasonitem { font-size:13px; padding:4px 0; }
+
+  #wf-root .wf-toggle-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  #wf-root .wf-toggle-label { font-size:11px; color:var(--wf-muted); }
+  #wf-root .wf-toggle-btn { font-size:11px; padding:5px 9px; border-radius:3px; border:1px solid var(--wf-border); background:#fff; cursor:pointer; color:var(--wf-muted); }
+  #wf-root .wf-toggle-active { background:#333; color:#fff; border-color:#333; }
+
+  #wf-root .wf-exercisegrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px; margin-bottom:8px; }
+
+  #wf-root .wf-mealgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; }
+  #wf-root .wf-mealcard { border:1px solid var(--wf-border); border-radius:4px; background:#fdf9f3; padding:10px; cursor:grab; }
+  #wf-root .wf-mealcard:active { cursor:grabbing; }
+  #wf-root .wf-mealcard.wf-dragging { opacity:0.4; }
+  #wf-root .wf-meal-name { font-size:13px; font-weight:bold; }
+  #wf-root .wf-meal-note { font-size:11px; color:var(--wf-muted); margin-top:3px; }
+  #wf-root .wf-exercisecard { border:1px solid var(--wf-border); border-radius:4px; background:#fff; padding:8px; cursor:grab; text-align:center; }
+  #wf-root .wf-exercisecard:active { cursor:grabbing; }
+  #wf-root .wf-exercisecard.wf-dragging { opacity:0.4; }
+  #wf-root .wf-exercise-thumb { background:#333; color:#fff; border-radius:3px; height:44px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:6px; }
+  #wf-root .wf-exercise-name { font-size:12px; font-weight:bold; }
+  #wf-root .wf-exercise-time { font-size:10px; color:var(--wf-muted); margin-top:2px; }
+
+  #wf-root .wf-routine-dropzone { min-height:56px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px; }
+  #wf-root .wf-routine-dropzone.wf-dragover { background:#eef4ea; border-color:#8a9c7a; }
+  #wf-root .wf-routine-chip { display:flex; align-items:center; gap:6px; background:#eee; border:1px solid #ccc; border-radius:14px; padding:4px 10px 4px 6px; font-size:11px; cursor:grab; }
+  #wf-root .wf-routine-chip .wf-chip-num { background:#333; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:9px; }
+  #wf-root .wf-routine-chip .wf-chip-remove { cursor:pointer; color:var(--wf-muted); font-weight:bold; margin-left:2px; }
+
+  #wf-root .wf-routinegrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; }
+  #wf-root .wf-routinecard { border:1px solid var(--wf-border); border-radius:3px; padding:10px; background:#fafafa; cursor:grab; }
+  #wf-root .wf-routinecard:active { cursor:grabbing; }
+  #wf-root .wf-routinecard.wf-dragging { opacity:0.4; }
+
+  #wf-root .wf-dropday { min-height:110px; }
+  #wf-root .wf-dropslot { margin:8px; padding:14px 6px; border:1px dashed #bbb; border-radius:3px; font-size:10px; color:var(--wf-muted); text-align:center; }
+  #wf-root .wf-dropday.wf-dragover .wf-dropslot { background:#eef4ea; border-color:#8a9c7a; color:#4a6a45; }
+  #wf-root .wf-dropslot.wf-filled { border-style:solid; border-color:#4a9a7a; background:#eef6f0; color:#333; font-weight:bold; }
+
+  #wf-root .wf-real-input { flex:1; border:1px solid var(--wf-border); border-radius:3px; padding:9px 10px; font-size:13px; font-family:inherit; background:#fcfcfc; color:#222; }
+  #wf-root .wf-intentcheck-group { display:flex; flex-wrap:wrap; gap:10px 16px; padding:10px; border:1px solid var(--wf-border); border-radius:3px; background:#fcfcfc; }
+  #wf-root .wf-intentcheck { display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer; }
+  #wf-root .wf-real-textarea { width:100%; min-height:70px; border:1px solid var(--wf-border); border-radius:3px; padding:9px 10px; font-size:13px; font-family:inherit; background:#fcfcfc; color:#222; box-sizing:border-box; resize:vertical; }
+  #wf-root .wf-quickitem { display:flex; align-items:center; gap:8px; padding:7px 4px; border-bottom:1px solid #eee; font-size:13px; }
+  #wf-root .wf-quickitem-check { cursor:pointer; }
+  #wf-root .wf-quickitem-text { flex:1; }
+  #wf-root .wf-quickitem-done { color:var(--wf-muted); text-decoration:line-through; }
+  #wf-root .wf-quickitem-remove { cursor:pointer; color:var(--wf-muted); font-weight:bold; font-size:11px; }
+  #wf-root .wf-quickitem-remove:hover { color:#a33; }
+  #wf-root .wf-quickitem-schedule { cursor:pointer; font-size:12px; opacity:0.6; }
+  #wf-root .wf-quickitem-schedule:hover { opacity:1; }
+
+  #wf-root .wf-quicklist-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #eee; }
+  #wf-root .wf-quicklist-tab { font-size:12px; padding:6px 12px; border-radius:14px; border:1px solid var(--wf-border); background:#fff; color:var(--wf-muted); cursor:pointer; }
+  #wf-root .wf-quicklist-tab:hover { background:#f0f0f0; }
+  #wf-root .wf-quicklist-tab-active { background:#333; color:#fff; border-color:#333; }
+  #wf-root .wf-quicklist-tab-new { border-style:dashed; color:#4a6a45; }
+
+  #wf-root .wf-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.25); opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:40; }
+  #wf-root .wf-overlay.wf-open { opacity:1; pointer-events:auto; }
+  #wf-root .wf-previewpanel { position:fixed; top:0; right:0; height:100%; width:340px; max-width:90vw; background:#fff; border-left:1px solid var(--wf-border); box-shadow:-4px 0 16px rgba(0,0,0,0.12); transform:translateX(100%); transition:transform 0.18s ease; z-index:41; padding:20px; box-sizing:border-box; overflow-y:auto; }
+  #wf-root .wf-previewpanel.wf-open { transform:translateX(0); }
+  #wf-root .wf-preview-close { position:absolute; top:14px; right:14px; border:none; background:none; font-size:16px; cursor:pointer; color:var(--wf-muted); }
+  #wf-root .wf-preview-eyebrow { font-size:10px; letter-spacing:0.06em; color:var(--wf-muted); margin-bottom:6px; }
+  #wf-root .wf-preview-title { font-size:19px; font-weight:bold; margin-bottom:10px; }
+  #wf-root .wf-preview-row { font-size:13px; margin-bottom:8px; color:#333; }
+  #wf-root .wf-preview-row b { color:#000; }
+
+  @media (max-width:800px) {
+    #wf-root .wf-homelayout { grid-template-columns:1fr; }
+    #wf-root .wf-grid7 { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+
+<script>
+(function() {
+  var root = document.getElementById('wf-root');
+  var overlay = root.querySelector('#wf-overlay');
+  var panel = root.querySelector('#wf-preview');
+  var panelBody = root.querySelector('#wf-preview-body');
+
+  function showScreen(name) {
+    closePreview();
+    var screens = root.querySelectorAll('.wf-screen');
+    screens.forEach(function(s) { s.style.display = 'none'; });
+    var target = root.querySelector('#screen-' + name);
+    if (target) target.style.display = 'block';
+  }
+
+  var previews = {
+    'event-allday-registration': '<div class="wf-preview-eyebrow">ALL DAY \u00b7 WED AUG 5</div><div class="wf-preview-title">Renew car registration</div><div class="wf-preview-row">No specific time \u2014 lives in the all-day strip, not the hourly grid</div><div class="wf-preview-row">Intention: Health \u2014 no Project attached</div>',
+
+    'review': '<div class="wf-preview-eyebrow">WEEKLY REVIEW</div><div class="wf-preview-title">Aug 3 \u2013 Aug 9</div><div class="wf-preview-row">Creativity: 5 practice sessions logged</div><div class="wf-preview-row">Training project: 1 run logged toward mileage goal</div><div class="wf-preview-row">Family: 1 dinner logged</div><div class="wf-preview-row">Season review unlocks when Fall ends, in 42 days</div>',
+
+    'event-journal': '<div class="wf-preview-eyebrow">JOURNAL \u00b7 MON AUG 3, 8:00 PM \u00b7 HEALTH</div><div class="wf-preview-title">Evening reflection</div><div class="wf-preview-row"><b>Prompt:</b> What did you protect your energy from today?</div><div class="wf-preview-row">Intention: Health \u2014 no Project attached</div><button class="wf-btn-primary" data-goto="journal-entry">Open full entry \u2192</button>',
+
+    'event-journal2': '<div class="wf-preview-eyebrow">JOURNAL \u00b7 SAT AUG 8, 8:00 PM \u00b7 HEALTH</div><div class="wf-preview-title">Evening reflection</div><div class="wf-preview-row"><b>Prompt:</b> not written yet</div><div class="wf-preview-row">Intention: Health \u2014 no Project attached</div><button class="wf-btn-primary" data-goto="journal-entry">Open full entry \u2192</button>',
+
+    'event-guitar-practice': '<div class="wf-preview-eyebrow">TUE AUG 4, 6:00 PM</div><div class="wf-preview-title">Guitar practice</div><div class="wf-preview-row">Tagged directly to Creativity \u2014 no Project attached, just counts toward Creativity\u2019s frequency</div><button class="wf-btn" data-goto="intention-detail">View intention \u2192</button>',
+
+    'event-project-run': '<div class="wf-preview-eyebrow">THU AUG 6, 7:00 AM \u00b7 PROJECT</div><div class="wf-preview-title">5k run</div><div class="wf-preview-row">Project: Train for a 5k \u2192 Build up mileage</div><div class="wf-preview-row">Scheduled via Workout Library \u2014 routine "Easy 5k pace"</div><button class="wf-btn" data-goto="project-detail">View project \u2192</button>',
+
+    'event-generic': '<div class="wf-preview-eyebrow">SAT AUG 8, 2:00 PM \u00b7 HEALTH</div><div class="wf-preview-title">Dentist</div><div class="wf-preview-row">Intention: Health \u2014 no Project attached</div>',
+
+    'event-family-dinner': '<div class="wf-preview-eyebrow">SUN AUG 9</div><div class="wf-preview-title">Family dinner</div><div class="wf-preview-row">Tagged directly to Family \u2014 no Project attached, just counts toward Family\u2019s frequency</div><button class="wf-btn" data-goto="intention-detail">View intention \u2192</button>'
+  };
+
+  /* ---------- Dopamine menu: real pool, randomize, save new ideas ---------- */
+  var dopamineActs = [
+    'Step outside for 5 minutes',
+    'Text a friend something nice',
+    'Stretch for 2 minutes, no phone',
+    'Make a cup of tea, sit with it',
+    'Doodle for 5 minutes'
+  ];
+  var currentDopamineAct = dopamineActs[0];
+
+  function renderDopamine() {
+    panelBody.innerHTML =
+      '<div class="wf-preview-eyebrow">DOPAMINE MENU</div>' +
+      '<div class="wf-preview-title" id="wf-dopamine-text">' + currentDopamineAct + '</div>' +
+      '<div class="wf-preview-row">Instead of doom scrolling, try this.</div>' +
+      '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
+      '<button class="wf-btn-primary" id="wf-dopamine-random">\ud83c\udfb2 Give me another</button>' +
+      '<button class="wf-btn-sm" id="wf-dopamine-add">\uff0b Save an idea I found</button>' +
+      '</div>';
+  }
+
+  /* ---------- Affirmations: real pool, randomize, set today's, save to pool ---------- */
+  var affirmationsPool = [
+    'Progress doesn\u2019t have to be loud to count.',
+    'You\u2019re allowed to rest without earning it.',
+    'Small steps still move you forward.'
+  ];
+  var todaysAffirmation = affirmationsPool[0];
+
+  function renderAffirmation() {
+    panelBody.innerHTML =
+      '<div class="wf-preview-eyebrow">\u2728 TODAY\u2019S AFFIRMATION</div>' +
+      '<div class="wf-preview-title" id="wf-affirm-text" style="font-style:italic; font-size:17px;">"' + todaysAffirmation + '"</div>' +
+      '<div class="wf-preview-row" style="margin-top:10px;">Pulled at random from your saved list \u2014 or write your own for today instead.</div>' +
+      '<input type="text" id="wf-affirm-input" class="wf-real-input" style="width:100%; margin-top:4px; margin-bottom:10px; box-sizing:border-box;" placeholder="Write or paste an affirmation..." />' +
+      '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
+      '<button class="wf-btn-primary" id="wf-affirm-random">\ud83c\udfb2 New random one</button>' +
+      '<button class="wf-btn" id="wf-affirm-savetoday">Save mine for today</button>' +
+      '<button class="wf-btn-sm" id="wf-affirm-addlist">\uff0b Add to my list</button>' +
+      '</div>';
+  }
+
+  function openPreview(key) {
+    if (key === 'dopamine') {
+      renderDopamine();
+      overlay.classList.add('wf-open');
+      panel.classList.add('wf-open');
+      return;
+    }
+    if (key === 'affirmation') {
+      renderAffirmation();
+      overlay.classList.add('wf-open');
+      panel.classList.add('wf-open');
+      return;
+    }
+    var html = previews[key];
+    if (!html) return;
+    panelBody.innerHTML = html;
+    overlay.classList.add('wf-open');
+    panel.classList.add('wf-open');
+  }
+  function closePreview() {
+    overlay.classList.remove('wf-open');
+    panel.classList.remove('wf-open');
+  }
+
+  panelBody.addEventListener('click', function(e) {
+    if (e.target.id === 'wf-dopamine-random') {
+      var pick = dopamineActs[Math.floor(Math.random() * dopamineActs.length)];
+      currentDopamineAct = pick;
+      var textEl = panelBody.querySelector('#wf-dopamine-text');
+      if (textEl) textEl.textContent = currentDopamineAct;
+      return;
+    }
+    if (e.target.id === 'wf-dopamine-add') {
+      var newIdea = window.prompt('What\u2019s the idea you found?');
+      if (!newIdea || !newIdea.trim()) return;
+      newIdea = newIdea.trim();
+      dopamineActs.push(newIdea);
+      currentDopamineAct = newIdea;
+      var textEl2 = panelBody.querySelector('#wf-dopamine-text');
+      if (textEl2) textEl2.textContent = currentDopamineAct;
+      return;
+    }
+    if (e.target.id === 'wf-affirm-random') {
+      todaysAffirmation = affirmationsPool[Math.floor(Math.random() * affirmationsPool.length)];
+      var atext = panelBody.querySelector('#wf-affirm-text');
+      if (atext) atext.textContent = '"' + todaysAffirmation + '"';
+      return;
+    }
+    if (e.target.id === 'wf-affirm-savetoday') {
+      var inputEl = panelBody.querySelector('#wf-affirm-input');
+      if (!inputEl || !inputEl.value.trim()) return;
+      todaysAffirmation = inputEl.value.trim();
+      var atext2 = panelBody.querySelector('#wf-affirm-text');
+      if (atext2) atext2.textContent = '"' + todaysAffirmation + '"';
+      inputEl.value = '';
+      return;
+    }
+    if (e.target.id === 'wf-affirm-addlist') {
+      var inputEl2 = panelBody.querySelector('#wf-affirm-input');
+      var val = inputEl2 && inputEl2.value.trim();
+      if (!val) { val = window.prompt('What\u2019s the affirmation you found?'); }
+      if (!val || !val.trim()) return;
+      val = val.trim();
+      affirmationsPool.push(val);
+      todaysAffirmation = val;
+      var atext3 = panelBody.querySelector('#wf-affirm-text');
+      if (atext3) atext3.textContent = '"' + todaysAffirmation + '"';
+      if (inputEl2) inputEl2.value = '';
+      return;
+    }
+  });
+
+  root.addEventListener('click', function(e) {
+    var gotoEl = e.target.closest('[data-goto]');
+    var previewEl = e.target.closest('[data-preview]');
+    var removeEl = e.target.closest('.wf-chip-remove');
+
+    if (removeEl) {
+      removeEl.closest('.wf-routine-chip').remove();
+      renumberChips();
+      return;
+    }
+    if (gotoEl) {
+      var targetScreen = gotoEl.getAttribute('data-goto');
+      if (targetScreen === 'newevent' && !gotoEl.classList.contains('wf-quickitem-schedule')) {
+        var staleBanner = root.querySelector('#wf-newevent-banner');
+        if (staleBanner) { staleBanner.style.display = 'none'; staleBanner.innerHTML = ''; }
+        var titleReset = root.querySelector('#wf-newevent-title');
+        if (titleReset) titleReset.textContent = 'Evening run';
+      }
+      showScreen(targetScreen);
+      return;
+    }
+    if (previewEl) {
+      openPreview(previewEl.getAttribute('data-preview'));
+      return;
+    }
+    if (e.target === overlay || e.target.id === 'wf-preview-close') {
+      closePreview();
+    }
+  });
+
+  /* ---------- Add a brand-new intention as a checkbox option ---------- */
+  var newIntentionInput = root.querySelector('#wf-newitem-newintention');
+  var addIntentionBtn = root.querySelector('#wf-newitem-addintention');
+  var intentionGroupEl = root.querySelector('#wf-newitem-intentions');
+
+  function addNewIntentionOption(name) {
+    if (!name || !name.trim() || !intentionGroupEl) return;
+    name = name.trim();
+    var label = document.createElement('label');
+    label.className = 'wf-intentcheck';
+    label.innerHTML = '<input type="checkbox" value="' + name + '" checked /> ' + name;
+    intentionGroupEl.appendChild(label);
+  }
+  if (addIntentionBtn) {
+    addIntentionBtn.addEventListener('click', function() {
+      addNewIntentionOption(newIntentionInput.value);
+      newIntentionInput.value = '';
+    });
+  }
+  if (newIntentionInput) {
+    newIntentionInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        addNewIntentionOption(newIntentionInput.value);
+        newIntentionInput.value = '';
+      }
+    });
+  }
+
+  var dropzone = root.querySelector('#wf-routine-dropzone');
+  var pool = root.querySelector('#wf-exercise-pool');
+  var miniWeek = root.querySelector('#wf-mini-week');
+  var saveRoutineBtn = root.querySelector('#wf-save-routine');
+  var clearRoutineBtn = root.querySelector('#wf-clear-routine');
+  var draggedEl = null;
+  var draggedIsChip = false;
+
+  function renumberChips() {
+    if (!dropzone) return;
+    var chips = dropzone.querySelectorAll('.wf-routine-chip');
+    chips.forEach(function(chip, i) {
+      var numEl = chip.querySelector('.wf-chip-num');
+      if (numEl) numEl.textContent = i + 1;
+    });
+  }
+
+  function makeChip(name) {
+    var chip = document.createElement('div');
+    chip.className = 'wf-routine-chip';
+    chip.setAttribute('draggable', 'true');
+    chip.innerHTML = '<span class="wf-chip-num">1</span><span>' + name + '</span><span class="wf-chip-remove">\u2715</span>';
+    return chip;
+  }
+
+  if (pool) {
+    pool.addEventListener('dragstart', function(e) {
+      var card = e.target.closest('.wf-exercisecard');
+      if (!card) return;
+      draggedEl = card;
+      draggedIsChip = false;
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-name'));
+      card.classList.add('wf-dragging');
+    });
+    pool.addEventListener('dragend', function(e) {
+      var card = e.target.closest('.wf-exercisecard');
+      if (card) card.classList.remove('wf-dragging');
+    });
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropzone.classList.add('wf-dragover');
+    });
+    dropzone.addEventListener('dragleave', function() {
+      dropzone.classList.remove('wf-dragover');
+    });
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropzone.classList.remove('wf-dragover');
+      if (draggedIsChip && draggedEl) {
+        dropzone.appendChild(draggedEl);
+      } else {
+        var name = e.dataTransfer.getData('text/plain');
+        if (!name) return;
+        if (dropzone.textContent.indexOf('Drop exercises here') !== -1) {
+          dropzone.textContent = '';
+        }
+        dropzone.appendChild(makeChip(name));
+      }
+      renumberChips();
+    });
+    dropzone.addEventListener('dragstart', function(e) {
+      var chip = e.target.closest('.wf-routine-chip');
+      if (!chip) return;
+      draggedEl = chip;
+      draggedIsChip = true;
+      e.dataTransfer.setData('text/plain', 'reorder');
+    });
+  }
+
+  if (saveRoutineBtn) {
+    saveRoutineBtn.addEventListener('click', function() {
+      var chips = dropzone.querySelectorAll('.wf-routine-chip');
+      if (chips.length === 0) return;
+      var names = Array.prototype.map.call(chips, function(c) { return c.querySelector('span:nth-child(2)').textContent; });
+      var grid = root.querySelector('.wf-routinegrid');
+      var card = document.createElement('div');
+      card.className = 'wf-routinecard';
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-name', names.join(' + '));
+      card.innerHTML = '<div class="wf-title" style="font-size:13px;">Custom routine</div><div class="wf-sub">' + names.length + ' exercises \u00b7 drag me onto a day</div>';
+      grid.appendChild(card);
+      dropzone.innerHTML = '';
+      dropzone.textContent = 'Drop exercises here to build a routine';
+    });
+  }
+  if (clearRoutineBtn) {
+    clearRoutineBtn.addEventListener('click', function() {
+      dropzone.innerHTML = '';
+      dropzone.textContent = 'Drop exercises here to build a routine';
+    });
+  }
+
+  root.addEventListener('dragstart', function(e) {
+    var routineCard = e.target.closest('.wf-routinecard');
+    if (!routineCard) return;
+    e.dataTransfer.setData('text/plain', routineCard.getAttribute('data-name'));
+    routineCard.classList.add('wf-dragging');
+  });
+  root.addEventListener('dragend', function(e) {
+    var routineCard = e.target.closest('.wf-routinecard');
+    if (routineCard) routineCard.classList.remove('wf-dragging');
+  });
+
+  if (miniWeek) {
+    var dayCols = miniWeek.querySelectorAll('.wf-dropday');
+    dayCols.forEach(function(col) {
+      col.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        col.classList.add('wf-dragover');
+      });
+      col.addEventListener('dragleave', function() {
+        col.classList.remove('wf-dragover');
+      });
+      col.addEventListener('drop', function(e) {
+        e.preventDefault();
+        col.classList.remove('wf-dragover');
+        var name = e.dataTransfer.getData('text/plain');
+        if (!name) return;
+        var slot = col.querySelector('.wf-dropslot');
+        slot.textContent = name;
+        slot.classList.add('wf-filled');
+      });
+    });
+  }
+
+  /* ---------- Meal planning: drag saved meals onto the week ---------- */
+  var mealPool = root.querySelector('#wf-meal-pool');
+  var mealMiniWeek = root.querySelector('#wf-meal-mini-week');
+  var mealNameInput = root.querySelector('#wf-meal-name-input');
+  var mealNoteInput = root.querySelector('#wf-meal-note-input');
+  var mealAddBtn = root.querySelector('#wf-meal-add-btn');
+
+  if (mealPool) {
+    mealPool.addEventListener('dragstart', function(e) {
+      var card = e.target.closest('.wf-mealcard');
+      if (!card) return;
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-name'));
+      card.classList.add('wf-dragging');
+    });
+    mealPool.addEventListener('dragend', function(e) {
+      var card = e.target.closest('.wf-mealcard');
+      if (card) card.classList.remove('wf-dragging');
+    });
+  }
+
+  if (mealMiniWeek) {
+    var mealDayCols = mealMiniWeek.querySelectorAll('.wf-dropday');
+    mealDayCols.forEach(function(col) {
+      col.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        col.classList.add('wf-dragover');
+      });
+      col.addEventListener('dragleave', function() {
+        col.classList.remove('wf-dragover');
+      });
+      col.addEventListener('drop', function(e) {
+        e.preventDefault();
+        col.classList.remove('wf-dragover');
+        var name = e.dataTransfer.getData('text/plain');
+        if (!name) return;
+        var slot = col.querySelector('.wf-dropslot');
+        slot.textContent = name;
+        slot.classList.add('wf-filled');
+      });
+    });
+  }
+
+  function addSavedMeal() {
+    if (!mealNameInput || !mealNameInput.value.trim()) return;
+    var name = mealNameInput.value.trim();
+    var note = mealNoteInput && mealNoteInput.value.trim() ? mealNoteInput.value.trim() : 'Added just now';
+    var card = document.createElement('div');
+    card.className = 'wf-mealcard';
+    card.setAttribute('draggable', 'true');
+    card.setAttribute('data-name', name);
+    card.innerHTML = '<div class="wf-meal-name"></div><div class="wf-meal-note"></div>';
+    card.querySelector('.wf-meal-name').textContent = name;
+    card.querySelector('.wf-meal-note').textContent = note;
+    mealPool.appendChild(card);
+    mealNameInput.value = '';
+    if (mealNoteInput) mealNoteInput.value = '';
+  }
+  if (mealAddBtn) mealAddBtn.addEventListener('click', addSavedMeal);
+  if (mealNameInput) {
+    mealNameInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addSavedMeal();
+    });
+  }
+
+  /* ---------- New event: all-day toggle ---------- */
+  var newEventAlldayCheck = root.querySelector('#wf-newevent-allday');
+  var newEventDatetimeEl = root.querySelector('#wf-newevent-datetime');
+  if (newEventAlldayCheck) {
+    newEventAlldayCheck.addEventListener('change', function() {
+      if (!newEventDatetimeEl) return;
+      if (newEventAlldayCheck.checked) {
+        newEventDatetimeEl.textContent = 'Aug 8 (no specific time)';
+        newEventDatetimeEl.style.opacity = '0.6';
+      } else {
+        newEventDatetimeEl.textContent = 'Aug 8, 6:00\u20136:45 PM';
+        newEventDatetimeEl.style.opacity = '1';
+      }
+    });
+  }
+
+  /* ---------- Sidebar: customize / remove / restore panels ---------- */
+  var customizeToggleBtn = root.querySelector('#wf-customize-toggle');
+  var hiddenPanelsArea = root.querySelector('#wf-hidden-panels-area');
+  var hiddenPanelsList = root.querySelector('#wf-hidden-panels-list');
+  var sidebarEl = root.querySelector('.wf-sidebar');
+  var customizeMode = false;
+
+  function renderHiddenPanelsList() {
+    if (!hiddenPanelsList) return;
+    var hidden = root.querySelectorAll('.wf-panelwrap.wf-panel-hidden');
+    hiddenPanelsList.innerHTML = '';
+    if (hidden.length === 0) {
+      if (hiddenPanelsArea) hiddenPanelsArea.style.display = 'none';
+      return;
+    }
+    if (hiddenPanelsArea) hiddenPanelsArea.style.display = 'block';
+    hidden.forEach(function(panel) {
+      var item = document.createElement('div');
+      item.className = 'wf-restore-item';
+      item.textContent = '+ ' + panel.getAttribute('data-panel-label');
+      item.addEventListener('click', function() {
+        panel.classList.remove('wf-panel-hidden');
+        renderHiddenPanelsList();
+      });
+      hiddenPanelsList.appendChild(item);
+    });
+  }
+
+  if (customizeToggleBtn) {
+    customizeToggleBtn.addEventListener('click', function() {
+      customizeMode = !customizeMode;
+      customizeToggleBtn.textContent = customizeMode ? '✓ Done customizing' : '⚙ Customize panels';
+      root.querySelectorAll('.wf-panel-remove').forEach(function(btn) {
+        btn.style.display = customizeMode ? 'flex' : 'none';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+      });
+      if (sidebarEl) sidebarEl.classList.toggle('wf-customize-active', customizeMode);
+      if (customizeMode && hiddenPanelsArea) {
+        renderHiddenPanelsList();
+        if (root.querySelectorAll('.wf-panelwrap.wf-panel-hidden').length > 0) {
+          hiddenPanelsArea.style.display = 'block';
+        }
+      } else if (hiddenPanelsArea) {
+        // keep hidden-panels area visible even outside customize mode if anything is hidden, so it's not lost
+        renderHiddenPanelsList();
+      }
+    });
+  }
+
+  root.querySelectorAll('.wf-panel-remove').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var wrap = btn.closest('.wf-panelwrap');
+      if (!wrap) return;
+      wrap.classList.add('wf-panel-hidden');
+      renderHiddenPanelsList();
+    });
+  });
+
+  /* ---------- New event: intention → type → filtered item ---------- */
+  var neIntentionsEl = root.querySelector('#wf-newevent-intentions');
+  var neTypesEl = root.querySelector('#wf-newevent-types');
+  var neFilteredEl = root.querySelector('#wf-newevent-filtered');
+  var neAttachToBlock = root.querySelector('#wf-newevent-attachto-block');
+
+  var neData = {
+    'Health': { Project: ['Train for a 5k → Build up mileage'] },
+    'Creativity': { Project: ['Learn guitar → Drill G→C transition'] },
+    'Family': { Project: [] },
+    'Career advancement': { Project: ['Job search process → Update LinkedIn'] },
+    'Volunteering': { Project: [] }
+  };
+  var neActiveIntention = 'None';
+  var neActiveType = 'None';
+
+  var neMechanicNote = {
+    'Project': 'Logs this event as activity toward that task. Doesn\u2019t auto-check the task \u2014 you still mark it done yourself on the project.'
+  };
+
+  function renderNewEventFiltered() {
+    if (!neFilteredEl) return;
+    if (neActiveType === 'None') {
+      neFilteredEl.innerHTML = '<div class="wf-hint" style="margin-top:6px;">No Project attached \u2014 just categorized under ' + neActiveIntention + '. This is also how something recurring gets tracked: just keep tagging events here, no Project needed \u2014 the intention itself tracks the frequency.</div>';
+      return;
+    }
+    var items = (neData[neActiveIntention] && neData[neActiveIntention][neActiveType]) || [];
+    if (items.length === 0) {
+      neFilteredEl.innerHTML = '<div class="wf-hint" style="margin-top:6px;">' + neActiveIntention + ' doesn\u2019t have any ' + neActiveType + 's yet.</div>' +
+        '<button class="wf-btn-sm" data-goto="newitem" style="margin-top:6px;">+ Create a ' + neActiveType + ' under ' + neActiveIntention + '</button>';
+    } else {
+      neFilteredEl.innerHTML = '<div class="wf-input wf-select">' + items[0] + ' \u25be</div>' +
+        '<div class="wf-hint">Only ' + neActiveIntention + '\u2019s ' + neActiveType + 's show up here. ' + neMechanicNote[neActiveType] + '</div>';
+    }
+  }
+
+  if (neIntentionsEl) {
+    neIntentionsEl.addEventListener('click', function(e) {
+      var choice = e.target.closest('.wf-choice');
+      if (!choice) return;
+      neIntentionsEl.querySelectorAll('.wf-choice').forEach(function(c) { c.classList.remove('wf-choice-active'); });
+      choice.classList.add('wf-choice-active');
+      neActiveIntention = choice.getAttribute('data-intention');
+      if (neActiveIntention === 'None') {
+        if (neAttachToBlock) neAttachToBlock.style.display = 'none';
+      } else {
+        if (neAttachToBlock) neAttachToBlock.style.display = 'block';
+        neActiveType = 'None';
+        if (neTypesEl) {
+          neTypesEl.querySelectorAll('.wf-choice').forEach(function(c) { c.classList.toggle('wf-choice-active', c.getAttribute('data-type') === 'None'); });
+        }
+        renderNewEventFiltered();
+      }
+    });
+  }
+  if (neTypesEl) {
+    neTypesEl.addEventListener('click', function(e) {
+      var choice = e.target.closest('.wf-choice');
+      if (!choice) return;
+      neTypesEl.querySelectorAll('.wf-choice').forEach(function(c) { c.classList.remove('wf-choice-active'); });
+      choice.classList.add('wf-choice-active');
+      neActiveType = choice.getAttribute('data-type');
+      renderNewEventFiltered();
+    });
+  }
+
+  /* ---------- New event: schedule a journal entry ahead of time ---------- */
+  var neJournalToggle = root.querySelector('#wf-newevent-journal-toggle');
+  var neJournalPicker = root.querySelector('#wf-newevent-journal-picker');
+  if (neJournalToggle) {
+    neJournalToggle.addEventListener('click', function(e) {
+      var choice = e.target.closest('.wf-choice');
+      if (!choice) return;
+      neJournalToggle.querySelectorAll('.wf-choice').forEach(function(c) { c.classList.remove('wf-choice-active'); });
+      choice.classList.add('wf-choice-active');
+      var isYes = choice.getAttribute('data-journalsched') === 'yes';
+      if (neJournalPicker) neJournalPicker.style.display = isYes ? 'block' : 'none';
+    });
+  }
+
+  /* ---------- Project detail: reversible task checkboxes, live progress recalc ---------- */
+  var projectTasklistEl = root.querySelector('#wf-project-tasklist');
+  var projectProgressFillEl = root.querySelector('#wf-project-progressfill');
+  var projectProgressTextEl = root.querySelector('#wf-project-progresstext');
+
+  function recalcProjectProgress() {
+    if (!projectTasklistEl) return;
+    var checks = projectTasklistEl.querySelectorAll('.wf-task-check');
+    var total = checks.length;
+    var done = 0;
+    checks.forEach(function(c) { if (c.checked) done++; });
+    var pct = total ? Math.round((done / total) * 100) : 0;
+    if (projectProgressFillEl) projectProgressFillEl.style.width = pct + '%';
+    if (projectProgressTextEl) projectProgressTextEl.textContent = done + ' of ' + total + ' tasks done · flat list, no phases';
+  }
+
+  if (projectTasklistEl) {
+    projectTasklistEl.addEventListener('change', function(e) {
+      if (!e.target.classList.contains('wf-task-check')) return;
+      var textEl = e.target.closest('.wf-task-row').querySelector('.wf-task-text');
+      textEl.classList.toggle('wf-task-done', e.target.checked);
+      recalcProjectProgress();
+    });
+  }
+
+  var projectMarkCompleteBtn = root.querySelector('#wf-project-markcomplete');
+  if (projectMarkCompleteBtn) {
+    projectMarkCompleteBtn.addEventListener('click', function() {
+      var detailScreen = root.querySelector('#screen-project-detail');
+      var crumb = detailScreen.querySelector('.wf-crumb');
+      if (crumb) crumb.textContent = 'Project · Creativity · No due date · Completed';
+      projectMarkCompleteBtn.textContent = '\u2713 Completed';
+      projectMarkCompleteBtn.disabled = true;
+      projectMarkCompleteBtn.style.opacity = '0.6';
+      projectMarkCompleteBtn.style.cursor = 'default';
+      var statusHint = projectMarkCompleteBtn.nextElementSibling;
+      if (statusHint) statusHint.textContent = 'Closed. This record stays as-is — start a new project if you want to do this again.';
+    });
+  }
+
+  /* ---------- Season reflection: save to this season's record ---------- */
+  var seasonReflectionInput = root.querySelector('#wf-season-reflection-input');
+  var seasonReflectionSaveBtn = root.querySelector('#wf-season-reflection-save');
+  var seasonReflectionStatus = root.querySelector('#wf-season-reflection-status');
+  var savedSeasonReflection = null; // stands in for Season.reflection_text + Season.reflected_at in the real DB
+
+  if (seasonReflectionSaveBtn) {
+    seasonReflectionSaveBtn.addEventListener('click', function() {
+      if (!seasonReflectionInput || !seasonReflectionInput.value.trim()) return;
+      savedSeasonReflection = { text: seasonReflectionInput.value.trim(), savedAt: new Date() };
+      if (seasonReflectionStatus) {
+        seasonReflectionStatus.textContent = '\u2713 Saved just now';
+      }
+    });
+  }
+  if (seasonReflectionInput) {
+    seasonReflectionInput.addEventListener('input', function() {
+      if (seasonReflectionStatus && seasonReflectionStatus.textContent) {
+        seasonReflectionStatus.textContent = 'Unsaved changes';
+      }
+    });
+  }
+
+  /* ---------- Calendar: hourly time grid, week nav, all-day strip, month view ---------- */
+  var timeGridEl = root.querySelector('#wf-timegrid');
+  var monthGridEl = root.querySelector('#wf-monthgrid');
+  var calLabelEl = root.querySelector('#wf-cal-label');
+  var calPrevBtn = root.querySelector('#wf-cal-prev');
+  var calNextBtn = root.querySelector('#wf-cal-next');
+  var calTodayBtn = root.querySelector('#wf-cal-today');
+  var viewWeekBtn = root.querySelector('#wf-view-week');
+  var viewMonthBtn = root.querySelector('#wf-view-month');
+
+  if (timeGridEl) {
+    var TG_START_HOUR = 6;   // 6 AM
+    var TG_END_HOUR = 22;    // 10 PM
+    var TG_PX_PER_HOUR = 32;
+    var TG_SNAP_PX = TG_PX_PER_HOUR / 4; // 15-minute snap
+    var TG_BASE_MONDAY = new Date(2026, 7, 3); // Mon Aug 3, 2026 — the one week with demo data
+    var tgHeight = (TG_END_HOUR - TG_START_HOUR) * TG_PX_PER_HOUR;
+    var currentView = 'week';
+    var currentWeekOffset = 0;
+    var currentMonthOffset = 0; // months relative to August 2026
+
+    // weekOffset: which week (relative to TG_BASE_MONDAY) this event lives in. Only offset 0 has real demo data.
+    var tgEvents = [
+      { day: 0, weekOffset: 0, start: 20.0, duration: 0.5, title: 'Journal', type: 'tag', sub: 'Health · no project', preview: 'event-journal' },
+      { day: 1, weekOffset: 0, start: 18.0, duration: 0.75, title: 'Guitar practice', type: 'tag', sub: 'Creativity · no project', preview: 'event-guitar-practice' },
+      { day: 3, weekOffset: 0, start: 7.0, duration: 0.75, title: '5k run', type: 'project', sub: 'Project · Train for a 5k', preview: 'event-project-run' },
+      { day: 5, weekOffset: 0, start: 20.0, duration: 0.5, title: 'Journal', type: 'tag', sub: 'Health · no project', preview: 'event-journal2' },
+      { day: 5, weekOffset: 0, start: 14.0, duration: 1.0, title: 'Dentist', type: 'tag', sub: 'Health · no project', preview: 'event-generic' },
+      { day: 6, weekOffset: 0, start: 18.0, duration: 1.5, title: 'Family dinner', type: 'tag', sub: 'Family · no project', preview: 'event-family-dinner' }
+    ];
+
+    var tgAllDayEvents = [
+      { day: 2, weekOffset: 0, title: 'Renew car registration', type: 'tag', sub: 'Health · no project', preview: 'event-allday-registration' }
+    ];
+
+    function tgFormatTime(decimalHour) {
+      var totalMin = Math.round(decimalHour * 60);
+      var h24 = Math.floor(totalMin / 60);
+      var m = totalMin % 60;
+      var period = h24 >= 12 ? 'PM' : 'AM';
+      var h12 = h24 % 12;
+      if (h12 === 0) h12 = 12;
+      var mStr = m === 0 ? '' : ':' + (m < 10 ? '0' + m : m);
+      return h12 + mStr + ' ' + period;
+    }
+
+    var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var DAY_ABBR = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+    function mondayForWeekOffset(offset) {
+      var d = new Date(TG_BASE_MONDAY);
+      d.setDate(d.getDate() + offset * 7);
+      return d;
+    }
+
+    function eventAbsoluteDate(ev) {
+      var d = mondayForWeekOffset(ev.weekOffset);
+      d.setDate(d.getDate() + ev.day);
+      return d;
+    }
+
+    function formatWeekLabel(offset) {
+      var monday = mondayForWeekOffset(offset);
+      var sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+      var sameMonth = monday.getMonth() === sunday.getMonth();
+      if (sameMonth) {
+        return MONTH_NAMES[monday.getMonth()] + ' ' + monday.getDate() + ' \u2013 ' + sunday.getDate();
+      }
+      return MONTH_NAMES[monday.getMonth()] + ' ' + monday.getDate() + ' \u2013 ' + MONTH_NAMES[sunday.getMonth()] + ' ' + sunday.getDate();
+    }
+
+    function tgDayLabelsForWeek(offset) {
+      var monday = mondayForWeekOffset(offset);
+      var labels = [];
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(monday);
+        d.setDate(d.getDate() + i);
+        labels.push(DAY_ABBR[i] + ' ' + d.getDate());
+      }
+      return labels;
+    }
+
+    function updateCalLabel() {
+      if (!calLabelEl) return;
+      if (currentView === 'week') {
+        calLabelEl.textContent = formatWeekLabel(currentWeekOffset);
+      } else {
+        var m = (7 + currentMonthOffset) % 12;
+        var yearShift = Math.floor((7 + currentMonthOffset) / 12);
+        calLabelEl.textContent = MONTH_NAMES[m] + ' ' + (2026 + yearShift);
+      }
+    }
+
+    function renderTimeGrid() {
+      var tgDayLabels = tgDayLabelsForWeek(currentWeekOffset);
+
+      // all-day strip
+      var allDayHtml = '<div class="wf-allday-row"><div class="wf-allday-label">All day</div>';
+      for (var d0 = 0; d0 < 7; d0++) {
+        allDayHtml += '<div class="wf-allday-col" data-day="' + d0 + '">';
+        tgAllDayEvents.forEach(function(ev, idx) {
+          if (ev.day !== d0 || ev.weekOffset !== currentWeekOffset) return;
+          allDayHtml += '<div class="wf-allday-chip wf-timeevent-' + ev.type + '" data-preview="' + ev.preview + '">' + ev.title + '</div>';
+        });
+        allDayHtml += '</div>';
+      }
+      allDayHtml += '</div>';
+
+      var html = '<div class="wf-timegrid-header"><div class="wf-timegrid-corner"></div>';
+      tgDayLabels.forEach(function(label) {
+        html += '<div class="wf-timegrid-daylabel">' + label + ' <button class="wf-daylabel-add" data-goto="newevent" title="Add event">+</button></div>';
+      });
+      html += '</div>';
+
+      html += allDayHtml;
+
+      html += '<div class="wf-timegrid-body">';
+      html += '<div class="wf-timegrid-hours" style="height:' + tgHeight + 'px;">';
+      for (var h = TG_START_HOUR; h <= TG_END_HOUR; h++) {
+        var top = (h - TG_START_HOUR) * TG_PX_PER_HOUR;
+        html += '<div class="wf-timegrid-hourlabel" style="top:' + top + 'px;">' + tgFormatTime(h) + '</div>';
+      }
+      html += '</div>';
+
+      for (var d = 0; d < 7; d++) {
+        html += '<div class="wf-timegrid-daycol" data-day="' + d + '" style="height:' + tgHeight + 'px;">';
+        tgEvents.forEach(function(ev, idx) {
+          if (ev.day !== d || ev.weekOffset !== currentWeekOffset) return;
+          var top = (ev.start - TG_START_HOUR) * TG_PX_PER_HOUR;
+          var h = Math.max(ev.duration * TG_PX_PER_HOUR, 18);
+          html += '<div class="wf-timeevent wf-timeevent-' + ev.type + '" draggable="true" data-idx="' + idx + '" data-preview="' + ev.preview + '" style="top:' + top + 'px; height:' + h + 'px;">' +
+            '<div class="wf-timeevent-title">' + ev.title + '</div>' +
+            '<div class="wf-timeevent-time">' + tgFormatTime(ev.start) + ' \u00b7 ' + ev.sub + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+
+      timeGridEl.innerHTML = html;
+      updateCalLabel();
+    }
+
+    function renderMonthGrid() {
+      var m = (7 + currentMonthOffset) % 12;
+      var yearShift = Math.floor((7 + currentMonthOffset) / 12);
+      var year = 2026 + yearShift;
+      var firstOfMonth = new Date(year, m, 1);
+      var daysInMonth = new Date(year, m + 1, 0).getDate();
+      // Monday-start weekday index (0=Mon...6=Sun)
+      var firstWeekday = (firstOfMonth.getDay() + 6) % 7;
+
+      var html = '<div class="wf-monthgrid-headerrow">';
+      DAY_ABBR.forEach(function(d) { html += '<div class="wf-monthgrid-headercell">' + d + '</div>'; });
+      html += '</div><div class="wf-monthgrid-body">';
+
+      // leading muted cells
+      var leadDays = firstWeekday;
+      var prevMonthDays = new Date(year, m, 0).getDate();
+      for (var i = 0; i < leadDays; i++) {
+        html += '<div class="wf-monthgrid-cell wf-monthgrid-muted"><div class="wf-monthgrid-daynum">' + (prevMonthDays - leadDays + i + 1) + '</div></div>';
+      }
+
+      for (var day = 1; day <= daysInMonth; day++) {
+        var cellDate = new Date(year, m, day);
+        var dots = [];
+        tgEvents.forEach(function(ev) {
+          var ed = eventAbsoluteDate(ev);
+          if (ed.getFullYear() === cellDate.getFullYear() && ed.getMonth() === cellDate.getMonth() && ed.getDate() === cellDate.getDate()) {
+            dots.push(ev.type);
+          }
+        });
+        tgAllDayEvents.forEach(function(ev) {
+          var ed = eventAbsoluteDate(ev);
+          if (ed.getFullYear() === cellDate.getFullYear() && ed.getMonth() === cellDate.getMonth() && ed.getDate() === cellDate.getDate()) {
+            dots.push(ev.type);
+          }
+        });
+        var dotsHtml = '<div class="wf-monthgrid-dots">';
+        dots.forEach(function(t) {
+          var color = t === 'project' ? '#8a5aa0' : '#999';
+          dotsHtml += '<div class="wf-monthgrid-dot" style="background:' + color + ';"></div>';
+        });
+        dotsHtml += '</div>';
+        html += '<div class="wf-monthgrid-cell" data-date="' + cellDate.getTime() + '"><div class="wf-monthgrid-daynum">' + day + '</div>' + dotsHtml + '</div>';
+      }
+
+      // trailing muted cells to fill last row
+      var totalCells = leadDays + daysInMonth;
+      var trailDays = (7 - (totalCells % 7)) % 7;
+      for (var t = 1; t <= trailDays; t++) {
+        html += '<div class="wf-monthgrid-cell wf-monthgrid-muted"><div class="wf-monthgrid-daynum">' + t + '</div></div>';
+      }
+
+      html += '</div>';
+      monthGridEl.innerHTML = html;
+      updateCalLabel();
+    }
+
+    function switchToWeekContainingDate(dateMs) {
+      var clicked = new Date(parseInt(dateMs, 10));
+      var diffDays = Math.round((clicked - TG_BASE_MONDAY) / 86400000);
+      var offset = Math.floor(diffDays / 7);
+      currentWeekOffset = offset;
+      currentView = 'week';
+      timeGridEl.style.display = 'block';
+      monthGridEl.style.display = 'none';
+      if (viewWeekBtn) viewWeekBtn.classList.add('wf-viewtoggle-active');
+      if (viewMonthBtn) viewMonthBtn.classList.remove('wf-viewtoggle-active');
+      renderTimeGrid();
+    }
+
+    renderTimeGrid();
+
+    var quickAddInput = root.querySelector('#wf-quickadd-input');
+    var quickAddBtn = root.querySelector('#wf-quickadd-btn');
+    function quickAddEvent() {
+      if (!quickAddInput || !quickAddInput.value.trim()) return;
+      var title = quickAddInput.value.trim();
+      tgAllDayEvents.push({ day: 0, weekOffset: currentWeekOffset, title: title, type: 'tag', sub: 'No intention · no time', preview: null });
+      quickAddInput.value = '';
+      if (currentView === 'week') renderTimeGrid();
+    }
+    if (quickAddBtn) quickAddBtn.addEventListener('click', quickAddEvent);
+    if (quickAddInput) {
+      quickAddInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') quickAddEvent();
+      });
+    }
+
+    var journalSaveBtn = root.querySelector('#wf-journal-save');
+    if (journalSaveBtn) {
+      journalSaveBtn.addEventListener('click', function() {
+        var entryTextEl = root.querySelector('#wf-journal-entry-text');
+        if (!entryTextEl || !entryTextEl.value.trim()) return; // nothing written, nothing to auto-add
+        var journalTabsEl2 = root.querySelector('#wf-journal-tabs');
+        var activeTab = journalTabsEl2 ? journalTabsEl2.querySelector('.wf-quicklist-tab-active') : null;
+        var journalName = activeTab ? activeTab.getAttribute('data-journal') : 'Journal';
+        tgEvents.push({
+          day: 0, weekOffset: currentWeekOffset, start: 21.0, duration: 0.5,
+          title: journalName, type: 'tag', sub: 'Journal \u00b7 written just now', preview: null
+        });
+        entryTextEl.value = '';
+        if (currentView === 'week') renderTimeGrid();
+      });
+    }
+
+    if (calPrevBtn) {
+      calPrevBtn.addEventListener('click', function() {
+        if (currentView === 'week') { currentWeekOffset--; renderTimeGrid(); }
+        else { currentMonthOffset--; renderMonthGrid(); }
+      });
+    }
+    if (calNextBtn) {
+      calNextBtn.addEventListener('click', function() {
+        if (currentView === 'week') { currentWeekOffset++; renderTimeGrid(); }
+        else { currentMonthOffset++; renderMonthGrid(); }
+      });
+    }
+    if (calTodayBtn) {
+      calTodayBtn.addEventListener('click', function() {
+        if (currentView === 'week') { currentWeekOffset = 0; renderTimeGrid(); }
+        else { currentMonthOffset = 0; renderMonthGrid(); }
+      });
+    }
+    if (viewWeekBtn) {
+      viewWeekBtn.addEventListener('click', function() {
+        currentView = 'week';
+        viewWeekBtn.classList.add('wf-viewtoggle-active');
+        if (viewMonthBtn) viewMonthBtn.classList.remove('wf-viewtoggle-active');
+        timeGridEl.style.display = 'block';
+        if (monthGridEl) monthGridEl.style.display = 'none';
+        renderTimeGrid();
+      });
+    }
+    if (viewMonthBtn) {
+      viewMonthBtn.addEventListener('click', function() {
+        currentView = 'month';
+        viewMonthBtn.classList.add('wf-viewtoggle-active');
+        if (viewWeekBtn) viewWeekBtn.classList.remove('wf-viewtoggle-active');
+        timeGridEl.style.display = 'none';
+        if (monthGridEl) monthGridEl.style.display = 'block';
+        renderMonthGrid();
+      });
+    }
+    if (monthGridEl) {
+      monthGridEl.addEventListener('click', function(e) {
+        var cell = e.target.closest('.wf-monthgrid-cell');
+        if (!cell || cell.classList.contains('wf-monthgrid-muted')) return;
+        var dateMs = cell.getAttribute('data-date');
+        if (dateMs) switchToWeekContainingDate(dateMs);
+      });
+    }
+
+    var tgDraggedIdx = null;
+    var tgGrabOffsetY = 0;
+
+    timeGridEl.addEventListener('dragstart', function(e) {
+      var block = e.target.closest('.wf-timeevent');
+      if (!block) return;
+      tgDraggedIdx = parseInt(block.getAttribute('data-idx'), 10);
+      var rect = block.getBoundingClientRect();
+      tgGrabOffsetY = e.clientY - rect.top;
+      e.dataTransfer.setData('text/plain', 'time-event');
+      block.classList.add('wf-dragging');
+    });
+    timeGridEl.addEventListener('dragend', function(e) {
+      var block = e.target.closest('.wf-timeevent');
+      if (block) block.classList.remove('wf-dragging');
+    });
+
+    timeGridEl.addEventListener('dragover', function(e) {
+      var col = e.target.closest('.wf-timegrid-daycol');
+      if (!col || tgDraggedIdx === null) return;
+      e.preventDefault();
+    });
+    timeGridEl.addEventListener('dragenter', function(e) {
+      var col = e.target.closest('.wf-timegrid-daycol');
+      if (col) col.classList.add('wf-dragover');
+    });
+    timeGridEl.addEventListener('dragleave', function(e) {
+      var col = e.target.closest('.wf-timegrid-daycol');
+      if (col) col.classList.remove('wf-dragover');
+    });
+    timeGridEl.addEventListener('drop', function(e) {
+      var col = e.target.closest('.wf-timegrid-daycol');
+      if (!col || tgDraggedIdx === null) return;
+      e.preventDefault();
+      root.querySelectorAll('.wf-timegrid-daycol').forEach(function(c) { c.classList.remove('wf-dragover'); });
+
+      var colRect = col.getBoundingClientRect();
+      var rawTop = e.clientY - colRect.top - tgGrabOffsetY;
+      var snappedTop = Math.round(rawTop / TG_SNAP_PX) * TG_SNAP_PX;
+      var ev = tgEvents[tgDraggedIdx];
+      var blockPx = Math.max(ev.duration * TG_PX_PER_HOUR, 18);
+      snappedTop = Math.max(0, Math.min(snappedTop, tgHeight - blockPx));
+
+      var newStart = TG_START_HOUR + (snappedTop / TG_PX_PER_HOUR);
+      newStart = Math.round(newStart * 4) / 4; // snap to nearest 15 min in hour terms too
+
+      ev.day = parseInt(col.getAttribute('data-day'), 10);
+      ev.start = newStart;
+
+      tgDraggedIdx = null;
+      renderTimeGrid();
+    });
+  }
+
+  /* ---------- Journal: multiple named journals, each with its own prompt pool ---------- */
+  var journalTabsEl = root.querySelector('#wf-journal-tabs');
+  var journalPromptEl = root.querySelector('#wf-journal-prompt');
+  var journalRandomBtn = root.querySelector('#wf-journal-random');
+  var journalNewBtn = root.querySelector('#wf-journal-newtab');
+  var journalAddPromptBtn = root.querySelector('#wf-journal-addprompt');
+  var journalChooseBtn = root.querySelector('#wf-journal-choose');
+  var journalPromptListEl = root.querySelector('#wf-journal-promptlist');
+
+  var journalPrompts = {
+    'Daily Reflection': [
+      'What did you protect your energy from today?',
+      'What are you proud of today?',
+      'What drained you today, and why?'
+    ],
+    'Food Diary': [
+      'What did you eat today, and how did it make you feel?',
+      'Did you eat mindfully today, or rushed?',
+      'What craving did you notice today?'
+    ],
+    'Gratitude': [
+      'What are three things you\u2019re grateful for today?',
+      'Who made your day better?',
+      'What small moment stood out today?'
+    ]
+  };
+  var journalActive = 'Daily Reflection';
+
+  function pickJournalPrompt(random) {
+    var pool = journalPrompts[journalActive] || ['Write freely.'];
+    var idx = random ? Math.floor(Math.random() * pool.length) : 0;
+    if (journalPromptEl) journalPromptEl.textContent = pool[idx];
+  }
+
+  function renderJournalPromptList() {
+    if (!journalPromptListEl) return;
+    var pool = journalPrompts[journalActive] || [];
+    journalPromptListEl.innerHTML = '';
+    pool.forEach(function(p) {
+      var row = document.createElement('div');
+      row.className = 'wf-promptlist-item';
+      row.textContent = p;
+      journalPromptListEl.appendChild(row);
+    });
+  }
+
+  function hideJournalPromptList() {
+    if (journalPromptListEl) journalPromptListEl.style.display = 'none';
+  }
+
+  if (journalTabsEl) {
+    journalTabsEl.addEventListener('click', function(e) {
+      var tab = e.target.closest('.wf-quicklist-tab');
+      if (!tab || tab.id === 'wf-journal-newtab') return;
+      journalTabsEl.querySelectorAll('.wf-quicklist-tab').forEach(function(t) { t.classList.remove('wf-quicklist-tab-active'); });
+      tab.classList.add('wf-quicklist-tab-active');
+      journalActive = tab.getAttribute('data-journal');
+      pickJournalPrompt(false);
+      hideJournalPromptList();
+    });
+  }
+
+  if (journalRandomBtn) {
+    journalRandomBtn.addEventListener('click', function() { pickJournalPrompt(true); hideJournalPromptList(); });
+  }
+  if (journalChooseBtn) {
+    journalChooseBtn.addEventListener('click', function() {
+      if (!journalPromptListEl) return;
+      var isOpen = journalPromptListEl.style.display !== 'none';
+      if (isOpen) {
+        hideJournalPromptList();
+      } else {
+        renderJournalPromptList();
+        journalPromptListEl.style.display = 'block';
+      }
+    });
+  }
+  if (journalPromptListEl) {
+    journalPromptListEl.addEventListener('click', function(e) {
+      var row = e.target.closest('.wf-promptlist-item');
+      if (!row) return;
+      if (journalPromptEl) journalPromptEl.textContent = row.textContent;
+      hideJournalPromptList();
+    });
+  }
+  if (journalAddPromptBtn) {
+    journalAddPromptBtn.addEventListener('click', function() {
+      var newPrompt = window.prompt('Paste or type the prompt you found:');
+      if (!newPrompt || !newPrompt.trim()) return;
+      newPrompt = newPrompt.trim();
+      if (!journalPrompts[journalActive]) journalPrompts[journalActive] = [];
+      journalPrompts[journalActive].push(newPrompt);
+      if (journalPromptEl) journalPromptEl.textContent = newPrompt;
+      hideJournalPromptList();
+    });
+  }
+  if (journalNewBtn) {
+    journalNewBtn.addEventListener('click', function() {
+      var name = window.prompt('Name this journal:');
+      if (!name || !name.trim()) return;
+      name = name.trim();
+      if (!journalPrompts[name]) journalPrompts[name] = ['Write freely.'];
+      var tab = document.createElement('button');
+      tab.className = 'wf-quicklist-tab';
+      tab.setAttribute('data-journal', name);
+      tab.textContent = name;
+      journalTabsEl.insertBefore(tab, journalNewBtn);
+      journalTabsEl.querySelectorAll('.wf-quicklist-tab').forEach(function(t) { t.classList.remove('wf-quicklist-tab-active'); });
+      tab.classList.add('wf-quicklist-tab-active');
+      journalActive = name;
+      pickJournalPrompt(false);
+    });
+  }
+
+  /* ---------- Quick list (multiple named lists) ---------- */
+  var quicklistInput = root.querySelector('#wf-quicklist-input');
+  var quicklistAddBtn = root.querySelector('#wf-quicklist-add');
+  var quicklistItemsEl = root.querySelector('#wf-quicklist-items');
+  var quicklistTabsEl = root.querySelector('#wf-quicklist-tabs');
+  var quicklistNewListBtn = root.querySelector('#wf-quicklist-newlist');
+
+  var quicklistData = {
+    'Errands': [
+      { text: 'Buy milk', done: false },
+      { text: 'Call dentist to reschedule', done: false },
+      { text: 'Return library book', done: true }
+    ],
+    'Groceries': [
+      { text: 'Eggs', done: false },
+      { text: 'Coffee', done: false }
+    ],
+    'Random ideas': [
+      { text: 'Look into a pottery class', done: false }
+    ]
+  };
+  var quicklistActive = 'Errands';
+
+  function renderQuicklist() {
+    if (!quicklistItemsEl) return;
+    quicklistItemsEl.innerHTML = '';
+    var items = quicklistData[quicklistActive] || [];
+    items.forEach(function(entry, idx) {
+      var item = document.createElement('div');
+      item.className = 'wf-quickitem';
+      item.setAttribute('data-idx', idx);
+      var checkedAttr = entry.done ? 'checked' : '';
+      item.innerHTML = '<input type="checkbox" class="wf-quickitem-check" ' + checkedAttr + ' />' +
+        '<span class="wf-quickitem-text' + (entry.done ? ' wf-quickitem-done' : '') + '"></span>' +
+        '<span class="wf-quickitem-schedule" title="Schedule this">\ud83d\udcc5</span>' +
+        '<span class="wf-quickitem-remove">\u2715</span>';
+      item.querySelector('.wf-quickitem-text').textContent = entry.text;
+      quicklistItemsEl.appendChild(item);
+    });
+  }
+
+  function addQuickItem(text) {
+    if (!text || !text.trim()) return;
+    quicklistData[quicklistActive].push({ text: text.trim(), done: false });
+    renderQuicklist();
+  }
+
+  function switchQuicklistTab(name) {
+    quicklistActive = name;
+    if (quicklistTabsEl) {
+      quicklistTabsEl.querySelectorAll('.wf-quicklist-tab').forEach(function(t) {
+        t.classList.toggle('wf-quicklist-tab-active', t.getAttribute('data-list') === name);
+      });
+    }
+    renderQuicklist();
+  }
+
+  if (quicklistAddBtn) {
+    quicklistAddBtn.addEventListener('click', function() {
+      addQuickItem(quicklistInput.value);
+      quicklistInput.value = '';
+      quicklistInput.focus();
+    });
+  }
+  if (quicklistInput) {
+    quicklistInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        addQuickItem(quicklistInput.value);
+        quicklistInput.value = '';
+      }
+    });
+  }
+  if (quicklistItemsEl) {
+    quicklistItemsEl.addEventListener('change', function(e) {
+      if (!e.target.classList.contains('wf-quickitem-check')) return;
+      var idx = parseInt(e.target.closest('.wf-quickitem').getAttribute('data-idx'), 10);
+      quicklistData[quicklistActive][idx].done = e.target.checked;
+      renderQuicklist();
+    });
+    quicklistItemsEl.addEventListener('click', function(e) {
+      if (e.target.classList.contains('wf-quickitem-schedule')) {
+        var idx2 = parseInt(e.target.closest('.wf-quickitem').getAttribute('data-idx'), 10);
+        var itemText = quicklistData[quicklistActive][idx2].text;
+        var titleEl = root.querySelector('#wf-newevent-title');
+        if (titleEl) titleEl.textContent = itemText;
+        var banner = root.querySelector('#wf-newevent-banner');
+        if (banner) {
+          banner.style.display = 'block';
+          banner.innerHTML = '\ud83d\udcc5 Scheduling from your <b>' + quicklistActive + '</b> list: <b>"' + itemText + '"</b>. It stays on the list too \u2014 check it off there once it\u2019s handled.';
+        }
+        showScreen('newevent');
+        return;
+      }
+      if (!e.target.classList.contains('wf-quickitem-remove')) return;
+      var idx = parseInt(e.target.closest('.wf-quickitem').getAttribute('data-idx'), 10);
+      quicklistData[quicklistActive].splice(idx, 1);
+      renderQuicklist();
+    });
+  }
+  if (quicklistTabsEl) {
+    quicklistTabsEl.addEventListener('click', function(e) {
+      var tab = e.target.closest('.wf-quicklist-tab');
+      if (!tab || tab.id === 'wf-quicklist-newlist') return;
+      switchQuicklistTab(tab.getAttribute('data-list'));
+    });
+  }
+  if (quicklistNewListBtn) {
+    quicklistNewListBtn.addEventListener('click', function() {
+      var name = window.prompt('Name this list:');
+      if (!name || !name.trim()) return;
+      name = name.trim();
+      if (!quicklistData[name]) quicklistData[name] = [];
+      var tab = document.createElement('button');
+      tab.className = 'wf-quicklist-tab';
+      tab.setAttribute('data-list', name);
+      tab.textContent = name;
+      quicklistTabsEl.insertBefore(tab, quicklistNewListBtn);
+      switchQuicklistTab(name);
+    });
+  }
+  renderQuicklist();
+})();
+</script>
