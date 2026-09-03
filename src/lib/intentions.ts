@@ -15,6 +15,38 @@ export async function listIntentions(client: DbClient, userId: string) {
   });
 }
 
+export async function updateIntention(
+  client: DbClient,
+  params: { userId: string; intentionId: string; name: string; color?: string },
+) {
+  const intention = await client.intention.findFirst({
+    where: { id: params.intentionId, userId: params.userId },
+  });
+  if (!intention) return null;
+
+  return client.intention.update({
+    where: { id: intention.id },
+    data: { name: params.name, color: params.color },
+  });
+}
+
+export async function deleteIntention(
+  client: DbClient,
+  params: { userId: string; intentionId: string },
+) {
+  const intention = await client.intention.findFirst({
+    where: { id: params.intentionId, userId: params.userId },
+  });
+  if (!intention) return null;
+
+  if (intention.isSystem) {
+    throw new Error("The automatic Journal intention can't be deleted");
+  }
+
+  await client.intention.delete({ where: { id: intention.id } });
+  return intention;
+}
+
 export async function getIntentionDetail(
   client: DbClient,
   params: {

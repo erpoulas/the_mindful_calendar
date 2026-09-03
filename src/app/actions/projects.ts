@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CreateProjectSchema } from "@/lib/project-schemas";
@@ -7,9 +8,11 @@ import {
   addProjectTask,
   completeProject,
   createProject,
+  deleteProject,
   pauseProject,
   resumeProject,
   toggleProjectTask,
+  updateProject,
 } from "@/lib/projects";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,18 +28,22 @@ export type ProjectFormState =
     }
   | undefined;
 
-export async function createProjectAction(
-  _state: ProjectFormState,
-  formData: FormData,
-): Promise<ProjectFormState> {
+function parseProjectFormData(formData: FormData) {
   const rawDueDate = formData.get("dueDate");
 
-  const validated = CreateProjectSchema.safeParse({
+  return CreateProjectSchema.safeParse({
     title: formData.get("title"),
     endGoal: formData.get("endGoal"),
     intentionIds: formData.getAll("intentionIds"),
     dueDate: rawDueDate && String(rawDueDate).trim() !== "" ? rawDueDate : undefined,
   });
+}
+
+export async function createProjectAction(
+  _state: ProjectFormState,
+  formData: FormData,
+): Promise<ProjectFormState> {
+  const validated = parseProjectFormData(formData);
 
   if (!validated.success) {
     return { errors: z.flattenError(validated.error).fieldErrors };
@@ -52,6 +59,39 @@ export async function createProjectAction(
   });
 
   revalidatePath("/projects");
+}
+
+export async function updateProjectAction(
+  projectId: string,
+  _state: ProjectFormState,
+  formData: FormData,
+): Promise<ProjectFormState> {
+  const validated = parseProjectFormData(formData);
+
+  if (!validated.success) {
+    return { errors: z.flattenError(validated.error).fieldErrors };
+  }
+
+  const userId = await getCurrentUserId();
+  await updateProject(db, {
+    userId,
+    projectId,
+    title: validated.data.title,
+    endGoal: validated.data.endGoal,
+    intentionIds: validated.data.intentionIds,
+    dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : undefined,
+  });
+
+  revalidatePath("/projects");
+  redirect(`/projects/${projectId}`);
+}
+
+export async function deleteProjectAction(projectId: string) {
+  const userId = await getCurrentUserId();
+  await deleteProject(db, { userId, projectId });
+
+  revalidatePath("/projects");
+  redirect("/projects");
 }
 
 export async function addProjectTaskAction(projectId: string, formData: FormData) {

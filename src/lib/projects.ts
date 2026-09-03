@@ -52,6 +52,54 @@ export async function getProjectDetail(
   });
 }
 
+export async function updateProject(
+  client: DbClient,
+  params: {
+    userId: string;
+    projectId: string;
+    title: string;
+    endGoal: string;
+    intentionIds: string[];
+    dueDate?: Date;
+  },
+) {
+  if (params.intentionIds.length === 0) {
+    throw new Error("A project must serve at least one intention");
+  }
+
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  return client.project.update({
+    where: { id: project.id },
+    data: {
+      title: params.title,
+      endGoal: params.endGoal,
+      dueDate: params.dueDate,
+      intentions: {
+        deleteMany: {},
+        create: params.intentionIds.map((intentionId) => ({ intentionId })),
+      },
+    },
+    include: { intentions: true, tasks: { orderBy: { order: "asc" } } },
+  });
+}
+
+export async function deleteProject(
+  client: DbClient,
+  params: { userId: string; projectId: string },
+) {
+  const project = await client.project.findFirst({
+    where: { id: params.projectId, userId: params.userId },
+  });
+  if (!project) return null;
+
+  await client.project.delete({ where: { id: project.id } });
+  return project;
+}
+
 export async function addProjectTask(
   client: DbClient,
   params: { userId: string; projectId: string; text: string },

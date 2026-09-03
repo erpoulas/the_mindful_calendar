@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { createProjectAction } from "@/app/actions/projects";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { listIntentions } from "@/lib/intentions";
 import { listProjects } from "@/lib/projects";
-import { NewProjectForm } from "./new-project-form";
+import { ProjectForm } from "./project-form";
 
 const STATUS_LABEL = {
   ACTIVE: "Active",
@@ -43,7 +44,13 @@ export default async function ProjectsPage() {
         ))}
       </ul>
 
-      <NewProjectForm intentions={intentions} />
+      <ProjectForm
+        action={createProjectAction}
+        heading="New project"
+        submitLabel="Add project"
+        pendingLabel="Adding..."
+        intentions={intentions}
+      />
     </div>
   );
 }

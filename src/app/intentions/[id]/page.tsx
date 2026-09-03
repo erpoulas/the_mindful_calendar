@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { deleteIntentionAction } from "@/app/actions/intentions";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getIntentionDetail } from "@/lib/intentions";
@@ -27,6 +30,22 @@ export default async function IntentionDetailPage({
       </Link>
 
       <h1 className="text-2xl font-semibold">{detail.intention.name}</h1>
+
+      {!detail.intention.isSystem && (
+        <div className="flex gap-2">
+          <Link
+            href={`/intentions/${detail.intention.id}/edit`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Edit
+          </Link>
+          <form action={deleteIntentionAction.bind(null, detail.intention.id)}>
+            <ConfirmSubmitButton confirmMessage="Delete this intention? This can't be undone.">
+              Delete
+            </ConfirmSubmitButton>
+          </form>
+        </div>
+      )}
 
       <div>
         <h2 className="text-sm font-medium text-zinc-600">Last 8 weeks</h2>

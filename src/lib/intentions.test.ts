@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { DbClient } from "./db";
 import { withRollback } from "../test/withRollback";
 import { createCalendarEvent } from "./calendar-events";
-import { createIntention, getIntentionDetail, listIntentions } from "./intentions";
+import {
+  createIntention,
+  deleteIntention,
+  getIntentionDetail,
+  listIntentions,
+  updateIntention,
+} from "./intentions";
 
 // Test-only helper: creates a calendar event tagged to an intention.
 function tagEvent(
@@ -171,6 +177,76 @@ describe("getIntentionDetail", () => {
       });
 
       expect(result?.weeklyStreak).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
+    });
+  });
+});
+
+describe("updateIntention", () => {
+  it("updates the name and color", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+
+      const updated = await updateIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        name: "Wellness",
+        color: "#4a6a99",
+      });
+
+      expect(updated?.name).toBe("Wellness");
+      expect(updated?.color).toBe("#4a6a99");
+    });
+  });
+
+  it("returns null when the intention doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+
+      const result = await updateIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        name: "Hijacked",
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("deleteIntention", () => {
+  it("deletes the intention", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+
+      await deleteIntention(tx, { userId: "test-user-1", intentionId: intention.id });
+
+      const result = await listIntentions(tx, "test-user-1");
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("returns null when the intention doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+
+      const result = await deleteIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
+  it("refuses to delete the automatic system intention", async () => {
+    await withRollback(async (tx) => {
+      const journal = await tx.intention.create({
+        data: { userId: "test-user-1", name: "Journal", isSystem: true },
+      });
+
+      await expect(
+        deleteIntention(tx, { userId: "test-user-1", intentionId: journal.id }),
+      ).rejects.toThrow();
     });
   });
 });

@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { createIntentionAction } from "@/app/actions/intentions";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { listIntentions } from "@/lib/intentions";
-import { NewIntentionForm } from "./new-intention-form";
+import { IntentionForm } from "./intention-form";
 
 export default async function IntentionsPage() {
   const userId = await getCurrentUserId();
@@ -38,7 +39,12 @@ export default async function IntentionsPage() {
         ))}
       </ul>
 
-      <NewIntentionForm />
+      <IntentionForm
+        action={createIntentionAction}
+        heading="New intention"
+        submitLabel="Add intention"
+        pendingLabel="Adding..."
+      />
     </div>
   );
 }

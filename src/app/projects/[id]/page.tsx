@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import {
   addProjectTaskAction,
   completeProjectAction,
+  deleteProjectAction,
   pauseProjectAction,
   resumeProjectAction,
   toggleProjectTaskAction,
 } from "@/app/actions/projects";
-import { Button } from "@/components/ui/button";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -59,6 +61,17 @@ export default async function ProjectDetailPage({
             <Button type="submit">Mark complete</Button>
           </form>
         )}
+        <Link
+          href={`/projects/${project.id}/edit`}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Edit
+        </Link>
+        <form action={deleteProjectAction.bind(null, project.id)}>
+          <ConfirmSubmitButton confirmMessage="Delete this project? This can't be undone.">
+            Delete
+          </ConfirmSubmitButton>
+        </form>
       </div>
 
       <div>
