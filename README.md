@@ -25,7 +25,7 @@ npm install
 3. Once the project is provisioned, go to **Connect** on the project dashboard and grab two connection strings:
    - **Direct connection** (port `5432`) — used for running migrations
    - **Transaction pooler** (port `6543`) — used by the running app, since serverless deployments can open many short-lived connections at once and the pooler shares a small pool across them
-4. Also under **Project Settings > Data API**, grab the **Project URL** and **anon public key** — used by the app for authentication.
+4. Also under **Project Settings > Data API**, grab the **Project URL** and **publishable key** — used by the app for authentication.
 
 ### 3. Configure environment variables
 
@@ -35,7 +35,7 @@ Copy the template and fill in your real values:
 cp .env.example .env
 ```
 
-Edit `.env` and fill in your actual values for `DATABASE_URL` (direct connection), `DATABASE_URL_POOLED` (transaction pooler), `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. `.env` is gitignored — never commit it.
+Edit `.env` and fill in your actual values for `DATABASE_URL` (direct connection), `DATABASE_URL_POOLED` (transaction pooler), `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. `.env` is gitignored — never commit it.
 
 ### 4. Run the database migration
 
