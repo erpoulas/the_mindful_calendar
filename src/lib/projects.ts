@@ -77,7 +77,7 @@ export async function updateProject(
     data: {
       title: params.title,
       endGoal: params.endGoal,
-      dueDate: params.dueDate,
+      dueDate: params.dueDate ?? null,
       intentions: {
         deleteMany: {},
         create: params.intentionIds.map((intentionId) => ({ intentionId })),

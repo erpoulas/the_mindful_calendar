@@ -269,6 +269,30 @@ describe("updateCalendarEvent", () => {
     });
   });
 
+  it("clears optional fields omitted from the update (full-form edit, not a partial patch)", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Long run",
+        startAt: new Date("2026-09-10T09:00:00Z"),
+        endAt: new Date("2026-09-10T10:00:00Z"),
+        location: "Riverside trail",
+        notes: "Bring water",
+      });
+
+      const updated = await updateCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        title: "Long run",
+      });
+
+      expect(updated?.startAt).toBeNull();
+      expect(updated?.endAt).toBeNull();
+      expect(updated?.location).toBeNull();
+      expect(updated?.notes).toBeNull();
+    });
+  });
+
   it("replaces the linked intentions with the new set", async () => {
     await withRollback(async (tx) => {
       const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });

@@ -35,7 +35,7 @@ export async function updateIntention(
 
   return client.intention.update({
     where: { id: intention.id },
-    data: { name: params.name, color: params.color },
+    data: { name: params.name, color: params.color ?? null },
   });
 }
 

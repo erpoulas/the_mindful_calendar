@@ -79,12 +79,12 @@ export async function updateCalendarEvent(
     where: { id: event.id },
     data: {
       title: params.title,
-      startAt: params.startAt,
-      endAt: params.endAt,
+      startAt: params.startAt ?? null,
+      endAt: params.endAt ?? null,
       isAllDay: params.isAllDay ?? false,
-      location: params.location,
-      notes: params.notes,
-      projectId: params.projectId,
+      location: params.location ?? null,
+      notes: params.notes ?? null,
+      projectId: params.projectId ?? null,
       intentions: {
         deleteMany: {},
         create: (params.intentionIds ?? []).map((intentionId) => ({ intentionId })),

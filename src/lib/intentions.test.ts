@@ -199,6 +199,24 @@ describe("updateIntention", () => {
     });
   });
 
+  it("clears the color when it's omitted from the update (full-form edit, not a partial patch)", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, {
+        userId: "test-user-1",
+        name: "Health",
+        color: "#4a6a99",
+      });
+
+      const updated = await updateIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        name: "Health",
+      });
+
+      expect(updated?.color).toBeNull();
+    });
+  });
+
   it("returns null when the intention doesn't belong to the user", async () => {
     await withRollback(async (tx) => {
       const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });

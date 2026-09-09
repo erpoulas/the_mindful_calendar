@@ -519,6 +519,29 @@ describe("updateProject", () => {
     });
   });
 
+  it("clears the due date when it's omitted from the update (full-form edit, not a partial patch)", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        dueDate: new Date("2026-10-12T00:00:00Z"),
+      });
+
+      const updated = await updateProject(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+        title: project.title,
+        endGoal: project.endGoal,
+        intentionIds: [intention.id],
+      });
+
+      expect(updated?.dueDate).toBeNull();
+    });
+  });
+
   it("replaces the linked intentions with the new set", async () => {
     await withRollback(async (tx) => {
       const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
