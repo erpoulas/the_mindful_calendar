@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { withRollback } from "../test/withRollback";
 import {
   addQuickListItem,
+  countOpenQuickListItems,
   createQuickList,
   deleteQuickList,
   getQuickListDetail,
@@ -241,6 +242,84 @@ describe("toggleQuickListItem", () => {
       });
 
       expect(result).toBeNull();
+    });
+  });
+
+  it("stamps doneAt when marking an item done", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const item = await addQuickListItem(tx, {
+        userId: "test-user-1",
+        quickListId: list.id,
+        text: "Bank",
+      });
+
+      const updated = await toggleQuickListItem(tx, {
+        userId: "test-user-1",
+        itemId: item!.id,
+      });
+
+      expect(updated?.doneAt).toBeInstanceOf(Date);
+    });
+  });
+
+  it("clears doneAt when marking a done item not-done again", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const item = await addQuickListItem(tx, {
+        userId: "test-user-1",
+        quickListId: list.id,
+        text: "Bank",
+      });
+
+      await toggleQuickListItem(tx, { userId: "test-user-1", itemId: item!.id });
+      const revertedBack = await toggleQuickListItem(tx, {
+        userId: "test-user-1",
+        itemId: item!.id,
+      });
+
+      expect(revertedBack?.doneAt).toBeNull();
+    });
+  });
+});
+
+describe("countOpenQuickListItems", () => {
+  it("returns 0 for a user with no quick lists", async () => {
+    await withRollback(async (tx) => {
+      const result = await countOpenQuickListItems(tx, "test-user-1");
+      expect(result).toBe(0);
+    });
+  });
+
+  it("counts only not-done items across all of the user's lists", async () => {
+    await withRollback(async (tx) => {
+      const errands = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const groceries = await createQuickList(tx, { userId: "test-user-1", name: "Groceries" });
+      const bank = await addQuickListItem(tx, {
+        userId: "test-user-1",
+        quickListId: errands.id,
+        text: "Bank",
+      });
+      await addQuickListItem(tx, { userId: "test-user-1", quickListId: errands.id, text: "Post office" });
+      await addQuickListItem(tx, { userId: "test-user-1", quickListId: groceries.id, text: "Milk" });
+      await toggleQuickListItem(tx, { userId: "test-user-1", itemId: bank!.id });
+
+      const result = await countOpenQuickListItems(tx, "test-user-1");
+
+      expect(result).toBe(2);
+    });
+  });
+
+  it("never counts another user's items", async () => {
+    await withRollback(async (tx) => {
+      const mine = await createQuickList(tx, { userId: "test-user-1", name: "Mine" });
+      const theirs = await createQuickList(tx, { userId: "test-user-2", name: "Theirs" });
+      await addQuickListItem(tx, { userId: "test-user-1", quickListId: mine.id, text: "Mine" });
+      await addQuickListItem(tx, { userId: "test-user-2", quickListId: theirs.id, text: "Theirs" });
+
+      const result = await countOpenQuickListItems(tx, "test-user-1");
+
+      expect(result).toBe(1);
     });
   });
 });

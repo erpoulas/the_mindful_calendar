@@ -77,6 +77,12 @@ export async function toggleQuickListItem(
 
   return client.quickListItem.update({
     where: { id: item.id },
-    data: { done: !item.done },
+    data: { done: !item.done, doneAt: !item.done ? new Date() : null },
+  });
+}
+
+export async function countOpenQuickListItems(client: DbClient, userId: string) {
+  return client.quickListItem.count({
+    where: { done: false, quickList: { userId } },
   });
 }
