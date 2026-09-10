@@ -62,8 +62,8 @@ export async function createCalendarEventAction(
     intentionIds: validated.data.intentionIds,
   });
 
-  revalidatePath("/calendar");
-  redirect("/calendar");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function quickAddEventAction(formData: FormData) {
@@ -73,7 +73,7 @@ export async function quickAddEventAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await createCalendarEvent(db, { userId, title: validated.data.title });
 
-  revalidatePath("/calendar");
+  revalidatePath("/dashboard");
 }
 
 export async function updateCalendarEventAction(
@@ -100,16 +100,16 @@ export async function updateCalendarEventAction(
     intentionIds: validated.data.intentionIds,
   });
 
-  revalidatePath("/calendar");
-  redirect("/calendar");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function deleteCalendarEventAction(eventId: string) {
   const userId = await getCurrentUserId();
   await deleteCalendarEvent(db, { userId, eventId });
 
-  revalidatePath("/calendar");
-  redirect("/calendar");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 // Called directly from the time-grid's drag handler (not a <form>), so it
@@ -122,5 +122,5 @@ export async function moveCalendarEventAction(
   const userId = await getCurrentUserId();
   await moveCalendarEvent(db, { userId, eventId, startAt, endAt });
 
-  revalidatePath("/calendar");
+  revalidatePath("/dashboard");
 }

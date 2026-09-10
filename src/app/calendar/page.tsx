@@ -6,7 +6,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getWeekRange } from "@/lib/calendar-week";
 import { listCalendarEvents } from "@/lib/calendar-events";
 import { db } from "@/lib/db";
-import { TimeGrid } from "./time-grid";
+import { TimeGrid } from "../dashboard/time-grid";
 
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
