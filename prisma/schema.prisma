@@ -48,12 +48,13 @@ model Project {
 }
 
 model ProjectTask {
-  id        String   @id @default(uuid())
-  projectId String
-  text      String
-  done      Boolean  @default(false)
-  order     Int
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  projectId   String
+  text        String
+  done        Boolean   @default(false)
+  order       Int
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -172,11 +173,12 @@ model QuickList {
 }
 
 model QuickListItem {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   quickListId String
   text        String
-  done        Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  done        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  doneAt      DateTime?
 
   quickList QuickList @relation(fields: [quickListId], references: [id], onDelete: Cascade)
 
@@ -261,4 +263,11 @@ model TodayAffirmation {
   userId String   @id
   text   String
   setAt  DateTime @default(now())
+}
+
+// One row per user: which sidebar panels they've hidden from the dashboard.
+// A missing row means nothing is hidden.
+model DashboardPreferences {
+  userId       String   @id
+  hiddenPanels String[] @default([])
 }
