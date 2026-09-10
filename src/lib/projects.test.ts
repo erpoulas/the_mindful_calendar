@@ -363,6 +363,46 @@ describe("toggleProjectTask", () => {
       expect(result).toBeNull();
     });
   });
+
+  it("stamps completedAt when marking a task done", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy running shoes"],
+      });
+      const [task] = project.tasks;
+
+      const updated = await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+
+      expect(updated?.completedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  it("clears completedAt when marking a done task not-done again", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy running shoes"],
+      });
+      const [task] = project.tasks;
+
+      await toggleProjectTask(tx, { userId: "test-user-1", taskId: task.id });
+      const revertedBack = await toggleProjectTask(tx, {
+        userId: "test-user-1",
+        taskId: task.id,
+      });
+
+      expect(revertedBack?.completedAt).toBeNull();
+    });
+  });
 });
 
 describe("pauseProject", () => {

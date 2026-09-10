@@ -179,6 +179,6 @@ export async function toggleProjectTask(
 
   return client.projectTask.update({
     where: { id: task.id },
-    data: { done: !task.done },
+    data: { done: !task.done, completedAt: !task.done ? new Date() : null },
   });
 }
