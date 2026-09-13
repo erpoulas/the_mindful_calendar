@@ -10,7 +10,10 @@ import { getHiddenPanels } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
+import { getMonthGrid } from "@/lib/calendar-month";
+import { AffirmationsView } from "./overlays/affirmations";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
+import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
 import {
@@ -24,6 +27,12 @@ import {
 } from "./panels";
 import { TimeGrid } from "./time-grid";
 
+const MONTH_FORMAT: Intl.DateTimeFormatOptions = {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+};
+
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
 }
@@ -31,46 +40,92 @@ function toDateParam(date: Date) {
 export default async function DashboardPage({
   searchParams,
 }: PageProps<"/dashboard">) {
-  const { start: startParam, panel: panelParam } = await searchParams;
+  const { start: startParam, mode: modeParam, panel: panelParam } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
+  const mode = modeParam === "month" ? "month" : "week";
 
   const referenceDate =
     typeof startParam === "string" ? new Date(startParam) : new Date();
-  const { start, end } = getWeekRange(referenceDate);
 
-  const [
-    events,
-    affirmation,
-    breakdown,
-    projects,
-    openQuickListCount,
-    reviewStats,
-    hiddenPanels,
-  ] = await Promise.all([
-    listCalendarEvents(db, { userId, start, end }),
-    getTodayAffirmation(db, userId),
-    getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
-    listProjects(db, userId),
-    countOpenQuickListItems(db, userId),
-    getWeeklyReviewStats(db, { userId, referenceDate }),
-    getHiddenPanels(db, userId),
-  ]);
+  const [affirmation, breakdown, projects, openQuickListCount, reviewStats, hiddenPanels] =
+    await Promise.all([
+      getTodayAffirmation(db, userId),
+      getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
+      listProjects(db, userId),
+      countOpenQuickListItems(db, userId),
+      getWeeklyReviewStats(db, { userId, referenceDate }),
+      getHiddenPanels(db, userId),
+    ]);
 
   const activeProjectCount = projects.filter((project) => project.status === "ACTIVE").length;
 
-  const allDayEvents = events.filter((event) => event.isAllDay);
-  const timedEvents = events
-    .filter((event) => !event.isAllDay && event.startAt)
-    .map((event) => ({
-      id: event.id,
-      title: event.title,
-      startAt: event.startAt!,
-      endAt: event.endAt,
-    }));
+  let headerLabel: string;
+  let prevHref: string;
+  let nextHref: string;
+  let calendarBody: React.ReactNode;
 
-  const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+  if (mode === "month") {
+    const { monthStart, gridStart, gridEnd } = getMonthGrid(referenceDate);
+    const monthEvents = await listCalendarEvents(db, { userId, start: gridStart, end: gridEnd });
+
+    const prevMonthRef = new Date(
+      Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1),
+    );
+    const nextMonthRef = new Date(
+      Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1),
+    );
+
+    headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
+    prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
+    nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
+    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
+  } else {
+    const { start, end } = getWeekRange(referenceDate);
+    const events = await listCalendarEvents(db, { userId, start, end });
+
+    const allDayEvents = events.filter((event) => event.isAllDay);
+    const timedEvents = events
+      .filter((event) => !event.isAllDay && event.startAt)
+      .map((event) => ({
+        id: event.id,
+        title: event.title,
+        startAt: event.startAt!,
+        endAt: event.endAt,
+      }));
+
+    const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    headerLabel = "This week";
+    prevHref = `/dashboard?start=${toDateParam(prevWeekStart)}`;
+    nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
+    calendarBody = (
+      <>
+        {allDayEvents.length > 0 && (
+          <div className="rounded border p-2">
+            <h2 className="text-xs font-medium text-zinc-500">All day</h2>
+            <ul className="mt-1 flex flex-wrap gap-1.5">
+              {allDayEvents.map((event) => (
+                <li key={event.id}>
+                  <Link
+                    href={`/calendar/${event.id}/edit`}
+                    className="rounded bg-zinc-100 px-2 py-0.5 text-xs hover:bg-zinc-200"
+                  >
+                    {event.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="overflow-x-auto rounded border p-2">
+          <TimeGrid weekStart={start} events={timedEvents} />
+        </div>
+      </>
+    );
+  }
 
   const panelComponents: Record<string, React.ReactNode> = {
     affirmation: <AffirmationPanel affirmation={affirmation} />,
@@ -90,31 +145,14 @@ export default async function DashboardPage({
   if (panel === "dopamine-menu") {
     panelTitle = "Dopamine Menu";
     panelContent = <DopamineMenuView />;
+  } else if (panel === "affirmations") {
+    panelTitle = "Affirmations";
+    panelContent = <AffirmationsView />;
   }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link href="/intentions" className="underline">
-            Intentions
-          </Link>
-          <Link href="/projects" className="underline">
-            Projects
-          </Link>
-          <Link href="/quicklists" className="underline">
-            Quick Lists
-          </Link>
-          <Link href="/journals" className="underline">
-            Journals
-          </Link>
-          <Link href="/dashboard?panel=dopamine-menu" className="underline">
-            Dopamine Menu
-          </Link>
-          <Link href="/affirmations" className="underline">
-            Affirmations
-          </Link>
-        </div>
+      <div className="flex items-center justify-end border-b pb-3">
         <form action={logout}>
           <Button type="submit" variant="outline" size="sm">
             Log out
@@ -133,11 +171,22 @@ export default async function DashboardPage({
 
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">This week</h1>
+            <h1 className="text-2xl font-semibold">{headerLabel}</h1>
             <div className="flex gap-2">
-              <Link href="/calendar/month" className={buttonVariants({ variant: "outline" })}>
-                Month view
-              </Link>
+              <div className="flex overflow-hidden rounded border text-sm">
+                <Link
+                  href={`/dashboard?start=${toDateParam(referenceDate)}`}
+                  className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                >
+                  Week
+                </Link>
+                <Link
+                  href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
+                  className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                >
+                  Month
+                </Link>
+              </div>
               <Link href="/calendar/new" className={buttonVariants()}>
                 New event
               </Link>
@@ -145,35 +194,15 @@ export default async function DashboardPage({
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <Link href={`/dashboard?start=${toDateParam(prevWeekStart)}`} className="underline">
-              ← Previous week
+            <Link href={prevHref} className="underline">
+              ← Previous {mode === "month" ? "month" : "week"}
             </Link>
-            <Link href={`/dashboard?start=${toDateParam(nextWeekStart)}`} className="underline">
-              Next week →
+            <Link href={nextHref} className="underline">
+              Next {mode === "month" ? "month" : "week"} →
             </Link>
           </div>
 
-          {allDayEvents.length > 0 && (
-            <div className="rounded border p-2">
-              <h2 className="text-xs font-medium text-zinc-500">All day</h2>
-              <ul className="mt-1 flex flex-wrap gap-1.5">
-                {allDayEvents.map((event) => (
-                  <li key={event.id}>
-                    <Link
-                      href={`/calendar/${event.id}/edit`}
-                      className="rounded bg-zinc-100 px-2 py-0.5 text-xs hover:bg-zinc-200"
-                    >
-                      {event.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="overflow-x-auto rounded border p-2">
-            <TimeGrid weekStart={start} events={timedEvents} />
-          </div>
+          {calendarBody}
         </div>
       </div>
 

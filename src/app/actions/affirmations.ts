@@ -17,14 +17,14 @@ export async function addAffirmationAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await addAffirmation(db, { userId, text: validated.data.text });
 
-  revalidatePath("/affirmations");
+  revalidatePath("/dashboard");
 }
 
 export async function deleteAffirmationAction(affirmationId: string) {
   const userId = await getCurrentUserId();
   await deleteAffirmation(db, { userId, affirmationId });
 
-  revalidatePath("/affirmations");
+  revalidatePath("/dashboard");
 }
 
 export async function setTodayAffirmationAction(formData: FormData) {
@@ -34,7 +34,7 @@ export async function setTodayAffirmationAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await setTodayAffirmation(db, { userId, text: validated.data.text });
 
-  revalidatePath("/affirmations");
+  revalidatePath("/dashboard");
 }
 
 export async function pickAffirmationAction() {

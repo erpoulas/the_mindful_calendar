@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   addAffirmationAction,
   deleteAffirmationAction,
@@ -11,7 +10,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTodayAffirmation, listAffirmations } from "@/lib/affirmations";
 
-export default async function AffirmationsPage() {
+export async function AffirmationsView() {
   const userId = await getCurrentUserId();
   const [today, affirmations] = await Promise.all([
     getTodayAffirmation(db, userId),
@@ -19,13 +18,7 @@ export default async function AffirmationsPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link href="/dashboard" className="text-sm text-zinc-600 underline">
-        ← Dashboard
-      </Link>
-
-      <h1 className="text-2xl font-semibold">Affirmations</h1>
-
+    <div className="flex flex-col gap-6">
       <div className="rounded border p-4 text-center">
         <p className="text-lg">
           {today ? today.text : "Add an affirmation below to get started."}

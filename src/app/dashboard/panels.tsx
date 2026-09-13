@@ -41,10 +41,12 @@ export function AffirmationPanel({
 }) {
   return (
     <PanelShell panelKey="affirmation">
-      <div className="text-xs font-medium text-zinc-500">✨ TODAY</div>
-      <p className="mt-1 text-sm italic">
-        {affirmation ? `"${affirmation.text}"` : "Add an affirmation to see one here."}
-      </p>
+      <Link href="/dashboard?panel=affirmations" className="block">
+        <div className="text-xs font-medium text-zinc-500">✨ TODAY</div>
+        <p className="mt-1 text-sm italic">
+          {affirmation ? `"${affirmation.text}"` : "Add an affirmation to see one here."}
+        </p>
+      </Link>
     </PanelShell>
   );
 }
