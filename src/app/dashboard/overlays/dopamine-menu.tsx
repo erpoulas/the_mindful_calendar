@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   addDopamineMenuItemAction,
   deleteDopamineMenuItemAction,
@@ -10,7 +9,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getRandomDopamineMenuItem, listDopamineMenuItems } from "@/lib/dopamine-menu";
 
-export default async function DopamineMenuPage() {
+export async function DopamineMenuView() {
   const userId = await getCurrentUserId();
   const [pick, items] = await Promise.all([
     getRandomDopamineMenuItem(db, userId),
@@ -18,13 +17,7 @@ export default async function DopamineMenuPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link href="/dashboard" className="text-sm text-zinc-600 underline">
-        ← Dashboard
-      </Link>
-
-      <h1 className="text-2xl font-semibold">Dopamine Menu</h1>
-
+    <div className="flex flex-col gap-6">
       <div className="rounded border p-4 text-center">
         <p className="text-lg">
           {pick ? pick.text : "Add something to your menu to get a pick."}

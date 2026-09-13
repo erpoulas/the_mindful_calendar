@@ -10,7 +10,9 @@ import { getHiddenPanels } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
+import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { PanelCustomizer } from "./panel-customizer";
+import { PanelSheet } from "./panel-sheet";
 import {
   AffirmationPanel,
   DopaminePanel,
@@ -29,8 +31,9 @@ function toDateParam(date: Date) {
 export default async function DashboardPage({
   searchParams,
 }: PageProps<"/dashboard">) {
-  const { start: startParam } = await searchParams;
+  const { start: startParam, panel: panelParam } = await searchParams;
   const userId = await getCurrentUserId();
+  const panel = typeof panelParam === "string" ? panelParam : null;
 
   const referenceDate =
     typeof startParam === "string" ? new Date(startParam) : new Date();
@@ -82,6 +85,13 @@ export default async function DashboardPage({
     (key) => !hiddenPanels.includes(key),
   );
 
+  let panelTitle = "";
+  let panelContent: React.ReactNode = null;
+  if (panel === "dopamine-menu") {
+    panelTitle = "Dopamine Menu";
+    panelContent = <DopamineMenuView />;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
@@ -98,7 +108,7 @@ export default async function DashboardPage({
           <Link href="/journals" className="underline">
             Journals
           </Link>
-          <Link href="/dopamine-menu" className="underline">
+          <Link href="/dashboard?panel=dopamine-menu" className="underline">
             Dopamine Menu
           </Link>
           <Link href="/affirmations" className="underline">
@@ -166,6 +176,10 @@ export default async function DashboardPage({
           </div>
         </div>
       </div>
+
+      <PanelSheet open={panel !== null} title={panelTitle}>
+        {panelContent}
+      </PanelSheet>
     </div>
   );
 }

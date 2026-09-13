@@ -130,7 +130,7 @@ export function JournalPanel() {
 export function DopaminePanel() {
   return (
     <PanelShell panelKey="dopamine">
-      <Link href="/dopamine-menu" className="block">
+      <Link href="/dashboard?panel=dopamine-menu" className="block">
         <div className="text-sm font-medium">🎲 Dopamine menu</div>
         <div className="mt-0.5 text-xs text-zinc-500">Feeling stuck? Get an idea</div>
       </Link>
