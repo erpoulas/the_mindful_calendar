@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
-import { quickAddEventAction } from "@/app/actions/calendar-events";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { getTodayAffirmation } from "@/lib/affirmations";
 import { listCalendarEvents } from "@/lib/calendar-events";
@@ -12,7 +10,6 @@ import { getHiddenPanels } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
-import { listSeasons } from "@/lib/seasons";
 import { PanelCustomizer } from "./panel-customizer";
 import {
   AffirmationPanel,
@@ -21,23 +18,12 @@ import {
   JournalPanel,
   ProjectsPanel,
   QuickListPanel,
-  SeasonPanel,
   WeeklyReviewPanel,
 } from "./panels";
 import { TimeGrid } from "./time-grid";
 
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
-}
-
-function pickCurrentSeason(seasons: Awaited<ReturnType<typeof listSeasons>>) {
-  if (seasons.length === 0) return null;
-  const now = new Date();
-  const current = seasons.find(
-    (season) =>
-      season.startDate && season.endDate && season.startDate <= now && now < season.endDate,
-  );
-  return current ?? seasons[seasons.length - 1];
 }
 
 export default async function DashboardPage({
@@ -53,7 +39,6 @@ export default async function DashboardPage({
   const [
     events,
     affirmation,
-    seasons,
     breakdown,
     projects,
     openQuickListCount,
@@ -62,7 +47,6 @@ export default async function DashboardPage({
   ] = await Promise.all([
     listCalendarEvents(db, { userId, start, end }),
     getTodayAffirmation(db, userId),
-    listSeasons(db, userId),
     getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
     listProjects(db, userId),
     countOpenQuickListItems(db, userId),
@@ -70,7 +54,6 @@ export default async function DashboardPage({
     getHiddenPanels(db, userId),
   ]);
 
-  const currentSeason = pickCurrentSeason(seasons);
   const activeProjectCount = projects.filter((project) => project.status === "ACTIVE").length;
 
   const allDayEvents = events.filter((event) => event.isAllDay);
@@ -88,7 +71,6 @@ export default async function DashboardPage({
 
   const panelComponents: Record<string, React.ReactNode> = {
     affirmation: <AffirmationPanel affirmation={affirmation} />,
-    season: <SeasonPanel season={currentSeason} />,
     breakdown: <IntentionBreakdownPanel breakdown={breakdown} />,
     projects: <ProjectsPanel activeCount={activeProjectCount} />,
     quicklist: <QuickListPanel openCount={openQuickListCount} />,
@@ -109,9 +91,6 @@ export default async function DashboardPage({
           </Link>
           <Link href="/projects" className="underline">
             Projects
-          </Link>
-          <Link href="/seasons" className="underline">
-            Seasons
           </Link>
           <Link href="/quicklists" className="underline">
             Quick Lists
@@ -154,11 +133,6 @@ export default async function DashboardPage({
               </Link>
             </div>
           </div>
-
-          <form action={quickAddEventAction} className="flex gap-2">
-            <Input name="title" placeholder="Quick add: type a title and press Enter" required />
-            <Button type="submit">Add</Button>
-          </form>
 
           <div className="flex items-center justify-between text-sm">
             <Link href={`/dashboard?start=${toDateParam(prevWeekStart)}`} className="underline">

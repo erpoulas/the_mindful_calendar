@@ -5,7 +5,6 @@ import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 
 const PANEL_LABELS: Record<string, string> = {
   affirmation: "Today's affirmation",
-  season: "Current season",
   breakdown: "Time by intention",
   projects: "Projects",
   quicklist: "Quick list",

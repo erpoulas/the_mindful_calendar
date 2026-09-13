@@ -1,9 +1,7 @@
 import Link from "next/link";
 import type { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
-import type { listSeasons } from "@/lib/seasons";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 
-type Season = Awaited<ReturnType<typeof listSeasons>>[number];
 type IntentionBreakdown = Awaited<ReturnType<typeof getWeeklyIntentionBreakdown>>;
 type WeeklyReviewStats = Awaited<ReturnType<typeof getWeeklyReviewStats>>;
 
@@ -47,26 +45,6 @@ export function AffirmationPanel({
       <p className="mt-1 text-sm italic">
         {affirmation ? `"${affirmation.text}"` : "Add an affirmation to see one here."}
       </p>
-    </PanelShell>
-  );
-}
-
-export function SeasonPanel({ season }: { season: Season | null }) {
-  return (
-    <PanelShell panelKey="season">
-      <Link href={season ? `/seasons/${season.id}` : "/seasons"} className="block">
-        <div className="text-xs font-medium text-zinc-500">🍂 CURRENT SEASON</div>
-        <div className="mt-1 text-sm font-medium">{season ? season.name : "No seasons yet"}</div>
-        {season?.endDate && (
-          <div className="mt-0.5 text-xs text-zinc-500">
-            {Math.max(
-              0,
-              Math.ceil((season.endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)),
-            )}{" "}
-            days left
-          </div>
-        )}
-      </Link>
     </PanelShell>
   );
 }

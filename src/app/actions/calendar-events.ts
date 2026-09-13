@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { CreateCalendarEventSchema, QuickAddEventSchema } from "@/lib/calendar-event-schemas";
+import { CreateCalendarEventSchema } from "@/lib/calendar-event-schemas";
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -64,16 +64,6 @@ export async function createCalendarEventAction(
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
-}
-
-export async function quickAddEventAction(formData: FormData) {
-  const validated = QuickAddEventSchema.safeParse({ title: formData.get("title") });
-  if (!validated.success) return;
-
-  const userId = await getCurrentUserId();
-  await createCalendarEvent(db, { userId, title: validated.data.title });
-
-  revalidatePath("/dashboard");
 }
 
 export async function updateCalendarEventAction(

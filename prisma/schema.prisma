@@ -147,20 +147,6 @@ model JournalEntry {
   @@index([journalId])
 }
 
-model Season {
-  id             String    @id @default(uuid())
-  userId         String
-  name           String
-  startDate      DateTime?
-  endDate        DateTime?
-  note           String?
-  reflectionText String?
-  reflectedAt    DateTime?
-  createdAt      DateTime  @default(now())
-
-  @@index([userId])
-}
-
 model QuickList {
   id        String   @id @default(uuid())
   userId    String
