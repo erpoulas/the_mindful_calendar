@@ -181,7 +181,11 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
         isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
       }`}
     >
-      <Link href={`/calendar/${event.id}/edit`} className="block truncate" draggable={false}>
+      <Link
+        href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+        className="block truncate"
+        draggable={false}
+      >
         {event.title}
       </Link>
     </div>

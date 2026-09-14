@@ -12,6 +12,7 @@ import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { AffirmationsView } from "./overlays/affirmations";
+import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
@@ -40,9 +41,23 @@ function toDateParam(date: Date) {
 export default async function DashboardPage({
   searchParams,
 }: PageProps<"/dashboard">) {
-  const { start: startParam, mode: modeParam, panel: panelParam } = await searchParams;
+  const {
+    start: startParam,
+    mode: modeParam,
+    panel: panelParam,
+    view: viewParam,
+    id: idParam,
+    date: dateParam,
+    title: titleParam,
+    postItId: postItIdParam,
+  } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
+  const view = typeof viewParam === "string" ? viewParam : null;
+  const id = typeof idParam === "string" ? idParam : null;
+  const date = typeof dateParam === "string" ? dateParam : undefined;
+  const title = typeof titleParam === "string" ? titleParam : undefined;
+  const postItId = typeof postItIdParam === "string" ? postItIdParam : undefined;
   const mode = modeParam === "month" ? "month" : "week";
 
   const referenceDate =
@@ -109,7 +124,7 @@ export default async function DashboardPage({
               {allDayEvents.map((event) => (
                 <li key={event.id}>
                   <Link
-                    href={`/calendar/${event.id}/edit`}
+                    href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
                     className="rounded bg-zinc-100 px-2 py-0.5 text-xs hover:bg-zinc-200"
                   >
                     {event.title}
@@ -148,6 +163,14 @@ export default async function DashboardPage({
   } else if (panel === "affirmations") {
     panelTitle = "Affirmations";
     panelContent = <AffirmationsView />;
+  } else if (panel === "calendar-event") {
+    if (view === "edit" && id) {
+      panelTitle = "Edit event";
+      panelContent = <EditEventView id={id} />;
+    } else {
+      panelTitle = "New event";
+      panelContent = <NewEventView date={date} title={title} postItId={postItId} />;
+    }
   }
 
   return (
@@ -187,7 +210,7 @@ export default async function DashboardPage({
                   Month
                 </Link>
               </div>
-              <Link href="/calendar/new" className={buttonVariants()}>
+              <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
                 New event
               </Link>
             </div>

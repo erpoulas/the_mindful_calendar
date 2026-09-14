@@ -70,7 +70,7 @@ export default async function QuickListDetailPage({
               {item.text}
             </span>
             <Link
-              href={`/calendar/new?title=${encodeURIComponent(item.text)}`}
+              href={`/dashboard?panel=calendar-event&view=new&title=${encodeURIComponent(item.text)}`}
               className="text-sm text-zinc-600 underline"
             >
               Schedule

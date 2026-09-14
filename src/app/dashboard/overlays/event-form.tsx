@@ -14,6 +14,7 @@ export function EventForm({
   projects,
   intentions,
   initialValues,
+  postItId,
 }: {
   action: (
     state: CalendarEventFormState,
@@ -34,6 +35,7 @@ export function EventForm({
     projectId: string | null;
     intentionIds: string[];
   };
+  postItId?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const selectedIntentionIds = new Set(initialValues?.intentionIds ?? []);
@@ -41,6 +43,7 @@ export function EventForm({
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded border p-4">
       <h2 className="text-lg font-medium">{heading}</h2>
+      {postItId && <input type="hidden" name="postItId" value={postItId} />}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="title">Title</Label>

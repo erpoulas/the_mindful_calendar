@@ -12,6 +12,7 @@ import {
 } from "@/lib/calendar-events";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { deletePostIt } from "@/lib/post-its";
 
 export type CalendarEventFormState =
   | {
@@ -61,6 +62,11 @@ export async function createCalendarEventAction(
     projectId: validated.data.projectId,
     intentionIds: validated.data.intentionIds,
   });
+
+  const postItId = formData.get("postItId");
+  if (typeof postItId === "string" && postItId !== "") {
+    await deletePostIt(db, { userId, postItId });
+  }
 
   revalidatePath("/dashboard");
   redirect("/dashboard");

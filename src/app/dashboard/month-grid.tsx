@@ -56,7 +56,7 @@ export function MonthGrid({
             {shown.map((event) => (
               <Link
                 key={event.id}
-                href={`/calendar/${event.id}/edit`}
+                href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
                 className="truncate rounded bg-zinc-100 px-1 text-xs hover:bg-zinc-200"
               >
                 {event.title}

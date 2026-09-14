@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   deleteCalendarEventAction,
   updateCalendarEventAction,
+  createCalendarEventAction,
 } from "@/app/actions/calendar-events";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { getCurrentUserId } from "@/lib/auth";
@@ -10,12 +10,62 @@ import { getCalendarEvent } from "@/lib/calendar-events";
 import { db } from "@/lib/db";
 import { listIntentions } from "@/lib/intentions";
 import { listProjects } from "@/lib/projects";
-import { EventForm } from "../../event-form";
+import { EventForm } from "./event-form";
 
-export default async function EditEventPage({
-  params,
-}: PageProps<"/calendar/[id]/edit">) {
-  const { id } = await params;
+export async function NewEventView({
+  date,
+  title,
+  postItId,
+}: {
+  date?: string;
+  title?: string;
+  postItId?: string;
+}) {
+  const userId = await getCurrentUserId();
+  const [projects, intentions] = await Promise.all([
+    listProjects(db, userId),
+    listIntentions(db, userId),
+  ]);
+
+  const initialValues = date
+    ? {
+        title: title ?? "",
+        startAt: new Date(`${date}T00:00:00Z`),
+        endAt: null,
+        isAllDay: true,
+        location: null,
+        notes: null,
+        projectId: null,
+        intentionIds: [],
+      }
+    : title
+      ? {
+          title,
+          startAt: null,
+          endAt: null,
+          isAllDay: false,
+          location: null,
+          notes: null,
+          projectId: null,
+          intentionIds: [],
+        }
+      : undefined;
+
+  return (
+    <EventForm
+      action={createCalendarEventAction}
+      heading="New event"
+      submitLabel="Add event"
+      pendingLabel="Adding..."
+      projects={projects}
+      intentions={intentions}
+      initialValues={initialValues}
+      postItId={postItId}
+    />
+  );
+}
+
+export async function EditEventView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const [event, projects, intentions] = await Promise.all([
@@ -27,11 +77,7 @@ export default async function EditEventPage({
   if (!event) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link href="/calendar" className="text-sm text-zinc-600 underline">
-        ← Calendar
-      </Link>
-
+    <div className="flex flex-col gap-4">
       <EventForm
         action={updateCalendarEventAction.bind(null, id)}
         heading="Edit event"
