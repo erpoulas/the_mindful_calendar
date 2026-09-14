@@ -12,6 +12,7 @@ import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
+import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
@@ -182,7 +183,10 @@ export default async function DashboardPage({
   let panelTitle = "";
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
-  if (panel === "dopamine-menu") {
+  if (panel === "account") {
+    panelTitle = "Account settings";
+    panelContent = <AccountSettingsView />;
+  } else if (panel === "dopamine-menu") {
     panelTitle = "Dopamine Menu";
     panelContent = <DopamineMenuView />;
   } else if (panel === "affirmations") {
@@ -245,7 +249,10 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6 pb-40">
-      <div className="flex items-center justify-end border-b pb-3">
+      <div className="flex items-center justify-end gap-2 border-b pb-3">
+        <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          Account settings
+        </Link>
         <form action={logout}>
           <Button type="submit" variant="outline" size="sm">
             Log out

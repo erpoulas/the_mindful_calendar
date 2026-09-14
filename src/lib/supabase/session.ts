@@ -2,7 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const protectedRoutes = ["/dashboard"];
-const publicRoutes = ["/login", "/signup"];
+const publicRoutes = ["/login", "/signup", "/forgot-password"];
+// /reset-password is deliberately left out of both lists: it's only
+// reachable right after a recovery-link click, which leaves the visitor
+// authenticated — publicRoutes would immediately bounce them to /dashboard
+// before they can set a new password.
 
 // Runs on every request via proxy.ts. Supabase's access token is
 // short-lived, so this refreshes it from the (longer-lived) refresh token

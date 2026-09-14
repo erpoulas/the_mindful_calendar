@@ -21,3 +21,21 @@ export const LoginSchema = z.object({
   email: z.email(),
   password: z.string().min(1, "Password is required"),
 });
+
+export const UpdatePasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    error: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export const UpdateEmailSchema = z.object({
+  email: z.email(),
+});
+
+export const RequestPasswordResetSchema = z.object({
+  email: z.email(),
+});

@@ -266,3 +266,10 @@ model DashboardPreferences {
   userId       String   @id
   hiddenPanels String[] @default([])
 }
+
+// One row per user: account-level settings not tied to any one feature.
+// A missing row (or a null field) means "not set yet".
+model UserSettings {
+  userId   String  @id
+  timezone String?
+}
