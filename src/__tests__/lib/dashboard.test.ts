@@ -167,7 +167,10 @@ describe("getWeeklyReviewStats", () => {
       });
       await toggleProjectTask(tx, { userId: "test-user-1", taskId: task!.id });
 
-      const result = await getWeeklyReviewStats(tx, { userId: "test-user-1", referenceDate });
+      // toggleProjectTask stamps completedAt with the real current time, so the
+      // stats lookup must use the real "this week" too, not the fixed fake referenceDate
+      // used by the other tests in this file.
+      const result = await getWeeklyReviewStats(tx, { userId: "test-user-1", referenceDate: new Date() });
 
       expect(result.tasksCompleted).toBe(1);
     });
@@ -183,7 +186,10 @@ describe("getWeeklyReviewStats", () => {
       });
       await toggleQuickListItem(tx, { userId: "test-user-1", itemId: item!.id });
 
-      const result = await getWeeklyReviewStats(tx, { userId: "test-user-1", referenceDate });
+      // toggleQuickListItem stamps doneAt with the real current time, so the
+      // stats lookup must use the real "this week" too, not the fixed fake referenceDate
+      // used by the other tests in this file.
+      const result = await getWeeklyReviewStats(tx, { userId: "test-user-1", referenceDate: new Date() });
 
       expect(result.quickListItemsCompleted).toBe(1);
     });
