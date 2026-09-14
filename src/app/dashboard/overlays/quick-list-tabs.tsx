@@ -14,7 +14,7 @@ export function QuickListTabs({
       {lists.map((list) => (
         <Link
           key={list.id}
-          href={`/quicklists/${list.id}`}
+          href={`/dashboard?panel=quicklists&id=${list.id}`}
           className={`rounded px-3 py-1 text-sm ${
             list.id === activeId
               ? "bg-zinc-800 text-white"

@@ -11,7 +11,7 @@ export function PanelSheet({
 }: {
   open: boolean;
   title: string;
-  size?: "side" | "wide";
+  size?: "side" | "wide" | "center";
   children: React.ReactNode;
 }) {
   const router = useRouter();

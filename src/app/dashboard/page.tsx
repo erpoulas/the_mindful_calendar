@@ -14,6 +14,7 @@ import { getMonthGrid } from "@/lib/calendar-month";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
+import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
@@ -157,6 +158,7 @@ export default async function DashboardPage({
 
   let panelTitle = "";
   let panelContent: React.ReactNode = null;
+  let panelSize: "side" | "wide" | "center" = "side";
   if (panel === "dopamine-menu") {
     panelTitle = "Dopamine Menu";
     panelContent = <DopamineMenuView />;
@@ -164,12 +166,21 @@ export default async function DashboardPage({
     panelTitle = "Affirmations";
     panelContent = <AffirmationsView />;
   } else if (panel === "calendar-event") {
+    panelSize = "center";
     if (view === "edit" && id) {
       panelTitle = "Edit event";
       panelContent = <EditEventView id={id} />;
     } else {
       panelTitle = "New event";
       panelContent = <NewEventView date={date} title={title} postItId={postItId} />;
+    }
+  } else if (panel === "quicklists") {
+    if (view === "edit" && id) {
+      panelTitle = "Edit list";
+      panelContent = <QuickListEditView id={id} />;
+    } else {
+      panelTitle = "Quick Lists";
+      panelContent = <QuickListsView activeId={id ?? undefined} />;
     }
   }
 
@@ -229,7 +240,7 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <PanelSheet open={panel !== null} title={panelTitle}>
+      <PanelSheet open={panel !== null} title={panelTitle} size={panelSize}>
         {panelContent}
       </PanelSheet>
     </div>

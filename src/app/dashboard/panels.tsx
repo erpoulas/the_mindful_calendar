@@ -108,7 +108,7 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
 export function QuickListPanel({ openCount }: { openCount: number }) {
   return (
     <PanelShell panelKey="quicklist">
-      <Link href="/quicklists" className="block">
+      <Link href="/dashboard?panel=quicklists" className="block">
         <div className="text-sm font-medium">📝 Quick list</div>
         <div className="mt-0.5 text-xs text-zinc-500">
           {openCount} open {openCount === 1 ? "item" : "items"} · no intention needed

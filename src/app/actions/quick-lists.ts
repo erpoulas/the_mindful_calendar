@@ -30,8 +30,8 @@ export async function createQuickListAction(
   const userId = await getCurrentUserId();
   const list = await createQuickList(db, { userId, name: validated.data.name });
 
-  revalidatePath("/quicklists");
-  redirect(`/quicklists/${list.id}`);
+  revalidatePath("/dashboard");
+  redirect(`/dashboard?panel=quicklists&id=${list.id}`);
 }
 
 export async function updateQuickListAction(
@@ -47,16 +47,16 @@ export async function updateQuickListAction(
   const userId = await getCurrentUserId();
   await updateQuickList(db, { userId, quickListId, name: validated.data.name });
 
-  revalidatePath("/quicklists");
-  redirect(`/quicklists/${quickListId}`);
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function deleteQuickListAction(quickListId: string) {
   const userId = await getCurrentUserId();
   await deleteQuickList(db, { userId, quickListId });
 
-  revalidatePath("/quicklists");
-  redirect("/quicklists");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function addQuickListItemAction(quickListId: string, formData: FormData) {
@@ -66,12 +66,12 @@ export async function addQuickListItemAction(quickListId: string, formData: Form
   const userId = await getCurrentUserId();
   await addQuickListItem(db, { userId, quickListId, text: validated.data.text });
 
-  revalidatePath(`/quicklists/${quickListId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function toggleQuickListItemAction(itemId: string, quickListId: string) {
   const userId = await getCurrentUserId();
   await toggleQuickListItem(db, { userId, itemId });
 
-  revalidatePath(`/quicklists/${quickListId}`);
+  revalidatePath("/dashboard");
 }
