@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "./db";
-import { withRollback } from "../test/withRollback";
-import { createCalendarEvent } from "./calendar-events";
+import type { DbClient } from "@/lib/db";
+import { withRollback } from "@/test/withRollback";
+import { createCalendarEvent } from "@/lib/calendar-events";
 import {
   createIntention,
   deleteIntention,
@@ -9,7 +9,7 @@ import {
   getOrCreateJournalIntention,
   listIntentions,
   updateIntention,
-} from "./intentions";
+} from "@/lib/intentions";
 
 // Test-only helper: creates a calendar event tagged to an intention.
 function tagEvent(

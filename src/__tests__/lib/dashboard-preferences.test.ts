@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
-import { getHiddenPanels, togglePanelVisibility } from "./dashboard-preferences";
+import { withRollback } from "@/test/withRollback";
+import { getHiddenPanels, togglePanelVisibility } from "@/lib/dashboard-preferences";
 
 describe("getHiddenPanels", () => {
   it("returns an empty list when the user has never set any preferences", async () => {

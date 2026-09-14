@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getWeekRange } from "./calendar-week";
+import { getWeekRange } from "@/lib/calendar-week";
 
 describe("getWeekRange", () => {
   it("returns the Monday-to-next-Monday range for a mid-week date", () => {

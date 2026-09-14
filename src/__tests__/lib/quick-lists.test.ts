@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
+import { withRollback } from "@/test/withRollback";
 import {
   addQuickListItem,
   countOpenQuickListItems,
@@ -9,7 +9,7 @@ import {
   listQuickLists,
   toggleQuickListItem,
   updateQuickList,
-} from "./quick-lists";
+} from "@/lib/quick-lists";
 
 describe("createQuickList", () => {
   it("creates a list with the given name for the user", async () => {

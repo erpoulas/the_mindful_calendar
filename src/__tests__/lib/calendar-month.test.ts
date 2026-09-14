@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMonthGrid } from "./calendar-month";
+import { getMonthGrid } from "@/lib/calendar-month";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

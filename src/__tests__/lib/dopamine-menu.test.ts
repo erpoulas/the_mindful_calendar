@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
+import { withRollback } from "@/test/withRollback";
 import {
   addDopamineMenuItem,
   deleteDopamineMenuItem,
   getRandomDopamineMenuItem,
   listDopamineMenuItems,
-} from "./dopamine-menu";
+} from "@/lib/dopamine-menu";
 
 describe("addDopamineMenuItem", () => {
   it("adds an item to the user's pool", async () => {

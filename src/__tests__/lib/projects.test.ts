@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
-import { createCalendarEvent } from "./calendar-events";
-import { createIntention } from "./intentions";
+import { withRollback } from "@/test/withRollback";
+import { createCalendarEvent } from "@/lib/calendar-events";
+import { createIntention } from "@/lib/intentions";
 import {
   addProjectTask,
   completeProject,
@@ -13,7 +13,7 @@ import {
   resumeProject,
   toggleProjectTask,
   updateProject,
-} from "./projects";
+} from "@/lib/projects";
 
 describe("createProject", () => {
   it("creates a project with the required fields", async () => {

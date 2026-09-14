@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
-import { createIntention } from "./intentions";
-import { createProject } from "./projects";
+import { withRollback } from "@/test/withRollback";
+import { createIntention } from "@/lib/intentions";
+import { createProject } from "@/lib/projects";
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -9,7 +9,7 @@ import {
   listCalendarEvents,
   moveCalendarEvent,
   updateCalendarEvent,
-} from "./calendar-events";
+} from "@/lib/calendar-events";
 
 describe("createCalendarEvent", () => {
   it("creates an event with only a title", async () => {

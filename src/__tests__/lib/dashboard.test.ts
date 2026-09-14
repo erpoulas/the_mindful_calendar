@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
-import { createCalendarEvent } from "./calendar-events";
-import { getWeekRange } from "./calendar-week";
-import { createIntention } from "./intentions";
-import { addProjectTask, createProject, toggleProjectTask } from "./projects";
-import { addQuickListItem, createQuickList, toggleQuickListItem } from "./quick-lists";
-import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "./dashboard";
+import { withRollback } from "@/test/withRollback";
+import { createCalendarEvent } from "@/lib/calendar-events";
+import { getWeekRange } from "@/lib/calendar-week";
+import { createIntention } from "@/lib/intentions";
+import { addProjectTask, createProject, toggleProjectTask } from "@/lib/projects";
+import { addQuickListItem, createQuickList, toggleQuickListItem } from "@/lib/quick-lists";
+import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 
 const referenceDate = new Date("2026-09-09T12:00:00Z"); // a Wednesday
 const { start: weekStart, end: weekEnd } = getWeekRange(referenceDate);

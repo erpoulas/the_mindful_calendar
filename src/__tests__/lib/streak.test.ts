@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getWeeklyEventCounts } from "./streak";
+import { getWeeklyEventCounts } from "@/lib/streak";
 
 describe("getWeeklyEventCounts", () => {
   const reference = new Date("2026-08-13T12:00:00Z");

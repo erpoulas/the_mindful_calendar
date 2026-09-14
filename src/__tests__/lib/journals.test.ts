@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
-import { getOrCreateJournalIntention } from "./intentions";
+import { withRollback } from "@/test/withRollback";
+import { getOrCreateJournalIntention } from "@/lib/intentions";
 import {
   addJournalPrompt,
   createJournal,
@@ -13,7 +13,7 @@ import {
   listJournals,
   updateJournal,
   updateJournalEntry,
-} from "./journals";
+} from "@/lib/journals";
 
 describe("createJournal", () => {
   it("creates a journal with the given name", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LoginSchema, SignupSchema } from "./auth-schemas";
+import { LoginSchema, SignupSchema } from "@/lib/auth-schemas";
 
 describe("SignupSchema", () => {
   it("accepts a valid email, matching passwords", () => {

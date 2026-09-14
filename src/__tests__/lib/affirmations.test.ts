@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withRollback } from "../test/withRollback";
+import { withRollback } from "@/test/withRollback";
 import {
   addAffirmation,
   deleteAffirmation,
@@ -7,7 +7,7 @@ import {
   getTodayAffirmation,
   listAffirmations,
   setTodayAffirmation,
-} from "./affirmations";
+} from "@/lib/affirmations";
 
 describe("addAffirmation", () => {
   it("adds an affirmation to the user's permanent pool", async () => {
