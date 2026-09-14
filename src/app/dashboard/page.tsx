@@ -10,6 +10,7 @@ import { getHiddenPanels } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
+import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
@@ -18,6 +19,7 @@ import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
+import { PostItTray } from "./post-it-tray";
 import {
   AffirmationPanel,
   DopaminePanel,
@@ -64,7 +66,7 @@ export default async function DashboardPage({
   const referenceDate =
     typeof startParam === "string" ? new Date(startParam) : new Date();
 
-  const [affirmation, breakdown, projects, openQuickListCount, reviewStats, hiddenPanels] =
+  const [affirmation, breakdown, projects, openQuickListCount, reviewStats, hiddenPanels, postIts] =
     await Promise.all([
       getTodayAffirmation(db, userId),
       getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
@@ -72,6 +74,7 @@ export default async function DashboardPage({
       countOpenQuickListItems(db, userId),
       getWeeklyReviewStats(db, { userId, referenceDate }),
       getHiddenPanels(db, userId),
+      listPostIts(db, userId),
     ]);
 
   const activeProjectCount = projects.filter((project) => project.status === "ACTIVE").length;
@@ -239,6 +242,8 @@ export default async function DashboardPage({
           {calendarBody}
         </div>
       </div>
+
+      <PostItTray postIts={postIts} />
 
       <PanelSheet open={panel !== null} title={panelTitle} size={panelSize}>
         {panelContent}
