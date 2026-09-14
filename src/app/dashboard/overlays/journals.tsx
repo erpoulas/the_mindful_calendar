@@ -2,17 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   addJournalPromptAction,
+  createJournalAction,
   createJournalEntryAction,
   deleteJournalAction,
+  deleteJournalEntryAction,
   deleteJournalPromptAction,
   pickJournalPromptAction,
+  updateJournalAction,
+  updateJournalEntryAction,
 } from "@/app/actions/journals";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getJournalDetail, getRandomJournalPrompt } from "@/lib/journals";
+import { getJournalDetail, getRandomJournalPrompt, listJournals } from "@/lib/journals";
+import { JournalForm } from "./journal-form";
 
 const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
   dateStyle: "medium",
@@ -20,10 +25,39 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: "UTC",
 };
 
-export default async function JournalDetailPage({
-  params,
-}: PageProps<"/journals/[id]">) {
-  const { id } = await params;
+export async function JournalsListView() {
+  const userId = await getCurrentUserId();
+  const journals = await listJournals(db, userId);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <ul className="flex flex-col gap-2">
+        {journals.length === 0 && (
+          <p className="text-sm text-zinc-600">No journals yet — add one below.</p>
+        )}
+        {journals.map((journal) => (
+          <li key={journal.id}>
+            <Link
+              href={`/dashboard?panel=journals&view=detail&id=${journal.id}`}
+              className="flex items-center rounded border px-3 py-2 hover:bg-zinc-50"
+            >
+              {journal.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <JournalForm
+        action={createJournalAction}
+        heading="New journal"
+        submitLabel="Add journal"
+        pendingLabel="Adding..."
+      />
+    </div>
+  );
+}
+
+export async function JournalDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const [journal, suggestedPrompt] = await Promise.all([
@@ -33,17 +67,13 @@ export default async function JournalDetailPage({
   if (!journal) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link href="/journals" className="text-sm text-zinc-600 underline">
-        ← Journals
-      </Link>
-
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{journal.name}</h1>
+        <h2 className="text-lg font-semibold">{journal.name}</h2>
         <div className="flex gap-2">
           <Link
-            href={`/journals/${journal.id}/edit`}
-            className={buttonVariants({ variant: "outline" })}
+            href={`/dashboard?panel=journals&view=edit&id=${journal.id}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Edit
           </Link>
@@ -56,7 +86,7 @@ export default async function JournalDetailPage({
       </div>
 
       <div className="rounded border p-4">
-        <h2 className="text-lg font-medium">New entry</h2>
+        <h3 className="text-lg font-medium">New entry</h3>
 
         {suggestedPrompt && (
           <div className="mt-2 flex items-center justify-between gap-2 text-sm text-zinc-600">
@@ -115,7 +145,7 @@ export default async function JournalDetailPage({
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-zinc-600">Prompt pool</h2>
+        <h3 className="text-sm font-medium text-zinc-600">Prompt pool</h3>
         <ul className="mt-2 flex flex-col gap-1.5">
           {journal.prompts.length === 0 && (
             <p className="text-sm text-zinc-600">No saved prompts yet.</p>
@@ -142,7 +172,7 @@ export default async function JournalDetailPage({
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-zinc-600">Entries</h2>
+        <h3 className="text-sm font-medium text-zinc-600">Entries</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {journal.entries.length === 0 && (
             <p className="text-sm text-zinc-600">No entries yet.</p>
@@ -150,7 +180,7 @@ export default async function JournalDetailPage({
           {journal.entries.map((entry) => (
             <li key={entry.id}>
               <Link
-                href={`/journals/${journal.id}/entries/${entry.id}/edit`}
+                href={`/dashboard?panel=journals&view=entry-edit&id=${journal.id}&entryId=${entry.id}`}
                 className="block rounded border px-3 py-2 hover:bg-zinc-50"
               >
                 <p className="text-xs text-zinc-500">
@@ -167,6 +197,68 @@ export default async function JournalDetailPage({
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+export async function JournalEditView({ id }: { id: string }) {
+  const userId = await getCurrentUserId();
+
+  const journal = await getJournalDetail(db, { userId, journalId: id });
+  if (!journal) notFound();
+
+  return (
+    <JournalForm
+      action={updateJournalAction.bind(null, id)}
+      heading="Edit journal"
+      submitLabel="Save"
+      pendingLabel="Saving..."
+      initialValues={{ name: journal.name }}
+    />
+  );
+}
+
+export async function JournalEntryEditView({
+  id,
+  entryId,
+}: {
+  id: string;
+  entryId: string;
+}) {
+  const userId = await getCurrentUserId();
+
+  const journal = await getJournalDetail(db, { userId, journalId: id });
+  if (!journal) notFound();
+
+  const entry = journal.entries.find((e) => e.id === entryId);
+  if (!entry) notFound();
+
+  return (
+    <div className="flex flex-col gap-3">
+      <h2 className="text-lg font-medium">{entry.promptText ?? "Entry"}</h2>
+      <p className="text-xs text-zinc-500">
+        {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
+      </p>
+
+      <form
+        action={updateJournalEntryAction.bind(null, entry.id, id)}
+        className="flex flex-col gap-3"
+      >
+        <textarea
+          name="content"
+          rows={8}
+          defaultValue={entry.content ?? undefined}
+          placeholder="Write your entry..."
+          className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+        />
+        <Button type="submit">Save</Button>
+      </form>
+
+      <form action={deleteJournalEntryAction.bind(null, entry.id, id)}>
+        <ConfirmSubmitButton confirmMessage="Delete this entry? This can't be undone.">
+          Delete entry
+        </ConfirmSubmitButton>
+      </form>
     </div>
   );
 }

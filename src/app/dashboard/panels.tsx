@@ -121,7 +121,7 @@ export function QuickListPanel({ openCount }: { openCount: number }) {
 export function JournalPanel() {
   return (
     <PanelShell panelKey="journal">
-      <Link href="/journals" className="block">
+      <Link href="/dashboard?panel=journals" className="block">
         <div className="text-sm font-medium">📓 Journal</div>
         <div className="mt-0.5 text-xs text-zinc-500">Write now, no scheduling needed</div>
       </Link>

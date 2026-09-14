@@ -17,6 +17,12 @@ import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
+import {
+  JournalDetailView,
+  JournalEditView,
+  JournalEntryEditView,
+  JournalsListView,
+} from "./overlays/journals";
 import { ProjectDetailView, ProjectEditView, ProjectsListView } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
@@ -59,6 +65,7 @@ export default async function DashboardPage({
     date: dateParam,
     title: titleParam,
     postItId: postItIdParam,
+    entryId: entryIdParam,
   } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
@@ -67,6 +74,7 @@ export default async function DashboardPage({
   const date = typeof dateParam === "string" ? dateParam : undefined;
   const title = typeof titleParam === "string" ? titleParam : undefined;
   const postItId = typeof postItIdParam === "string" ? postItIdParam : undefined;
+  const entryId = typeof entryIdParam === "string" ? entryIdParam : null;
   const mode = modeParam === "month" ? "month" : "week";
 
   const referenceDate =
@@ -218,6 +226,20 @@ export default async function DashboardPage({
     } else {
       panelTitle = "Projects";
       panelContent = <ProjectsListView />;
+    }
+  } else if (panel === "journals") {
+    if (view === "entry-edit" && id && entryId) {
+      panelTitle = "Entry";
+      panelContent = <JournalEntryEditView id={id} entryId={entryId} />;
+    } else if (view === "edit" && id) {
+      panelTitle = "Edit journal";
+      panelContent = <JournalEditView id={id} />;
+    } else if (view === "detail" && id) {
+      panelTitle = "Journal";
+      panelContent = <JournalDetailView id={id} />;
+    } else {
+      panelTitle = "Journals";
+      panelContent = <JournalsListView />;
     }
   }
 
