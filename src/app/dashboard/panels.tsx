@@ -63,7 +63,7 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
 
   return (
     <PanelShell panelKey="breakdown">
-      <Link href="/intentions" className="block">
+      <Link href="/dashboard?panel=intentions" className="block">
         <div className="mb-1 text-xs font-medium text-zinc-500">TIME THIS WEEK, BY INTENTION</div>
         {segments.length === 0 ? (
           <p className="text-sm text-zinc-600">No events logged yet this week.</p>
@@ -95,7 +95,7 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
 export function ProjectsPanel({ activeCount }: { activeCount: number }) {
   return (
     <PanelShell panelKey="projects">
-      <Link href="/projects" className="block">
+      <Link href="/dashboard?panel=projects" className="block">
         <div className="text-sm font-medium">📁 All projects</div>
         <div className="mt-0.5 text-xs text-zinc-500">
           {activeCount} active · click to view any one

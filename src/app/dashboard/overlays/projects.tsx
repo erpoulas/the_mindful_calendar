@@ -3,35 +3,75 @@ import { notFound } from "next/navigation";
 import {
   addProjectTaskAction,
   completeProjectAction,
+  createProjectAction,
   deleteProjectAction,
   pauseProjectAction,
   resumeProjectAction,
   toggleProjectTaskAction,
+  updateProjectAction,
 } from "@/app/actions/projects";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getProjectDetail } from "@/lib/projects";
+import { listIntentions } from "@/lib/intentions";
+import { getProjectDetail, listProjects } from "@/lib/projects";
+import { ProjectForm } from "./project-form";
 
-export default async function ProjectDetailPage({
-  params,
-}: PageProps<"/projects/[id]">) {
-  const { id } = await params;
+const STATUS_LABEL = {
+  ACTIVE: "Active",
+  PAUSED: "Paused",
+  COMPLETED: "Completed",
+};
+
+export async function ProjectsListView() {
+  const userId = await getCurrentUserId();
+  const [projects, intentions] = await Promise.all([
+    listProjects(db, userId),
+    listIntentions(db, userId),
+  ]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <ul className="flex flex-col gap-2">
+        {projects.length === 0 && (
+          <p className="text-sm text-zinc-600">No projects yet — add one below.</p>
+        )}
+        {projects.map((project) => (
+          <li key={project.id}>
+            <Link
+              href={`/dashboard?panel=projects&view=detail&id=${project.id}`}
+              className="flex items-center justify-between rounded border px-3 py-2 hover:bg-zinc-50"
+            >
+              <span>{project.title}</span>
+              <span className="text-sm text-zinc-500">{STATUS_LABEL[project.status]}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <ProjectForm
+        action={createProjectAction}
+        heading="New project"
+        submitLabel="Add project"
+        pendingLabel="Adding..."
+        intentions={intentions}
+      />
+    </div>
+  );
+}
+
+export async function ProjectDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const project = await getProjectDetail(db, { userId, projectId: id });
   if (!project) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link href="/projects" className="text-sm text-zinc-600 underline">
-        ← Projects
-      </Link>
-
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">{project.title}</h1>
+        <h2 className="text-lg font-semibold">{project.title}</h2>
         <p className="mt-1 text-sm text-zinc-600">{project.endGoal}</p>
         {project.dueDate && (
           <p className="mt-1 text-sm text-zinc-500">
@@ -41,7 +81,7 @@ export default async function ProjectDetailPage({
         <p className="mt-1 text-sm font-medium">{project.status}</p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {project.status === "ACTIVE" && (
           <form action={pauseProjectAction.bind(null, project.id)}>
             <Button type="submit" variant="outline">
@@ -62,7 +102,7 @@ export default async function ProjectDetailPage({
           </form>
         )}
         <Link
-          href={`/projects/${project.id}/edit`}
+          href={`/dashboard?panel=projects&view=edit&id=${project.id}`}
           className={buttonVariants({ variant: "outline" })}
         >
           Edit
@@ -75,7 +115,7 @@ export default async function ProjectDetailPage({
       </div>
 
       <div>
-        <h2 className="text-lg font-medium">Tasks</h2>
+        <h3 className="text-lg font-medium">Tasks</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {project.tasks.length === 0 && (
             <p className="text-sm text-zinc-600">No tasks yet.</p>
@@ -107,5 +147,32 @@ export default async function ProjectDetailPage({
         </form>
       </div>
     </div>
+  );
+}
+
+export async function ProjectEditView({ id }: { id: string }) {
+  const userId = await getCurrentUserId();
+
+  const [project, intentions] = await Promise.all([
+    getProjectDetail(db, { userId, projectId: id }),
+    listIntentions(db, userId),
+  ]);
+
+  if (!project) notFound();
+
+  return (
+    <ProjectForm
+      action={updateProjectAction.bind(null, id)}
+      heading="Edit project"
+      submitLabel="Save"
+      pendingLabel="Saving..."
+      intentions={intentions}
+      initialValues={{
+        title: project.title,
+        endGoal: project.endGoal,
+        dueDate: project.dueDate,
+        intentionIds: project.intentions.map((pi) => pi.intentionId),
+      }}
+    />
   );
 }

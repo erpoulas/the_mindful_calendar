@@ -58,7 +58,7 @@ export async function createProjectAction(
     dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : undefined,
   });
 
-  revalidatePath("/projects");
+  revalidatePath("/dashboard");
 }
 
 export async function updateProjectAction(
@@ -82,16 +82,16 @@ export async function updateProjectAction(
     dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : undefined,
   });
 
-  revalidatePath("/projects");
-  redirect(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function deleteProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await deleteProject(db, { userId, projectId });
 
-  revalidatePath("/projects");
-  redirect("/projects");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function addProjectTaskAction(projectId: string, formData: FormData) {
@@ -100,29 +100,29 @@ export async function addProjectTaskAction(projectId: string, formData: FormData
 
   const userId = await getCurrentUserId();
   await addProjectTask(db, { userId, projectId, text });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function toggleProjectTaskAction(taskId: string, projectId: string) {
   const userId = await getCurrentUserId();
   await toggleProjectTask(db, { userId, taskId });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function pauseProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await pauseProject(db, { userId, projectId });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function resumeProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await resumeProject(db, { userId, projectId });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function completeProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await completeProject(db, { userId, projectId });
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/dashboard");
 }

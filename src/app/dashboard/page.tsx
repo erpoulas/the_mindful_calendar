@@ -16,6 +16,8 @@ import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
+import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
+import { ProjectDetailView, ProjectEditView, ProjectsListView } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
@@ -187,6 +189,28 @@ export default async function DashboardPage({
     } else {
       panelTitle = "Quick Lists";
       panelContent = <QuickListsView activeId={id ?? undefined} />;
+    }
+  } else if (panel === "intentions") {
+    if (view === "edit" && id) {
+      panelTitle = "Edit intention";
+      panelContent = <IntentionEditView id={id} />;
+    } else if (view === "detail" && id) {
+      panelTitle = "Intention";
+      panelContent = <IntentionDetailView id={id} />;
+    } else {
+      panelTitle = "Intentions";
+      panelContent = <IntentionsListView />;
+    }
+  } else if (panel === "projects") {
+    if (view === "edit" && id) {
+      panelTitle = "Edit project";
+      panelContent = <ProjectEditView id={id} />;
+    } else if (view === "detail" && id) {
+      panelTitle = "Project";
+      panelContent = <ProjectDetailView id={id} />;
+    } else {
+      panelTitle = "Projects";
+      panelContent = <ProjectsListView />;
     }
   }
 
