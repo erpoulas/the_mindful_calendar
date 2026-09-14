@@ -16,6 +16,7 @@ import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
+import { CalendarDndProvider } from "./calendar-dnd";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
@@ -29,7 +30,7 @@ import {
   QuickListPanel,
   WeeklyReviewPanel,
 } from "./panels";
-import { TimeGrid } from "./time-grid";
+import { TimeGrid, type TimeGridEvent } from "./time-grid";
 
 const MONTH_FORMAT: Intl.DateTimeFormatOptions = {
   month: "long",
@@ -83,6 +84,7 @@ export default async function DashboardPage({
   let prevHref: string;
   let nextHref: string;
   let calendarBody: React.ReactNode;
+  let dndEvents: TimeGridEvent[] = [];
 
   if (mode === "month") {
     const { monthStart, gridStart, gridEnd } = getMonthGrid(referenceDate);
@@ -119,6 +121,7 @@ export default async function DashboardPage({
     headerLabel = "This week";
     prevHref = `/dashboard?start=${toDateParam(prevWeekStart)}`;
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
+    dndEvents = timedEvents;
     calendarBody = (
       <>
         {allDayEvents.length > 0 && (
@@ -197,53 +200,55 @@ export default async function DashboardPage({
         </form>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[16rem_1fr]">
-        <div>
-          <PanelCustomizer hiddenPanels={hiddenPanels}>
-            {visiblePanelKeys.map((key) => (
-              <div key={key}>{panelComponents[key]}</div>
-            ))}
-          </PanelCustomizer>
-        </div>
+      <CalendarDndProvider events={dndEvents}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[16rem_1fr]">
+          <div>
+            <PanelCustomizer hiddenPanels={hiddenPanels}>
+              {visiblePanelKeys.map((key) => (
+                <div key={key}>{panelComponents[key]}</div>
+              ))}
+            </PanelCustomizer>
+          </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">{headerLabel}</h1>
-            <div className="flex gap-2">
-              <div className="flex overflow-hidden rounded border text-sm">
-                <Link
-                  href={`/dashboard?start=${toDateParam(referenceDate)}`}
-                  className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                >
-                  Week
-                </Link>
-                <Link
-                  href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
-                  className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                >
-                  Month
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold">{headerLabel}</h1>
+              <div className="flex gap-2">
+                <div className="flex overflow-hidden rounded border text-sm">
+                  <Link
+                    href={`/dashboard?start=${toDateParam(referenceDate)}`}
+                    className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                  >
+                    Week
+                  </Link>
+                  <Link
+                    href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
+                    className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                  >
+                    Month
+                  </Link>
+                </div>
+                <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
+                  New event
                 </Link>
               </div>
-              <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
-                New event
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <Link href={prevHref} className="underline">
+                ← Previous {mode === "month" ? "month" : "week"}
+              </Link>
+              <Link href={nextHref} className="underline">
+                Next {mode === "month" ? "month" : "week"} →
               </Link>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <Link href={prevHref} className="underline">
-              ← Previous {mode === "month" ? "month" : "week"}
-            </Link>
-            <Link href={nextHref} className="underline">
-              Next {mode === "month" ? "month" : "week"} →
-            </Link>
+            {calendarBody}
           </div>
-
-          {calendarBody}
         </div>
-      </div>
 
-      <PostItTray postIts={postIts} />
+        <PostItTray postIts={postIts} />
+      </CalendarDndProvider>
 
       <PanelSheet open={panel !== null} title={panelTitle} size={panelSize}>
         {panelContent}

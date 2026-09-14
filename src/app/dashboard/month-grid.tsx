@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { listCalendarEvents } from "@/lib/calendar-events";
 import { getMonthGrid } from "@/lib/calendar-month";
+import { MonthDayCell } from "./month-day-cell";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -44,33 +44,15 @@ export function MonthGrid({
         const weekStartParam = toDateParam(date);
 
         return (
-          <div
+          <MonthDayCell
             key={date.toISOString()}
-            className={`flex min-h-24 flex-col gap-1 bg-white p-1.5 ${
-              inMonth ? "" : "bg-zinc-50 text-zinc-400"
-            }`}
-          >
-            <Link href={`/dashboard?start=${weekStartParam}`} className="text-xs hover:underline">
-              {date.getUTCDate()}
-            </Link>
-            {shown.map((event) => (
-              <Link
-                key={event.id}
-                href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
-                className="truncate rounded bg-zinc-100 px-1 text-xs hover:bg-zinc-200"
-              >
-                {event.title}
-              </Link>
-            ))}
-            {overflow > 0 && (
-              <Link
-                href={`/dashboard?start=${weekStartParam}`}
-                className="text-xs text-zinc-500 hover:underline"
-              >
-                +{overflow} more
-              </Link>
-            )}
-          </div>
+            dayKey={weekStartParam}
+            dayNumber={date.getUTCDate()}
+            inMonth={inMonth}
+            weekStartHref={`/dashboard?start=${weekStartParam}`}
+            events={shown}
+            overflow={overflow}
+          />
         );
       })}
     </div>

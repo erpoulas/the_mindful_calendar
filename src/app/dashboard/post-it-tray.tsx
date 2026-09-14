@@ -1,3 +1,8 @@
+"use client";
+
+import type { CSSProperties } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +41,26 @@ export function PostItTray({
 }
 
 function PostItCard({ id, text }: { id: string; text: string }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id,
+    data: { type: "postit", text },
+  });
+
+  const style: CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 10 : undefined,
+  };
+
   return (
-    <div className="relative w-36 -rotate-1 rounded bg-yellow-100 p-2 pt-3 text-sm shadow odd:rotate-1">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`relative w-36 -rotate-1 touch-none rounded bg-yellow-100 p-2 pt-3 text-sm shadow odd:rotate-1 ${
+        isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
+      }`}
+    >
       <form action={deletePostItAction.bind(null, id)} className="absolute top-0.5 right-1">
         <button
           type="submit"
