@@ -19,6 +19,7 @@ import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import { ProjectDetailView, ProjectEditView, ProjectsListView } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
+import { DashboardShell } from "./dashboard-shell";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
@@ -39,6 +40,8 @@ const MONTH_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",
   timeZone: "UTC",
 };
+
+const CALENDAR_HEIGHT_CLASS = "h-[37.5rem]";
 
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -102,7 +105,11 @@ export default async function DashboardPage({
     headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
-    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
+    calendarBody = (
+      <div className={`${CALENDAR_HEIGHT_CLASS} overflow-hidden rounded border`}>
+        <MonthGrid referenceDate={referenceDate} events={monthEvents} />
+      </div>
+    );
   } else {
     const { start, end } = getWeekRange(referenceDate);
     const events = await listCalendarEvents(db, { userId, start, end });
@@ -144,7 +151,7 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className="overflow-x-auto rounded border p-2">
+        <div className={`${CALENDAR_HEIGHT_CLASS} overflow-auto rounded border p-2`}>
           <TimeGrid weekStart={start} events={timedEvents} />
         </div>
       </>
@@ -215,7 +222,7 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6 pb-40">
       <div className="flex items-center justify-end border-b pb-3">
         <form action={logout}>
           <Button type="submit" variant="outline" size="sm">
@@ -225,51 +232,49 @@ export default async function DashboardPage({
       </div>
 
       <CalendarDndProvider events={dndEvents}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[16rem_1fr]">
-          <div>
+        <DashboardShell
+          sidebar={
             <PanelCustomizer hiddenPanels={hiddenPanels}>
               {visiblePanelKeys.map((key) => (
                 <div key={key}>{panelComponents[key]}</div>
               ))}
             </PanelCustomizer>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">{headerLabel}</h1>
-              <div className="flex gap-2">
-                <div className="flex overflow-hidden rounded border text-sm">
-                  <Link
-                    href={`/dashboard?start=${toDateParam(referenceDate)}`}
-                    className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                  >
-                    Week
-                  </Link>
-                  <Link
-                    href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
-                    className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                  >
-                    Month
-                  </Link>
-                </div>
-                <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
-                  New event
+          }
+        >
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold">{headerLabel}</h1>
+            <div className="flex gap-2">
+              <div className="flex overflow-hidden rounded border text-sm">
+                <Link
+                  href={`/dashboard?start=${toDateParam(referenceDate)}`}
+                  className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                >
+                  Week
+                </Link>
+                <Link
+                  href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
+                  className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
+                >
+                  Month
                 </Link>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <Link href={prevHref} className="underline">
-                ← Previous {mode === "month" ? "month" : "week"}
-              </Link>
-              <Link href={nextHref} className="underline">
-                Next {mode === "month" ? "month" : "week"} →
+              <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
+                New event
               </Link>
             </div>
-
-            {calendarBody}
           </div>
-        </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <Link href={prevHref} className="underline">
+              ← Previous {mode === "month" ? "month" : "week"}
+            </Link>
+            <Link href={nextHref} className="underline">
+              Next {mode === "month" ? "month" : "week"} →
+            </Link>
+          </div>
+
+          {calendarBody}
+        </DashboardShell>
 
         <PostItTray postIts={postIts} />
       </CalendarDndProvider>

@@ -14,28 +14,30 @@ export function PostItTray({
   postIts: Awaited<ReturnType<typeof listPostIts>>;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded border p-3">
-      <h2 className="text-xs font-medium text-zinc-500">
-        📌 POST-ITS — drag one onto a day to schedule it
-      </h2>
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 p-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
+        <h2 className="text-xs font-medium text-zinc-500">
+          📌 POST-ITS — drag one onto a day to schedule it
+        </h2>
 
-      <div className="flex flex-wrap gap-3">
-        {postIts.length === 0 && (
-          <p className="text-sm text-zinc-500">
-            No post-its yet — jot one below, or promote a quick-list item.
-          </p>
-        )}
-        {postIts.map((postIt) => (
-          <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
-        ))}
+        <div className="flex flex-wrap gap-3">
+          {postIts.length === 0 && (
+            <p className="text-sm text-zinc-500">
+              No post-its yet — jot one below, or promote a quick-list item.
+            </p>
+          )}
+          {postIts.map((postIt) => (
+            <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
+          ))}
+        </div>
+
+        <form action={createPostItAction} className="flex max-w-sm gap-2">
+          <Input name="text" placeholder="Jot a quick note" required />
+          <Button type="submit" size="sm">
+            Add
+          </Button>
+        </form>
       </div>
-
-      <form action={createPostItAction} className="flex max-w-sm gap-2">
-        <Input name="text" placeholder="Jot a quick note" required />
-        <Button type="submit" size="sm">
-          Add
-        </Button>
-      </form>
     </div>
   );
 }

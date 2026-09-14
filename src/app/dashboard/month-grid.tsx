@@ -18,6 +18,7 @@ export function MonthGrid({
   const { monthStart, monthEnd, gridStart, gridEnd } = getMonthGrid(referenceDate);
 
   const totalDays = (gridEnd.getTime() - gridStart.getTime()) / MS_PER_DAY;
+  const weekRows = totalDays / 7;
   const days = Array.from({ length: totalDays }, (_, i) => {
     const date = new Date(gridStart.getTime() + i * MS_PER_DAY);
     const nextDate = new Date(date.getTime() + MS_PER_DAY);
@@ -32,7 +33,10 @@ export function MonthGrid({
   });
 
   return (
-    <div className="grid grid-cols-7 gap-px overflow-hidden rounded border bg-zinc-200 text-xs">
+    <div
+      className="grid h-full grid-cols-7 gap-px overflow-hidden bg-zinc-200 text-xs"
+      style={{ gridTemplateRows: `auto repeat(${weekRows}, 1fr)` }}
+    >
       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => (
         <div key={label} className="bg-zinc-50 px-2 py-1 text-center font-medium text-zinc-600">
           {label}
