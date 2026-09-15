@@ -298,11 +298,11 @@ export default async function DashboardPage({
             <Image
               src="/panel-art/gradient-wash.png"
               alt=""
-              width={1050}
-              height={1051}
+              fill
               priority
               aria-hidden
-              className="pointer-events-none absolute -top-24 -left-24 z-0 h-auto w-[50rem] max-w-none opacity-70 [mask-image:radial-gradient(circle_at_30%_30%,black_35%,transparent_75%)]"
+              sizes="40rem"
+              className="pointer-events-none z-0 object-cover object-left-top opacity-70 [mask-image:radial-gradient(circle_at_20%_20%,black_0%,transparent_85%)]"
             />
 
             <div className="relative z-10 flex shrink-0 items-center justify-between p-4 pb-2">
