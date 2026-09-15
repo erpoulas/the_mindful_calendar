@@ -156,7 +156,7 @@ function PostItCard({ id, text }: { id: string; text: string }) {
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-label={expanded ? "Show less of this note" : "Show the full note"}
-          className="absolute bottom-1 left-1 flex h-4 w-4 items-center justify-center rounded-full bg-background/80 text-xs leading-none text-muted-foreground hover:text-foreground"
+          className="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-background/80 text-xs leading-none text-muted-foreground hover:text-foreground"
         >
           {expanded ? "−" : "+"}
         </button>
