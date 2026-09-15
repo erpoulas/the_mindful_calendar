@@ -17,7 +17,7 @@ import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { DopamineMenuView } from "./overlays/dopamine-menu";
-import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
+import { QuickListCreateView, QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
   JournalCreateView,
@@ -37,7 +37,7 @@ import { DashboardShell } from "./dashboard-shell";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizer } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
-import { PostItTray } from "./post-it-tray";
+import { PostItColumn } from "./post-it-column";
 import {
   AffirmationPanel,
   DopaminePanel,
@@ -54,8 +54,6 @@ const MONTH_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",
   timeZone: "UTC",
 };
-
-const CALENDAR_HEIGHT_CLASS = "h-[37.5rem]";
 
 function toDateParam(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -104,7 +102,9 @@ export default async function DashboardPage({
   let headerLabel: string;
   let prevHref: string;
   let nextHref: string;
+  let allDayRow: React.ReactNode = null;
   let calendarBody: React.ReactNode;
+  let calendarBodyPadded = false;
   let dndEvents: TimeGridEvent[] = [];
 
   if (mode === "month") {
@@ -121,13 +121,7 @@ export default async function DashboardPage({
     headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
-    calendarBody = (
-      <div
-        className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-hidden rounded border border-border`}
-      >
-        <MonthGrid referenceDate={referenceDate} events={monthEvents} />
-      </div>
-    );
+    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
   } else {
     const { start, end } = getWeekRange(referenceDate);
     const events = await listCalendarEvents(db, { userId, start, end });
@@ -149,33 +143,27 @@ export default async function DashboardPage({
     prevHref = `/dashboard?start=${toDateParam(prevWeekStart)}`;
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
     dndEvents = timedEvents;
-    calendarBody = (
-      <>
-        {allDayEvents.length > 0 && (
-          <div className="mx-4 rounded border border-border bg-background p-2">
-            <h2 className="text-xs font-medium text-muted-foreground">All day</h2>
-            <ul className="mt-1 flex flex-wrap gap-1.5">
-              {allDayEvents.map((event) => (
-                <li key={event.id}>
-                  <Link
-                    href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
-                    className="rounded bg-accent px-2 py-0.5 text-xs hover:bg-secondary"
-                  >
-                    {event.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div
-          className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-auto rounded border border-border p-2`}
-        >
-          <TimeGrid weekStart={start} events={timedEvents} />
+    calendarBodyPadded = true;
+    if (allDayEvents.length > 0) {
+      allDayRow = (
+        <div className="relative z-10 mx-4 shrink-0 rounded border border-border bg-background p-2">
+          <h2 className="text-xs font-medium text-muted-foreground">All day</h2>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {allDayEvents.map((event) => (
+              <li key={event.id}>
+                <Link
+                  href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+                  className="rounded bg-accent px-2 py-0.5 text-xs hover:bg-secondary"
+                >
+                  {event.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-      </>
-    );
+      );
+    }
+    calendarBody = <TimeGrid weekStart={start} events={timedEvents} />;
   }
 
   const panelComponents: Record<string, React.ReactNode> = {
@@ -229,6 +217,9 @@ export default async function DashboardPage({
     if (view === "edit" && id) {
       panelTitle = "Edit list";
       panelContent = <QuickListEditView id={id} />;
+    } else if (view === "create") {
+      panelTitle = "New list";
+      panelContent = <QuickListCreateView />;
     } else {
       panelTitle = "Quick Lists";
       panelContent = <QuickListsView activeId={id ?? undefined} />;
@@ -280,8 +271,8 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6 pb-40">
-      <div className="flex items-center justify-end gap-2 border-b pb-3">
+    <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
         <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>
           Account settings
         </Link>
@@ -301,8 +292,9 @@ export default async function DashboardPage({
               ))}
             </PanelCustomizer>
           }
+          postIts={<PostItColumn postIts={postIts} />}
         >
-          <div className="isolate relative overflow-hidden rounded">
+          <div className="isolate relative flex min-h-0 flex-1 flex-col overflow-hidden rounded">
             <Image
               src="/panel-art/gradient-wash.png"
               alt=""
@@ -313,7 +305,7 @@ export default async function DashboardPage({
               className="pointer-events-none absolute -top-24 -left-24 z-0 h-auto w-[50rem] max-w-none opacity-70 [mask-image:radial-gradient(circle_at_30%_30%,black_35%,transparent_75%)]"
             />
 
-            <div className="relative z-10 flex items-center justify-between p-4 pb-2">
+            <div className="relative z-10 flex shrink-0 items-center justify-between p-4 pb-2">
               <h1 className="flex items-center gap-2 font-heading text-4xl tracking-wide uppercase">
                 {headerLabel}
                 <Image src="/panel-art/decorative-star.png" alt="" width={20} height={20} />
@@ -340,7 +332,7 @@ export default async function DashboardPage({
               </div>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between px-4 pb-3 text-sm">
+            <div className="relative z-10 flex shrink-0 items-center justify-between px-4 pb-3 text-sm">
               <Link href={prevHref} className="underline">
                 ← Previous {mode === "month" ? "month" : "week"}
               </Link>
@@ -349,11 +341,15 @@ export default async function DashboardPage({
               </Link>
             </div>
 
-            <div className="relative z-10">{calendarBody}</div>
+            {allDayRow}
+
+            <div
+              className={`relative z-10 mx-4 mb-4 min-h-0 flex-1 overflow-auto rounded border border-border ${calendarBodyPadded ? "p-2" : ""}`}
+            >
+              {calendarBody}
+            </div>
           </div>
         </DashboardShell>
-
-        <PostItTray postIts={postIts} />
       </CalendarDndProvider>
 
       <PanelSheet

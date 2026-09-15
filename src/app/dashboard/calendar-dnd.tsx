@@ -79,7 +79,9 @@ export function CalendarDndProvider({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className={`flex flex-col gap-4 ${isPending ? "opacity-60" : ""}`}>{children}</div>
+      <div className={`flex min-h-0 flex-1 flex-col ${isPending ? "opacity-60" : ""}`}>
+        {children}
+      </div>
     </DndContext>
   );
 }

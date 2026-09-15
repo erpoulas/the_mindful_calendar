@@ -9,36 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { listPostIts } from "@/lib/post-its";
 
-export function PostItTray({
+export function PostItColumn({
   postIts,
 }: {
   postIts: Awaited<ReturnType<typeof listPostIts>>;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
-        <h2 className="text-xs font-medium text-muted-foreground">
-          📌 POST-ITS — drag one onto a day to schedule it
-        </h2>
+    <div className="flex h-full flex-col gap-2">
+      <h2 className="text-xs font-medium text-muted-foreground">
+        📌 POST-ITS — drag one onto a day to schedule it
+      </h2>
 
-        <div className="flex flex-wrap gap-3">
-          {postIts.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No post-its yet — jot one below, or promote a quick-list item.
-            </p>
-          )}
-          {postIts.map((postIt) => (
-            <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
-          ))}
-        </div>
-
-        <form action={createPostItAction} className="flex max-w-sm gap-2">
-          <Input name="text" placeholder="Jot a quick note" required />
-          <Button type="submit" size="sm">
-            Add
-          </Button>
-        </form>
+      <div className="flex flex-wrap content-start gap-3 overflow-hidden">
+        {postIts.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No post-its yet — jot one below, or promote a quick-list item.
+          </p>
+        )}
+        {postIts.map((postIt) => (
+          <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
+        ))}
       </div>
+
+      <form action={createPostItAction} className="flex gap-2">
+        <Input name="text" placeholder="Jot a quick note" required />
+        <Button type="submit" size="sm">
+          Add
+        </Button>
+      </form>
     </div>
   );
 }
