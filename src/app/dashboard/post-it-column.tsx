@@ -2,15 +2,26 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDraggable } from "@dnd-kit/core";
 import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
 import type { listPostIts } from "@/lib/post-its";
 
+// How many post-its the permanent column shows before overflowing into the
+// "+N more" pop-out — same fixed-cap approach used for month-grid day cells,
+// rather than giving the column its own scrollbar.
+const VISIBLE_CAP = 5;
+
 export function PostItColumn({
   postIts,
+  capped = false,
 }: {
   postIts: Awaited<ReturnType<typeof listPostIts>>;
+  capped?: boolean;
 }) {
+  const shown = capped ? postIts.slice(0, VISIBLE_CAP) : postIts;
+  const overflow = postIts.length - shown.length;
+
   return (
     <div className="flex h-full flex-col gap-2">
       <div className="flex flex-wrap content-start gap-3 overflow-hidden">
@@ -18,10 +29,18 @@ export function PostItColumn({
             revalidates this server-fed prop) remounts the ghost card back to
             its resting state instead of staying stuck in "editing". */}
         <PostItGhostCreate key={postIts.length} />
-        {postIts.map((postIt) => (
+        {shown.map((postIt) => (
           <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
         ))}
       </div>
+      {overflow > 0 && (
+        <Link
+          href="/dashboard?panel=postits"
+          className="text-xs text-muted-foreground hover:underline"
+        >
+          +{overflow} more
+        </Link>
+      )}
     </div>
   );
 }

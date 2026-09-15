@@ -268,6 +268,10 @@ export default async function DashboardPage({
       panelTitle = "Journals";
       panelContent = <JournalsListView />;
     }
+  } else if (panel === "postits") {
+    panelTitle = "Post-its";
+    panelSize = "wide";
+    panelContent = <PostItColumn postIts={postIts} />;
   }
 
   return (
@@ -292,7 +296,7 @@ export default async function DashboardPage({
               ))}
             </PanelCustomizer>
           }
-          postIts={<PostItColumn postIts={postIts} />}
+          postIts={<PostItColumn postIts={postIts} capped />}
         >
           <div className="isolate relative flex min-h-0 flex-1 flex-col overflow-hidden rounded">
             <Image
@@ -350,16 +354,21 @@ export default async function DashboardPage({
             </div>
           </div>
         </DashboardShell>
-      </CalendarDndProvider>
 
-      <PanelSheet
-        open={panel !== null}
-        title={panelTitle}
-        size={panelSize}
-        backgroundImage={panelBackground}
-      >
-        {panelContent}
-      </PanelSheet>
+        {/* Inside CalendarDndProvider, not a sibling of it, so drag-and-drop
+            still works for post-its rendered in the "+N more" pop-out
+            (the panel=postits case above) — dnd-kit's DndContext is a React
+            context, so it must be an ancestor in the element tree even
+            though the Drawer's own content renders through a portal. */}
+        <PanelSheet
+          open={panel !== null}
+          title={panelTitle}
+          size={panelSize}
+          backgroundImage={panelBackground}
+        >
+          {panelContent}
+        </PanelSheet>
+      </CalendarDndProvider>
     </div>
   );
 }
