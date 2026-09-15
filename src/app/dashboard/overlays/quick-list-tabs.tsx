@@ -17,8 +17,8 @@ export function QuickListTabs({
           href={`/dashboard?panel=quicklists&id=${list.id}`}
           className={`rounded px-3 py-1 text-sm ${
             list.id === activeId
-              ? "bg-zinc-800 text-white"
-              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+              ? "bg-primary text-primary-foreground"
+              : "bg-accent text-foreground hover:bg-secondary"
           }`}
         >
           {list.name}

@@ -24,7 +24,7 @@ export async function AffirmationsView() {
           {today ? today.text : "Add an affirmation below to get started."}
         </p>
         {today?.isOverride && (
-          <p className="mt-1 text-xs text-zinc-500">Set just for today</p>
+          <p className="mt-1 text-xs text-muted-foreground">Set just for today</p>
         )}
         {affirmations.length > 0 && (
           <form action={pickAffirmationAction} className="mt-3">
@@ -37,7 +37,7 @@ export async function AffirmationsView() {
 
       <div className="flex flex-col gap-3 rounded border p-4">
         <h2 className="text-lg font-medium">Just for today</h2>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           A one-off override — it won&apos;t be added to your permanent list.
         </p>
         <form action={setTodayAffirmationAction} className="flex gap-2">
@@ -47,10 +47,10 @@ export async function AffirmationsView() {
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-zinc-600">Your list</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Your list</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {affirmations.length === 0 && (
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-muted-foreground">
               Nothing here yet — save one you found below.
             </p>
           )}

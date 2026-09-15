@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
@@ -14,15 +15,15 @@ export function PostItTray({
   postIts: Awaited<ReturnType<typeof listPostIts>>;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 p-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] backdrop-blur-sm">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
-        <h2 className="text-xs font-medium text-zinc-500">
+        <h2 className="text-xs font-medium text-muted-foreground">
           📌 POST-ITS — drag one onto a day to schedule it
         </h2>
 
         <div className="flex flex-wrap gap-3">
           {postIts.length === 0 && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               No post-its yet — jot one below, or promote a quick-list item.
             </p>
           )}
@@ -59,20 +60,30 @@ function PostItCard({ id, text }: { id: string; text: string }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`relative w-36 -rotate-1 touch-none rounded bg-yellow-100 p-2 pt-3 text-sm shadow odd:rotate-1 ${
+      className={`relative w-28 -rotate-1 touch-none odd:rotate-1 ${
         isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
       }`}
     >
-      <form action={deletePostItAction.bind(null, id)} className="absolute top-0.5 right-1">
+      <Image
+        src="/panel-art/post-it-icon.png"
+        alt=""
+        width={170}
+        height={185}
+        draggable={false}
+        className="pointer-events-none h-auto w-full drop-shadow-sm select-none"
+      />
+      <form action={deletePostItAction.bind(null, id)} className="absolute top-1 right-1">
         <button
           type="submit"
           aria-label="Dismiss post-it"
-          className="text-xs text-zinc-500 hover:text-zinc-800"
+          className="text-xs text-muted-foreground hover:text-foreground"
         >
           ✕
         </button>
       </form>
-      <p className="break-words pr-2">{text}</p>
+      <p className="font-handwritten absolute inset-x-3 top-9 bottom-2 overflow-hidden text-sm leading-snug break-words">
+        {text}
+      </p>
     </div>
   );
 }

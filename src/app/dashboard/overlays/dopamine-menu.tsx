@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   addDopamineMenuItemAction,
   deleteDopamineMenuItemAction,
@@ -18,6 +19,15 @@ export async function DopamineMenuView() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-center">
+        <Image
+          src="/panel-art/dopamine-tracker.png"
+          alt=""
+          width={144}
+          height={100}
+          className="h-24 w-auto"
+        />
+      </div>
       <div className="rounded border p-4 text-center">
         <p className="text-lg">
           {pick ? pick.text : "Add something to your menu to get a pick."}
@@ -32,10 +42,10 @@ export async function DopamineMenuView() {
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-zinc-600">Your menu</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Your menu</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {items.length === 0 && (
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-muted-foreground">
               Nothing here yet — save something you found below.
             </p>
           )}

@@ -94,7 +94,7 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
   return (
     <form action={action} className="flex flex-col gap-3 rounded border p-4">
       <h2 className="text-lg font-medium">Change email</h2>
-      <p className="text-sm text-zinc-600">Current: {currentEmail}</p>
+      <p className="text-sm text-muted-foreground">Current: {currentEmail}</p>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">New email</Label>

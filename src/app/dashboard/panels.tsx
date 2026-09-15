@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 
@@ -24,7 +25,7 @@ function PanelShell({
         <button
           type="submit"
           aria-label="Hide this panel"
-          className="text-xs text-zinc-400 hover:text-zinc-700"
+          className="text-xs text-muted-foreground hover:text-foreground"
         >
           ✕
         </button>
@@ -42,7 +43,7 @@ export function AffirmationPanel({
   return (
     <PanelShell panelKey="affirmation">
       <Link href="/dashboard?panel=affirmations" className="block">
-        <div className="text-xs font-medium text-zinc-500">✨ TODAY</div>
+        <div className="text-xs font-medium text-muted-foreground">✨ TODAY</div>
         <p className="mt-1 text-sm italic">
           {affirmation ? `"${affirmation.text}"` : "Add an affirmation to see one here."}
         </p>
@@ -64,12 +65,12 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
   return (
     <PanelShell panelKey="breakdown">
       <Link href="/dashboard?panel=intentions" className="block">
-        <div className="mb-1 text-xs font-medium text-zinc-500">TIME THIS WEEK, BY INTENTION</div>
+        <div className="mb-1 text-xs font-medium text-muted-foreground">TIME THIS WEEK, BY INTENTION</div>
         {segments.length === 0 ? (
-          <p className="text-sm text-zinc-600">No events logged yet this week.</p>
+          <p className="text-sm text-muted-foreground">No events logged yet this week.</p>
         ) : (
           <>
-            <div className="flex h-3 w-full overflow-hidden rounded bg-zinc-100">
+            <div className="flex h-3 w-full overflow-hidden rounded bg-accent">
               {segments.map((segment) => (
                 <div
                   key={segment.label}
@@ -78,7 +79,7 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
                 />
               ))}
             </div>
-            <ul className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-zinc-600">
+            <ul className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
               {segments.map((segment) => (
                 <li key={segment.label}>
                   {segment.label} {segment.percent}%
@@ -95,10 +96,13 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
 export function ProjectsPanel({ activeCount }: { activeCount: number }) {
   return (
     <PanelShell panelKey="projects">
-      <Link href="/dashboard?panel=projects" className="block">
-        <div className="text-sm font-medium">📁 All projects</div>
-        <div className="mt-0.5 text-xs text-zinc-500">
-          {activeCount} active · click to view any one
+      <Link href="/dashboard?panel=projects" className="flex items-center gap-2">
+        <Image src="/panel-art/project-tracker-button.png" alt="" width={24} height={28} />
+        <div>
+          <div className="text-sm font-medium">Project tracker</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {activeCount} active · click to view any one
+          </div>
         </div>
       </Link>
     </PanelShell>
@@ -108,10 +112,13 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
 export function QuickListPanel({ openCount }: { openCount: number }) {
   return (
     <PanelShell panelKey="quicklist">
-      <Link href="/dashboard?panel=quicklists" className="block">
-        <div className="text-sm font-medium">📝 Quick list</div>
-        <div className="mt-0.5 text-xs text-zinc-500">
-          {openCount} open {openCount === 1 ? "item" : "items"} · no intention needed
+      <Link href="/dashboard?panel=quicklists" className="flex items-center gap-2">
+        <Image src="/panel-art/quick-notes-button.png" alt="" width={31} height={28} />
+        <div>
+          <div className="text-sm font-medium">Quick notes</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {openCount} open {openCount === 1 ? "item" : "items"} · no intention needed
+          </div>
         </div>
       </Link>
     </PanelShell>
@@ -121,9 +128,12 @@ export function QuickListPanel({ openCount }: { openCount: number }) {
 export function JournalPanel() {
   return (
     <PanelShell panelKey="journal">
-      <Link href="/dashboard?panel=journals" className="block">
-        <div className="text-sm font-medium">📓 Journal</div>
-        <div className="mt-0.5 text-xs text-zinc-500">Write now, no scheduling needed</div>
+      <Link href="/dashboard?panel=journals" className="flex items-center gap-2">
+        <Image src="/panel-art/journal-button.png" alt="" width={34} height={28} />
+        <div>
+          <div className="text-sm font-medium">Journal</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">Write now, no scheduling needed</div>
+        </div>
       </Link>
     </PanelShell>
   );
@@ -132,9 +142,12 @@ export function JournalPanel() {
 export function DopaminePanel() {
   return (
     <PanelShell panelKey="dopamine">
-      <Link href="/dashboard?panel=dopamine-menu" className="block">
-        <div className="text-sm font-medium">🎲 Dopamine menu</div>
-        <div className="mt-0.5 text-xs text-zinc-500">Feeling stuck? Get an idea</div>
+      <Link href="/dashboard?panel=dopamine-menu" className="flex items-center gap-2">
+        <Image src="/panel-art/dopamine-tracker.png" alt="" width={40} height={28} />
+        <div>
+          <div className="text-sm font-medium">Dopamine menu</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">Feeling stuck? Get an idea</div>
+        </div>
       </Link>
     </PanelShell>
   );
@@ -144,7 +157,7 @@ export function WeeklyReviewPanel({ stats }: { stats: WeeklyReviewStats }) {
   return (
     <PanelShell panelKey="review">
       <div className="text-sm font-medium">📊 Weekly review</div>
-      <ul className="mt-1 flex flex-col gap-0.5 text-xs text-zinc-600">
+      <ul className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
         <li>{stats.intentionBreakdown.totalCount} events logged this week</li>
         <li>{stats.tasksCompleted} project tasks completed</li>
         <li>{stats.quickListItemsCompleted} quick list items checked off</li>

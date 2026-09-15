@@ -74,7 +74,7 @@ export function ProjectForm({
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1 text-sm font-medium">Intentions</legend>
         {intentions.length === 0 && (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted-foreground">
             No intentions yet — create one first, then come back here.
           </p>
         )}

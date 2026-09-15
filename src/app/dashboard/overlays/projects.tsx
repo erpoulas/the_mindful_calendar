@@ -36,16 +36,16 @@ export async function ProjectsListView() {
     <div className="flex flex-col gap-6">
       <ul className="flex flex-col gap-2">
         {projects.length === 0 && (
-          <p className="text-sm text-zinc-600">No projects yet — add one below.</p>
+          <p className="text-sm text-muted-foreground">No projects yet — add one below.</p>
         )}
         {projects.map((project) => (
           <li key={project.id}>
             <Link
               href={`/dashboard?panel=projects&view=detail&id=${project.id}`}
-              className="flex items-center justify-between rounded border px-3 py-2 hover:bg-zinc-50"
+              className="flex items-center justify-between rounded border px-3 py-2 hover:bg-accent"
             >
               <span>{project.title}</span>
-              <span className="text-sm text-zinc-500">{STATUS_LABEL[project.status]}</span>
+              <span className="text-sm text-muted-foreground">{STATUS_LABEL[project.status]}</span>
             </Link>
           </li>
         ))}
@@ -72,9 +72,9 @@ export async function ProjectDetailView({ id }: { id: string }) {
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-lg font-semibold">{project.title}</h2>
-        <p className="mt-1 text-sm text-zinc-600">{project.endGoal}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{project.endGoal}</p>
         {project.dueDate && (
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Due {project.dueDate.toLocaleDateString()}
           </p>
         )}
@@ -118,7 +118,7 @@ export async function ProjectDetailView({ id }: { id: string }) {
         <h3 className="text-lg font-medium">Tasks</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {project.tasks.length === 0 && (
-            <p className="text-sm text-zinc-600">No tasks yet.</p>
+            <p className="text-sm text-muted-foreground">No tasks yet.</p>
           )}
           {project.tasks.map((task) => (
             <li key={task.id} className="flex items-center gap-2">
@@ -127,11 +127,11 @@ export async function ProjectDetailView({ id }: { id: string }) {
                   type="submit"
                   aria-label={task.done ? "Mark not done" : "Mark done"}
                   className={`h-5 w-5 rounded border ${
-                    task.done ? "border-zinc-800 bg-zinc-800" : "border-zinc-400 bg-white"
+                    task.done ? "border-primary bg-primary" : "border-border bg-background"
                   }`}
                 />
               </form>
-              <span className={task.done ? "text-zinc-500 line-through" : ""}>
+              <span className={task.done ? "text-muted-foreground line-through" : ""}>
                 {task.text}
               </span>
             </li>

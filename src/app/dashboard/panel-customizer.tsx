@@ -27,7 +27,7 @@ export function PanelCustomizer({
       <button
         type="button"
         onClick={() => setIsCustomizing((value) => !value)}
-        className="mb-2 text-xs text-zinc-600 underline"
+        className="mb-2 text-xs text-muted-foreground underline"
       >
         ⚙ {isCustomizing ? "Done customizing" : "Customize panels"}
       </button>
@@ -41,12 +41,12 @@ export function PanelCustomizer({
 
       {isCustomizing && hiddenPanels.length > 0 && (
         <div className="mt-3 border-t pt-3">
-          <p className="mb-1 text-xs font-medium text-zinc-500">Hidden — click to bring back</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Hidden — click to bring back</p>
           <ul className="flex flex-col gap-1">
             {hiddenPanels.map((panelKey) => (
               <li key={panelKey}>
                 <form action={togglePanelVisibilityAction.bind(null, panelKey)}>
-                  <button type="submit" className="text-xs text-zinc-600 underline">
+                  <button type="submit" className="text-xs text-muted-foreground underline">
                     + {PANEL_LABELS[panelKey] ?? panelKey}
                   </button>
                 </form>

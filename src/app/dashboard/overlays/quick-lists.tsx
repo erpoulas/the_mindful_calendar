@@ -33,7 +33,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
       {!list && (
         <>
           {lists.length === 0 && (
-            <p className="text-sm text-zinc-600">No lists yet — add one below.</p>
+            <p className="text-sm text-muted-foreground">No lists yet — add one below.</p>
           )}
           <QuickListForm
             action={createQuickListAction}
@@ -65,7 +65,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
 
           <ul className="flex flex-col gap-2">
             {list.items.length === 0 && (
-              <p className="text-sm text-zinc-600">No items yet — add one below.</p>
+              <p className="text-sm text-muted-foreground">No items yet — add one below.</p>
             )}
             {list.items.map((item) => (
               <li key={item.id} className="flex items-center gap-2">
@@ -74,21 +74,21 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
                     type="submit"
                     aria-label={item.done ? "Mark not done" : "Mark done"}
                     className={`h-5 w-5 rounded border ${
-                      item.done ? "border-zinc-800 bg-zinc-800" : "border-zinc-400 bg-white"
+                      item.done ? "border-primary bg-primary" : "border-border bg-background"
                     }`}
                   />
                 </form>
-                <span className={`flex-1 ${item.done ? "text-zinc-500 line-through" : ""}`}>
+                <span className={`flex-1 ${item.done ? "text-muted-foreground line-through" : ""}`}>
                   {item.text}
                 </span>
                 <Link
                   href={`/dashboard?panel=calendar-event&view=new&title=${encodeURIComponent(item.text)}`}
-                  className="text-sm text-zinc-600 underline"
+                  className="text-sm text-muted-foreground underline"
                 >
                   Schedule
                 </Link>
                 <form action={promoteQuickListItemToPostItAction.bind(null, item.id)}>
-                  <button type="submit" className="text-sm text-zinc-600 underline">
+                  <button type="submit" className="text-sm text-muted-foreground underline">
                     → Post-it
                   </button>
                 </form>

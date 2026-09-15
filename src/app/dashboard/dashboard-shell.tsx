@@ -22,7 +22,7 @@ export function DashboardShell({
           <button
             type="button"
             onClick={() => setSidebarHidden((value) => !value)}
-            className="text-xs text-zinc-600 underline"
+            className="text-xs text-muted-foreground underline"
           >
             {sidebarHidden ? "Show side panels" : "Hide side panels"}
           </button>

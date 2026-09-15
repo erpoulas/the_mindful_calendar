@@ -20,13 +20,13 @@ export async function IntentionsListView() {
     <div className="flex flex-col gap-6">
       <ul className="flex flex-col gap-2">
         {intentions.length === 0 && (
-          <p className="text-sm text-zinc-600">No intentions yet — add one below.</p>
+          <p className="text-sm text-muted-foreground">No intentions yet — add one below.</p>
         )}
         {intentions.map((intention) => (
           <li key={intention.id}>
             <Link
               href={`/dashboard?panel=intentions&view=detail&id=${intention.id}`}
-              className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-zinc-50"
+              className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
             >
               {intention.color && (
                 <span
@@ -84,12 +84,12 @@ export async function IntentionDetailView({ id }: { id: string }) {
       )}
 
       <div>
-        <h3 className="text-sm font-medium text-zinc-600">Last 8 weeks</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">Last 8 weeks</h3>
         <div className="mt-2 flex h-20 items-end gap-1.5">
           {detail.weeklyStreak.map((count, i) => (
             <div
               key={i}
-              className="flex-1 rounded-t bg-zinc-800"
+              className="flex-1 rounded-t bg-primary"
               style={{
                 height: `${(count / maxCount) * 100}%`,
                 minHeight: count > 0 ? 4 : 1,

@@ -33,13 +33,13 @@ export async function JournalsListView() {
     <div className="flex flex-col gap-6">
       <ul className="flex flex-col gap-2">
         {journals.length === 0 && (
-          <p className="text-sm text-zinc-600">No journals yet — add one below.</p>
+          <p className="text-sm text-muted-foreground">No journals yet — add one below.</p>
         )}
         {journals.map((journal) => (
           <li key={journal.id}>
             <Link
               href={`/dashboard?panel=journals&view=detail&id=${journal.id}`}
-              className="flex items-center rounded border px-3 py-2 hover:bg-zinc-50"
+              className="flex items-center rounded border px-3 py-2 hover:bg-accent"
             >
               {journal.name}
             </Link>
@@ -89,7 +89,7 @@ export async function JournalDetailView({ id }: { id: string }) {
         <h3 className="text-lg font-medium">New entry</h3>
 
         {suggestedPrompt && (
-          <div className="mt-2 flex items-center justify-between gap-2 text-sm text-zinc-600">
+          <div className="mt-2 flex items-center justify-between gap-2 text-sm text-muted-foreground">
             <span>Try: &ldquo;{suggestedPrompt.text}&rdquo;</span>
             <form action={pickJournalPromptAction}>
               <Button type="submit" variant="ghost" size="sm">
@@ -145,10 +145,10 @@ export async function JournalDetailView({ id }: { id: string }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-zinc-600">Prompt pool</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">Prompt pool</h3>
         <ul className="mt-2 flex flex-col gap-1.5">
           {journal.prompts.length === 0 && (
-            <p className="text-sm text-zinc-600">No saved prompts yet.</p>
+            <p className="text-sm text-muted-foreground">No saved prompts yet.</p>
           )}
           {journal.prompts.map((prompt) => (
             <li key={prompt.id} className="flex items-center justify-between gap-2 text-sm">
@@ -172,24 +172,24 @@ export async function JournalDetailView({ id }: { id: string }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-zinc-600">Entries</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">Entries</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {journal.entries.length === 0 && (
-            <p className="text-sm text-zinc-600">No entries yet.</p>
+            <p className="text-sm text-muted-foreground">No entries yet.</p>
           )}
           {journal.entries.map((entry) => (
             <li key={entry.id}>
               <Link
                 href={`/dashboard?panel=journals&view=entry-edit&id=${journal.id}&entryId=${entry.id}`}
-                className="block rounded border px-3 py-2 hover:bg-zinc-50"
+                className="block rounded border px-3 py-2 hover:bg-accent"
               >
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
                 </p>
                 {entry.promptText && (
                   <p className="text-sm font-medium">{entry.promptText}</p>
                 )}
-                <p className="text-sm text-zinc-600">
+                <p className="text-sm text-muted-foreground">
                   {entry.content ? entry.content.slice(0, 120) : "Not written yet"}
                 </p>
               </Link>
@@ -236,7 +236,7 @@ export async function JournalEntryEditView({
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-medium">{entry.promptText ?? "Entry"}</h2>
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-muted-foreground">
         {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
       </p>
 

@@ -26,9 +26,9 @@ export function MonthDayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex h-full flex-col gap-1 overflow-hidden bg-white p-1.5 ${
-        inMonth ? "" : "bg-zinc-50 text-zinc-400"
-      } ${isOver ? "bg-zinc-100" : ""}`}
+      className={`flex h-full flex-col gap-1 overflow-hidden bg-background p-1.5 ${
+        inMonth ? "" : "bg-secondary text-muted-foreground"
+      } ${isOver ? "bg-accent" : ""}`}
     >
       <Link href={weekStartHref} className="text-xs hover:underline">
         {dayNumber}
@@ -37,13 +37,13 @@ export function MonthDayCell({
         <Link
           key={event.id}
           href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
-          className="truncate rounded bg-zinc-100 px-1 text-xs hover:bg-zinc-200"
+          className="truncate rounded bg-accent px-1 text-xs hover:bg-secondary"
         >
           {event.title}
         </Link>
       ))}
       {overflow > 0 && (
-        <Link href={weekStartHref} className="text-xs text-zinc-500 hover:underline">
+        <Link href={weekStartHref} className="text-xs text-muted-foreground hover:underline">
           +{overflow} more
         </Link>
       )}

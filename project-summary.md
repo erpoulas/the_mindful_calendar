@@ -88,10 +88,12 @@ WorkoutRoutine / SavedMeal (drag-and-drop libraries, schedule onto calendar)
 
 ---
 
-## Visual design direction (not yet implemented in real code)
-- Palette: rose `#E86A8D`, light pink `#F4C2CF`, sage `#A8C7B3`, deep green `#4E6B57`, cream `#FAF3EE`.
-- Cream background with a user-supplied orchid photo at ~10% opacity behind all content.
-- Everything else about how the palette gets applied (which color means what, typography, per-intention colors) is still undecided — UI polish is deferred until after the v1 build.
+## Visual design direction (implemented, based on the user's Canva mockup — see `canva design/`)
+- Palette: cream background `#FFFCEF`, ink text/borders `#343434`.
+- Typography: **League Gothic** for headings (page titles, popup titles), **Open Sauce Sans** for body/UI text everywhere else, **Finger Paint** (handwritten style) for post-it note text.
+- A blue/purple/teal gradient-wash image sits behind the calendar header, fading into the cream background.
+- Each sidebar panel (Projects, Dopamine Menu, Journal, Quick List) has a matching piece of decorative art from the mockup, shown both as a small icon on its dashboard card and as larger art at the top of its popup.
+- All panel art lives in `public/panel-art/`, sourced from `canva design/canva design/assets/` (the two combined source images — dice+notebook, gradient+post-it icon — were split with a one-off `sharp` script).
 
 ---
 

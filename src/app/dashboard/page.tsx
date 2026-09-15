@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { logout } from "@/app/actions/auth";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
@@ -115,7 +116,9 @@ export default async function DashboardPage({
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
     calendarBody = (
-      <div className={`${CALENDAR_HEIGHT_CLASS} overflow-hidden rounded border`}>
+      <div
+        className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-hidden rounded border border-border`}
+      >
         <MonthGrid referenceDate={referenceDate} events={monthEvents} />
       </div>
     );
@@ -136,21 +139,21 @@ export default async function DashboardPage({
     const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
     const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    headerLabel = "This week";
+    headerLabel = start.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?start=${toDateParam(prevWeekStart)}`;
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
     dndEvents = timedEvents;
     calendarBody = (
       <>
         {allDayEvents.length > 0 && (
-          <div className="rounded border p-2">
-            <h2 className="text-xs font-medium text-zinc-500">All day</h2>
+          <div className="mx-4 rounded border border-border bg-background p-2">
+            <h2 className="text-xs font-medium text-muted-foreground">All day</h2>
             <ul className="mt-1 flex flex-wrap gap-1.5">
               {allDayEvents.map((event) => (
                 <li key={event.id}>
                   <Link
                     href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
-                    className="rounded bg-zinc-100 px-2 py-0.5 text-xs hover:bg-zinc-200"
+                    className="rounded bg-accent px-2 py-0.5 text-xs hover:bg-secondary"
                   >
                     {event.title}
                   </Link>
@@ -160,7 +163,9 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className={`${CALENDAR_HEIGHT_CLASS} overflow-auto rounded border p-2`}>
+        <div
+          className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-auto rounded border border-border bg-background p-2`}
+        >
           <TimeGrid weekStart={start} events={timedEvents} />
         </div>
       </>
@@ -183,6 +188,7 @@ export default async function DashboardPage({
   let panelTitle = "";
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
+  let panelBackground: { src: string } | undefined;
   if (panel === "account") {
     panelTitle = "Account settings";
     panelContent = <AccountSettingsView />;
@@ -202,6 +208,8 @@ export default async function DashboardPage({
       panelContent = <NewEventView date={date} title={title} postItId={postItId} />;
     }
   } else if (panel === "quicklists") {
+    panelSize = "center";
+    panelBackground = { src: "/panel-art/quick-notes-pop-up.png" };
     if (view === "edit" && id) {
       panelTitle = "Edit list";
       panelContent = <QuickListEditView id={id} />;
@@ -221,6 +229,7 @@ export default async function DashboardPage({
       panelContent = <IntentionsListView />;
     }
   } else if (panel === "projects") {
+    panelBackground = { src: "/panel-art/project-tracker-side-popup.png" };
     if (view === "edit" && id) {
       panelTitle = "Edit project";
       panelContent = <ProjectEditView id={id} />;
@@ -232,6 +241,7 @@ export default async function DashboardPage({
       panelContent = <ProjectsListView />;
     }
   } else if (panel === "journals") {
+    panelBackground = { src: "/panel-art/side-popup-journal.png" };
     if (view === "entry-edit" && id && entryId) {
       panelTitle = "Entry";
       panelContent = <JournalEntryEditView id={id} entryId={entryId} />;
@@ -270,36 +280,52 @@ export default async function DashboardPage({
             </PanelCustomizer>
           }
         >
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">{headerLabel}</h1>
-            <div className="flex gap-2">
-              <div className="flex overflow-hidden rounded border text-sm">
-                <Link
-                  href={`/dashboard?start=${toDateParam(referenceDate)}`}
-                  className={`px-3 py-1 ${mode === "week" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                >
-                  Week
-                </Link>
-                <Link
-                  href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
-                  className={`px-3 py-1 ${mode === "month" ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}`}
-                >
-                  Month
+          <div className="isolate relative overflow-hidden rounded">
+            <Image
+              src="/panel-art/gradient-wash.png"
+              alt=""
+              width={1050}
+              height={1051}
+              priority
+              aria-hidden
+              className="pointer-events-none absolute -top-24 -left-24 z-0 h-auto w-[34rem] max-w-none opacity-70 [mask-image:radial-gradient(circle_at_30%_30%,black_35%,transparent_75%)]"
+            />
+
+            <div className="relative z-10 flex items-center justify-between p-4 pb-2">
+              <h1 className="flex items-center gap-2 font-heading text-4xl tracking-wide uppercase">
+                {headerLabel}
+                <Image src="/panel-art/decorative-star.png" alt="" width={20} height={20} />
+                <Image src="/panel-art/decorative-star.png" alt="" width={20} height={20} />
+              </h1>
+              <div className="flex gap-2">
+                <div className="flex overflow-hidden rounded border border-border text-sm">
+                  <Link
+                    href={`/dashboard?start=${toDateParam(referenceDate)}`}
+                    className={`px-3 py-1 ${mode === "week" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  >
+                    Week
+                  </Link>
+                  <Link
+                    href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
+                    className={`px-3 py-1 ${mode === "month" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  >
+                    Month
+                  </Link>
+                </div>
+                <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
+                  New event
                 </Link>
               </div>
-              <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
-                New event
+            </div>
+
+            <div className="relative z-10 flex items-center justify-between px-4 pb-3 text-sm">
+              <Link href={prevHref} className="underline">
+                ← Previous {mode === "month" ? "month" : "week"}
+              </Link>
+              <Link href={nextHref} className="underline">
+                Next {mode === "month" ? "month" : "week"} →
               </Link>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <Link href={prevHref} className="underline">
-              ← Previous {mode === "month" ? "month" : "week"}
-            </Link>
-            <Link href={nextHref} className="underline">
-              Next {mode === "month" ? "month" : "week"} →
-            </Link>
           </div>
 
           {calendarBody}
@@ -308,7 +334,12 @@ export default async function DashboardPage({
         <PostItTray postIts={postIts} />
       </CalendarDndProvider>
 
-      <PanelSheet open={panel !== null} title={panelTitle} size={panelSize}>
+      <PanelSheet
+        open={panel !== null}
+        title={panelTitle}
+        size={panelSize}
+        backgroundImage={panelBackground}
+      >
         {panelContent}
       </PanelSheet>
     </div>

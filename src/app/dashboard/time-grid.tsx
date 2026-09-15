@@ -42,7 +42,7 @@ export function TimeGrid({
       {days.map(({ date, key }) => (
         <div
           key={key}
-          className="border-b px-1 pb-1 text-center text-xs font-medium text-zinc-600"
+          className="border-b px-1 pb-1 text-center text-xs font-medium text-foreground"
         >
           {date.toLocaleDateString(undefined, {
             weekday: "short",
@@ -57,7 +57,7 @@ export function TimeGrid({
         {Array.from({ length: 24 }, (_, hour) => (
           <div
             key={hour}
-            className="absolute right-1 -translate-y-2 text-[10px] text-zinc-400"
+            className="absolute right-1 -translate-y-2 text-[10px] text-muted-foreground"
             style={{ top: hour * HOUR_HEIGHT }}
           >
             {hour === 0 ? "" : `${hour}:00`}
@@ -82,13 +82,13 @@ function DayColumn({ dayKey, events }: { dayKey: string; events: TimeGridEvent[]
   return (
     <div
       ref={setNodeRef}
-      className={`relative border-l ${isOver ? "bg-zinc-50" : ""}`}
+      className={`relative border-l ${isOver ? "bg-accent" : ""}`}
       style={{ height: HOUR_HEIGHT * 24 }}
     >
       {Array.from({ length: 24 }, (_, hour) => (
         <div
           key={hour}
-          className="absolute inset-x-0 border-t border-zinc-100"
+          className="absolute inset-x-0 border-t border-border/40"
           style={{ top: hour * HOUR_HEIGHT }}
         />
       ))}
@@ -124,7 +124,7 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`absolute inset-x-0.5 touch-none overflow-hidden rounded bg-zinc-800 px-1 text-[11px] leading-tight text-white ${
+      className={`absolute inset-x-0.5 touch-none overflow-hidden rounded bg-primary px-1 text-[11px] leading-tight text-primary-foreground ${
         isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
       }`}
     >

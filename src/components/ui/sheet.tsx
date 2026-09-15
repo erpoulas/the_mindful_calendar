@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Drawer } from "@base-ui/react/drawer";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +22,14 @@ export function Sheet({
   onOpenChange,
   title,
   size = "side",
+  backgroundImage,
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   size?: "side" | "wide" | "center";
+  backgroundImage?: { src: string };
   children: React.ReactNode;
 }) {
   return (
@@ -42,20 +45,33 @@ export function Sheet({
         >
           <Drawer.Popup
             className={cn(
-              "flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
+              "isolate relative flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
               POPUP_CLASSES[size],
             )}
           >
-            <div className="flex items-start justify-between gap-4">
-              <Drawer.Title className="text-lg font-semibold">{title}</Drawer.Title>
+            {backgroundImage && (
+              <Image
+                src={backgroundImage.src}
+                alt=""
+                fill
+                aria-hidden
+                className="pointer-events-none z-0 object-cover object-top"
+              />
+            )}
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <Drawer.Title className="font-heading text-2xl tracking-wide uppercase">
+                {title}
+              </Drawer.Title>
               <Drawer.Close
                 aria-label="Close"
-                className="text-sm text-zinc-400 hover:text-zinc-700"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 ✕
               </Drawer.Close>
             </div>
-            <Drawer.Content className="flex flex-1 flex-col">{children}</Drawer.Content>
+            <Drawer.Content className="relative z-10 flex flex-1 flex-col">
+              {children}
+            </Drawer.Content>
           </Drawer.Popup>
         </Drawer.Viewport>
       </Drawer.Portal>
