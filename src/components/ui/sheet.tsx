@@ -17,6 +17,12 @@ const POPUP_CLASSES = {
     "w-full sm:max-w-lg max-h-[90vh] rounded-lg border transition-all duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
 };
 
+// For a "side" popup with a background photo, the popup's own shape is the
+// photo's aspect ratio (h-full, width derived) instead of a fixed max-width,
+// so the photo fills the panel exactly with no letterboxing or empty margin.
+const SIDE_WITH_IMAGE_CLASSES =
+  "h-full border-l transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full";
+
 export function Sheet({
   open,
   onOpenChange,
@@ -29,9 +35,10 @@ export function Sheet({
   onOpenChange: (open: boolean) => void;
   title: string;
   size?: "side" | "wide" | "center";
-  backgroundImage?: { src: string };
+  backgroundImage?: { src: string; width: number; height: number };
   children: React.ReactNode;
 }) {
+  const sideWithImage = size === "side" && backgroundImage;
   return (
     <Drawer.Root
       open={open}
@@ -46,8 +53,13 @@ export function Sheet({
           <Drawer.Popup
             className={cn(
               "isolate relative flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
-              POPUP_CLASSES[size],
+              sideWithImage ? SIDE_WITH_IMAGE_CLASSES : POPUP_CLASSES[size],
             )}
+            style={
+              sideWithImage
+                ? { aspectRatio: `${backgroundImage.width} / ${backgroundImage.height}` }
+                : undefined
+            }
           >
             {backgroundImage && (
               <Image
@@ -55,7 +67,8 @@ export function Sheet({
                 alt=""
                 fill
                 aria-hidden
-                className="pointer-events-none z-0 object-contain object-right-top"
+                sizes="(max-width: 640px) 100vw, 24rem"
+                className="pointer-events-none z-0 object-cover object-right-top"
               />
             )}
             <div className="relative z-10 flex items-start justify-between gap-4">

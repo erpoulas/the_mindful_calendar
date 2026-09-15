@@ -188,7 +188,7 @@ export default async function DashboardPage({
   let panelTitle = "";
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
-  let panelBackground: { src: string } | undefined;
+  let panelBackground: { src: string; width: number; height: number } | undefined;
   if (panel === "account") {
     panelTitle = "Account settings";
     panelContent = <AccountSettingsView />;
@@ -209,7 +209,7 @@ export default async function DashboardPage({
     }
   } else if (panel === "quicklists") {
     panelSize = "center";
-    panelBackground = { src: "/panel-art/quick-notes-pop-up.png" };
+    panelBackground = { src: "/panel-art/quick-notes-pop-up.png", width: 614, height: 996 };
     if (view === "edit" && id) {
       panelTitle = "Edit list";
       panelContent = <QuickListEditView id={id} />;
@@ -229,7 +229,7 @@ export default async function DashboardPage({
       panelContent = <IntentionsListView />;
     }
   } else if (panel === "projects") {
-    panelBackground = { src: "/panel-art/project-tracker-side-popup.png" };
+    panelBackground = { src: "/panel-art/project-tracker-side-popup.png", width: 863, height: 1108 };
     if (view === "edit" && id) {
       panelTitle = "Edit project";
       panelContent = <ProjectEditView id={id} />;
@@ -241,7 +241,7 @@ export default async function DashboardPage({
       panelContent = <ProjectsListView />;
     }
   } else if (panel === "journals") {
-    panelBackground = { src: "/panel-art/side-popup-journal.png" };
+    panelBackground = { src: "/panel-art/side-popup-journal.png", width: 818, height: 1099 };
     if (view === "entry-edit" && id && entryId) {
       panelTitle = "Entry";
       panelContent = <JournalEntryEditView id={id} entryId={entryId} />;
