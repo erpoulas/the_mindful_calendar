@@ -34,11 +34,14 @@ export function MonthGrid({
 
   return (
     <div
-      className="grid h-full grid-cols-7 gap-px overflow-hidden bg-border text-xs"
+      className="grid h-full grid-cols-7 overflow-hidden text-xs"
       style={{ gridTemplateRows: `auto repeat(${weekRows}, 1fr)` }}
     >
       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => (
-        <div key={label} className="bg-background px-2 py-1 text-center font-medium text-foreground">
+        <div
+          key={label}
+          className="border-r border-b border-border px-2 py-1 text-center font-medium text-foreground"
+        >
           {label}
         </div>
       ))}

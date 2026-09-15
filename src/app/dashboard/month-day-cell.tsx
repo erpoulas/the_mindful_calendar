@@ -26,7 +26,7 @@ export function MonthDayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`flex h-full flex-col gap-1 overflow-hidden bg-background p-1.5 ${
+      className={`flex h-full flex-col gap-1 overflow-hidden border-r border-b border-border p-1.5 ${
         inMonth ? "" : "bg-secondary text-muted-foreground"
       } ${isOver ? "bg-accent" : ""}`}
     >

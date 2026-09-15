@@ -93,18 +93,43 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
   );
 }
 
+function IconPanelLink({
+  href,
+  iconSrc,
+  iconWidth,
+  iconHeight,
+  title,
+  description,
+}: {
+  href: string;
+  iconSrc: string;
+  iconWidth: number;
+  iconHeight: number;
+  title: string;
+  description: React.ReactNode;
+}) {
+  return (
+    <Link href={href} className="flex items-center gap-2">
+      <Image src={iconSrc} alt="" width={iconWidth} height={iconHeight} />
+      <div>
+        <div className="text-sm font-medium">{title}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+      </div>
+    </Link>
+  );
+}
+
 export function ProjectsPanel({ activeCount }: { activeCount: number }) {
   return (
     <PanelShell panelKey="projects">
-      <Link href="/dashboard?panel=projects" className="flex items-center gap-2">
-        <Image src="/panel-art/project-tracker-button.png" alt="" width={24} height={28} />
-        <div>
-          <div className="text-sm font-medium">Project tracker</div>
-          <div className="mt-0.5 text-xs text-muted-foreground">
-            {activeCount} active · click to view any one
-          </div>
-        </div>
-      </Link>
+      <IconPanelLink
+        href="/dashboard?panel=projects"
+        iconSrc="/panel-art/project-tracker-button.png"
+        iconWidth={24}
+        iconHeight={28}
+        title="Project tracker"
+        description={`${activeCount} active · click to view any one`}
+      />
     </PanelShell>
   );
 }
@@ -112,15 +137,14 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
 export function QuickListPanel({ openCount }: { openCount: number }) {
   return (
     <PanelShell panelKey="quicklist">
-      <Link href="/dashboard?panel=quicklists" className="flex items-center gap-2">
-        <Image src="/panel-art/quick-notes-button.png" alt="" width={31} height={28} />
-        <div>
-          <div className="text-sm font-medium">Quick notes</div>
-          <div className="mt-0.5 text-xs text-muted-foreground">
-            {openCount} open {openCount === 1 ? "item" : "items"} · no intention needed
-          </div>
-        </div>
-      </Link>
+      <IconPanelLink
+        href="/dashboard?panel=quicklists"
+        iconSrc="/panel-art/quick-notes-button.png"
+        iconWidth={31}
+        iconHeight={28}
+        title="Quick notes"
+        description={`${openCount} open ${openCount === 1 ? "item" : "items"} · no intention needed`}
+      />
     </PanelShell>
   );
 }
@@ -128,13 +152,14 @@ export function QuickListPanel({ openCount }: { openCount: number }) {
 export function JournalPanel() {
   return (
     <PanelShell panelKey="journal">
-      <Link href="/dashboard?panel=journals" className="flex items-center gap-2">
-        <Image src="/panel-art/journal-button.png" alt="" width={34} height={28} />
-        <div>
-          <div className="text-sm font-medium">Journal</div>
-          <div className="mt-0.5 text-xs text-muted-foreground">Write now, no scheduling needed</div>
-        </div>
-      </Link>
+      <IconPanelLink
+        href="/dashboard?panel=journals"
+        iconSrc="/panel-art/journal-button.png"
+        iconWidth={34}
+        iconHeight={28}
+        title="Journal"
+        description="Write now, no scheduling needed"
+      />
     </PanelShell>
   );
 }
@@ -142,13 +167,14 @@ export function JournalPanel() {
 export function DopaminePanel() {
   return (
     <PanelShell panelKey="dopamine">
-      <Link href="/dashboard?panel=dopamine-menu" className="flex items-center gap-2">
-        <Image src="/panel-art/dopamine-tracker.png" alt="" width={40} height={28} />
-        <div>
-          <div className="text-sm font-medium">Dopamine menu</div>
-          <div className="mt-0.5 text-xs text-muted-foreground">Feeling stuck? Get an idea</div>
-        </div>
-      </Link>
+      <IconPanelLink
+        href="/dashboard?panel=dopamine-menu"
+        iconSrc="/panel-art/dopamine-tracker.png"
+        iconWidth={40}
+        iconHeight={28}
+        title="Dopamine menu"
+        description="Feeling stuck? Get an idea"
+      />
     </PanelShell>
   );
 }

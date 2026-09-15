@@ -164,7 +164,7 @@ export default async function DashboardPage({
         )}
 
         <div
-          className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-auto rounded border border-border bg-background p-2`}
+          className={`${CALENDAR_HEIGHT_CLASS} mx-4 mb-4 overflow-auto rounded border border-border p-2`}
         >
           <TimeGrid weekStart={start} events={timedEvents} />
         </div>
@@ -288,7 +288,7 @@ export default async function DashboardPage({
               height={1051}
               priority
               aria-hidden
-              className="pointer-events-none absolute -top-24 -left-24 z-0 h-auto w-[34rem] max-w-none opacity-70 [mask-image:radial-gradient(circle_at_30%_30%,black_35%,transparent_75%)]"
+              className="pointer-events-none absolute -top-24 -left-24 z-0 h-auto w-[50rem] max-w-none opacity-70 [mask-image:radial-gradient(circle_at_30%_30%,black_35%,transparent_75%)]"
             />
 
             <div className="relative z-10 flex items-center justify-between p-4 pb-2">
@@ -326,9 +326,9 @@ export default async function DashboardPage({
                 Next {mode === "month" ? "month" : "week"} →
               </Link>
             </div>
-          </div>
 
-          {calendarBody}
+            <div className="relative z-10">{calendarBody}</div>
+          </div>
         </DashboardShell>
 
         <PostItTray postIts={postIts} />
