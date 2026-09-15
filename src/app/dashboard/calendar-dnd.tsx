@@ -1,15 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import { moveCalendarEventAction } from "@/app/actions/calendar-events";
+import { PostItVisual } from "./post-it-column";
 import {
   HOUR_HEIGHT,
   SNAP_MINUTES,
@@ -26,11 +29,19 @@ export function CalendarDndProvider({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [draggedPostItText, setDraggedPostItText] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  function handleDragStart(e: DragStartEvent) {
+    if (e.active.data.current?.type === "postit") {
+      setDraggedPostItText(String(e.active.data.current?.text ?? ""));
+    }
+  }
+
   function handleDragEnd(e: DragEndEvent) {
+    setDraggedPostItText(null);
     const overDayKey = e.over ? String(e.over.id) : undefined;
     if (!overDayKey) return;
 
@@ -78,10 +89,22 @@ export function CalendarDndProvider({
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setDraggedPostItText(null)}
+    >
       <div className={`flex min-h-0 flex-1 flex-col ${isPending ? "opacity-60" : ""}`}>
         {children}
       </div>
+      <DragOverlay>
+        {draggedPostItText !== null && (
+          <div className="relative w-28 -rotate-1">
+            <PostItVisual text={draggedPostItText} />
+          </div>
+        )}
+      </DragOverlay>
     </DndContext>
   );
 }
