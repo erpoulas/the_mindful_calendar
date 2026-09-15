@@ -47,13 +47,21 @@ export async function JournalsListView() {
         ))}
       </ul>
 
-      <JournalForm
-        action={createJournalAction}
-        heading="New journal"
-        submitLabel="Add journal"
-        pendingLabel="Adding..."
-      />
+      <Link href="/dashboard?panel=journals&view=create" className="text-sm hover:underline">
+        + Create new journal
+      </Link>
     </div>
+  );
+}
+
+export function JournalCreateView() {
+  return (
+    <JournalForm
+      action={createJournalAction}
+      heading="New journal"
+      submitLabel="Add journal"
+      pendingLabel="Adding..."
+    />
   );
 }
 

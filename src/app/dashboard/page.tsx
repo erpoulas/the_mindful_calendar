@@ -20,6 +20,7 @@ import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
+  JournalCreateView,
   JournalDetailView,
   JournalEditView,
   JournalEntryEditView,
@@ -251,6 +252,9 @@ export default async function DashboardPage({
     } else if (view === "detail" && id) {
       panelTitle = "Journal";
       panelContent = <JournalDetailView id={id} />;
+    } else if (view === "create") {
+      panelTitle = "New journal";
+      panelContent = <JournalCreateView />;
     } else {
       panelTitle = "Journals";
       panelContent = <JournalsListView />;
