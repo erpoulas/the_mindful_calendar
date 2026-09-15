@@ -43,9 +43,18 @@ export function Sheet({
 }) {
   const sideWithImage = size === "side" && backgroundImage;
 
+  // The photo already carries its own visual identity (folder, notebook),
+  // so photo-backed popups skip the redundant heading text — the Drawer.Title
+  // stays in the DOM (sr-only) so the popup still has an accessible name.
   const titleRow = (
-    <div className="relative z-10 flex items-start justify-between gap-4">
-      <Drawer.Title className="font-heading text-2xl tracking-wide uppercase">
+    <div className="relative z-10 flex items-start justify-end gap-4">
+      <Drawer.Title
+        className={
+          sideWithImage
+            ? "sr-only"
+            : "mr-auto font-heading text-2xl tracking-wide uppercase"
+        }
+      >
         {title}
       </Drawer.Title>
       <Drawer.Close
