@@ -39,6 +39,21 @@ export function Sheet({
   children: React.ReactNode;
 }) {
   const sideWithImage = size === "side" && backgroundImage;
+
+  const titleRow = (
+    <div className="relative z-10 flex items-start justify-between gap-4">
+      <Drawer.Title className="font-heading text-2xl tracking-wide uppercase">
+        {title}
+      </Drawer.Title>
+      <Drawer.Close
+        aria-label="Close"
+        className="text-sm text-muted-foreground hover:text-foreground"
+      >
+        ✕
+      </Drawer.Close>
+    </div>
+  );
+
   return (
     <Drawer.Root
       open={open}
@@ -50,49 +65,49 @@ export function Sheet({
         <Drawer.Viewport
           className={cn("fixed inset-0 z-50 flex", VIEWPORT_CLASSES[size])}
         >
-          <Drawer.Popup
-            className={cn(
-              "isolate relative flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
-              sideWithImage ? SIDE_WITH_IMAGE_CLASSES : POPUP_CLASSES[size],
-              // Keeps text off the photo's own binding/tab art, which sits in its left margin.
-              sideWithImage && "pl-[18%]",
-            )}
-            style={
-              sideWithImage
-                ? { aspectRatio: `${backgroundImage.width} / ${backgroundImage.height}` }
-                : undefined
-            }
-          >
-            {backgroundImage && (
+          {sideWithImage ? (
+            // The photo (rendered at its natural size, scaled to the panel's
+            // height) is what determines the panel's width here — not a
+            // separately-computed CSS aspect-ratio — so there's a single
+            // source of truth for the size and no rounding seam between them.
+            <Drawer.Popup className={cn("isolate relative", SIDE_WITH_IMAGE_CLASSES)}>
               <Image
                 src={backgroundImage.src}
                 alt=""
-                fill
+                width={backgroundImage.width}
+                height={backgroundImage.height}
                 aria-hidden
-                sizes="(max-width: 640px) 100vw, 24rem"
-                className="pointer-events-none z-0 object-cover object-right-top"
+                className="pointer-events-none block h-full w-auto max-w-none select-none"
               />
-            )}
-            <div className="relative z-10 flex items-start justify-between gap-4">
-              <Drawer.Title className="font-heading text-2xl tracking-wide uppercase">
-                {title}
-              </Drawer.Title>
-              <Drawer.Close
-                aria-label="Close"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </Drawer.Close>
-            </div>
-            <Drawer.Content
+              <div className="absolute inset-0 z-10 flex flex-col gap-4 overflow-y-auto p-6 pl-[18%] text-popover-foreground">
+                {titleRow}
+                <Drawer.Content className="flex flex-1 flex-col justify-center">
+                  {children}
+                </Drawer.Content>
+              </div>
+            </Drawer.Popup>
+          ) : (
+            <Drawer.Popup
               className={cn(
-                "relative z-10 flex flex-1 flex-col",
-                sideWithImage && "justify-center",
+                "isolate relative flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
+                POPUP_CLASSES[size],
               )}
             >
-              {children}
-            </Drawer.Content>
-          </Drawer.Popup>
+              {backgroundImage && (
+                <Image
+                  src={backgroundImage.src}
+                  alt=""
+                  fill
+                  aria-hidden
+                  className="pointer-events-none z-0 object-contain object-right-top"
+                />
+              )}
+              {titleRow}
+              <Drawer.Content className="relative z-10 flex flex-1 flex-col">
+                {children}
+              </Drawer.Content>
+            </Drawer.Popup>
+          )}
         </Drawer.Viewport>
       </Drawer.Portal>
     </Drawer.Root>
