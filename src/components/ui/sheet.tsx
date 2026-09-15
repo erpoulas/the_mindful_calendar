@@ -55,7 +55,7 @@ export function Sheet({
                 alt=""
                 fill
                 aria-hidden
-                className="pointer-events-none z-0 object-cover object-right-top"
+                className="pointer-events-none z-0 object-contain object-right-top"
               />
             )}
             <div className="relative z-10 flex items-start justify-between gap-4">
