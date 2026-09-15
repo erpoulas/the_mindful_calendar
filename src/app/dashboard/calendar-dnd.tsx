@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
   PointerSensor,
@@ -114,6 +115,7 @@ export function CalendarDndProvider({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setDraggedPostItText(null)}
