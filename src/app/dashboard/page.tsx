@@ -26,7 +26,12 @@ import {
   JournalEntryEditView,
   JournalsListView,
 } from "./overlays/journals";
-import { ProjectDetailView, ProjectEditView, ProjectsListView } from "./overlays/projects";
+import {
+  ProjectCreateView,
+  ProjectDetailView,
+  ProjectEditView,
+  ProjectsListView,
+} from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
 import { MonthGrid } from "./month-grid";
@@ -237,6 +242,9 @@ export default async function DashboardPage({
     } else if (view === "detail" && id) {
       panelTitle = "Project";
       panelContent = <ProjectDetailView id={id} />;
+    } else if (view === "create") {
+      panelTitle = "New project";
+      panelContent = <ProjectCreateView />;
     } else {
       panelTitle = "Projects";
       panelContent = <ProjectsListView />;

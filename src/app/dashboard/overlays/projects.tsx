@@ -27,10 +27,7 @@ const STATUS_LABEL = {
 
 export async function ProjectsListView() {
   const userId = await getCurrentUserId();
-  const [projects, intentions] = await Promise.all([
-    listProjects(db, userId),
-    listIntentions(db, userId),
-  ]);
+  const projects = await listProjects(db, userId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,14 +48,25 @@ export async function ProjectsListView() {
         ))}
       </ul>
 
-      <ProjectForm
-        action={createProjectAction}
-        heading="New project"
-        submitLabel="Add project"
-        pendingLabel="Adding..."
-        intentions={intentions}
-      />
+      <Link href="/dashboard?panel=projects&view=create" className="text-sm hover:underline">
+        + Create new project
+      </Link>
     </div>
+  );
+}
+
+export async function ProjectCreateView() {
+  const userId = await getCurrentUserId();
+  const intentions = await listIntentions(db, userId);
+
+  return (
+    <ProjectForm
+      action={createProjectAction}
+      heading="New project"
+      submitLabel="Add project"
+      pendingLabel="Adding..."
+      intentions={intentions}
+    />
   );
 }
 
