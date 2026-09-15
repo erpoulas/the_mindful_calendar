@@ -5,6 +5,7 @@ import type { CalendarEventFormState } from "@/app/actions/calendar-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
 
 export function EventForm({
   action,
@@ -53,6 +54,7 @@ export function EventForm({
           placeholder="e.g. Dentist appointment"
           defaultValue={initialValues?.title}
           required
+          maxLength={TITLE_MAX_LENGTH}
         />
         {state?.errors?.title && (
           <p className="text-sm text-red-600">{state.errors.title[0]}</p>

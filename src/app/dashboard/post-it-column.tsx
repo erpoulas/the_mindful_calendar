@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
+import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
 import type { listPostIts } from "@/lib/post-its";
 
 // How many post-its the permanent column shows before overflowing into the
@@ -87,6 +88,7 @@ function PostItGhostCreate() {
         name="text"
         autoFocus
         required
+        maxLength={TITLE_MAX_LENGTH}
         onBlur={(e) => {
           if (!e.currentTarget.value) setIsCreating(false);
         }}
