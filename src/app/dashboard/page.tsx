@@ -194,7 +194,9 @@ export default async function DashboardPage({
   let panelTitle = "";
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
-  let panelBackground: { src: string; width: number; height: number } | undefined;
+  let panelBackground:
+    | { src: string; width: number; height: number; contentInsetClassName?: string }
+    | undefined;
   if (panel === "account") {
     panelTitle = "Account settings";
     panelContent = <AccountSettingsView />;
@@ -215,7 +217,15 @@ export default async function DashboardPage({
     }
   } else if (panel === "quicklists") {
     panelSize = "center";
-    panelBackground = { src: "/panel-art/quick-notes-pop-up.png", width: 614, height: 996 };
+    panelBackground = {
+      src: "/panel-art/quick-notes-pop-up.png",
+      width: 614,
+      height: 996,
+      // This photo has a clip along the top edge and punch holes down the
+      // left, instead of a plain left-edge binding like the journal/project
+      // photos, so it needs clearance on both sides.
+      contentInsetClassName: "pt-[20%] pl-[16%]",
+    };
     if (view === "edit" && id) {
       panelTitle = "Edit list";
       panelContent = <QuickListEditView id={id} />;

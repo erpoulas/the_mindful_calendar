@@ -17,14 +17,27 @@ const POPUP_CLASSES = {
     "w-full sm:max-w-lg max-h-[90vh] rounded-lg border transition-all duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
 };
 
-// For a "side" popup with a background photo, the popup's own shape is the
-// photo's aspect ratio (h-full, width derived) instead of a fixed max-width,
-// so the photo fills the panel exactly with no letterboxing or empty margin.
-// No border-l here — the photo's own edge (with its baked-in drop shadow)
-// is the panel's visual boundary, so an extra border line would just cut
-// across it.
-const SIDE_WITH_IMAGE_CLASSES =
-  "h-full transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full";
+// A background photo becomes the popup's own shape — its rendered size (not
+// a separately-computed CSS box) determines the panel's size, so there's a
+// single source of truth and no rounding seam between "the box" and "the
+// photo". No border either: the photo's own edge (with its baked-in drop
+// shadow) is the panel's visual boundary, so an extra border line would just
+// cut across it.
+const IMAGE_POPUP_CLASSES = {
+  side: "h-full transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full",
+  center:
+    "transition-all duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+};
+
+const IMAGE_CLASSES = {
+  side: "block h-full w-auto max-w-none select-none",
+  center: "block h-auto max-h-[80vh] w-auto max-w-[85vw] select-none",
+};
+
+// Default clearance keeps content off a spiral/binding running down the
+// photo's left edge. Individual photos with art elsewhere (e.g. a clip
+// along the top) override this via backgroundImage.contentInsetClassName.
+const DEFAULT_CONTENT_INSET = "pl-[18%]";
 
 export function Sheet({
   open,
@@ -38,19 +51,26 @@ export function Sheet({
   onOpenChange: (open: boolean) => void;
   title: string;
   size?: "side" | "wide" | "center";
-  backgroundImage?: { src: string; width: number; height: number };
+  backgroundImage?: {
+    src: string;
+    width: number;
+    height: number;
+    contentInsetClassName?: string;
+  };
   children: React.ReactNode;
 }) {
-  const sideWithImage = size === "side" && backgroundImage;
+  const imageBacked =
+    (size === "side" || size === "center") && backgroundImage;
 
-  // The photo already carries its own visual identity (folder, notebook),
-  // so photo-backed popups skip the redundant heading text — the Drawer.Title
-  // stays in the DOM (sr-only) so the popup still has an accessible name.
+  // The photo already carries its own visual identity (folder, notebook,
+  // clipboard), so photo-backed popups skip the redundant heading text — the
+  // Drawer.Title stays in the DOM (sr-only) so the popup still has an
+  // accessible name.
   const titleRow = (
     <div className="relative z-10 flex items-start justify-end gap-4">
       <Drawer.Title
         className={
-          sideWithImage
+          imageBacked
             ? "sr-only"
             : "mr-auto font-heading text-2xl tracking-wide uppercase"
         }
@@ -77,21 +97,24 @@ export function Sheet({
         <Drawer.Viewport
           className={cn("fixed inset-0 z-50 flex", VIEWPORT_CLASSES[size])}
         >
-          {sideWithImage ? (
-            // The photo (rendered at its natural size, scaled to the panel's
-            // height) is what determines the panel's width here — not a
-            // separately-computed CSS aspect-ratio — so there's a single
-            // source of truth for the size and no rounding seam between them.
-            <Drawer.Popup className={cn("isolate relative", SIDE_WITH_IMAGE_CLASSES)}>
+          {imageBacked ? (
+            <Drawer.Popup
+              className={cn("isolate relative", IMAGE_POPUP_CLASSES[size])}
+            >
               <Image
                 src={backgroundImage.src}
                 alt=""
                 width={backgroundImage.width}
                 height={backgroundImage.height}
                 aria-hidden
-                className="pointer-events-none block h-full w-auto max-w-none select-none"
+                className={cn("pointer-events-none", IMAGE_CLASSES[size])}
               />
-              <div className="absolute inset-0 z-10 flex flex-col gap-4 overflow-y-auto p-6 pl-[18%] text-popover-foreground">
+              <div
+                className={cn(
+                  "absolute inset-0 z-10 flex flex-col gap-4 overflow-y-auto p-6 text-popover-foreground",
+                  backgroundImage.contentInsetClassName ?? DEFAULT_CONTENT_INSET,
+                )}
+              >
                 {titleRow}
                 <div className="mx-auto flex w-full max-w-[75%] flex-1 flex-col justify-center">
                   <Drawer.Content className="flex flex-col gap-4">{children}</Drawer.Content>
@@ -105,15 +128,6 @@ export function Sheet({
                 POPUP_CLASSES[size],
               )}
             >
-              {backgroundImage && (
-                <Image
-                  src={backgroundImage.src}
-                  alt=""
-                  fill
-                  aria-hidden
-                  className="pointer-events-none z-0 object-contain object-right-top"
-                />
-              )}
               {titleRow}
               <Drawer.Content className="relative z-10 flex flex-1 flex-col">
                 {children}

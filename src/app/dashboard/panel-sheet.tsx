@@ -13,7 +13,12 @@ export function PanelSheet({
   open: boolean;
   title: string;
   size?: "side" | "wide" | "center";
-  backgroundImage?: { src: string; width: number; height: number };
+  backgroundImage?: {
+    src: string;
+    width: number;
+    height: number;
+    contentInsetClassName?: string;
+  };
   children: React.ReactNode;
 }) {
   const router = useRouter();
