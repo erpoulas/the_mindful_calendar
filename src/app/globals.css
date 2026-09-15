@@ -4,6 +4,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* @fontsource/open-sauce-sans ships a corrupted woff2 for weight 400
+   (invalid file signature, rejected by Firefox's font sanitizer) — this
+   is a bug in the published package itself, present in every version.
+   The .woff sibling is valid, so weight 400 is served from our own copy
+   of it instead of the package's 400.css. */
+@font-face {
+  font-family: "Open Sauce Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("/fonts/open-sauce-sans-400.woff") format("woff");
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

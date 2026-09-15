@@ -110,7 +110,13 @@ function IconPanelLink({
 }) {
   return (
     <Link href={href} className="flex items-center gap-2">
-      <Image src={iconSrc} alt="" width={iconWidth} height={iconHeight} />
+      <Image
+        src={iconSrc}
+        alt=""
+        width={iconWidth}
+        height={iconHeight}
+        className="h-7 w-auto"
+      />
       <div>
         <div className="text-sm font-medium">{title}</div>
         <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
@@ -125,8 +131,8 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
       <IconPanelLink
         href="/dashboard?panel=projects"
         iconSrc="/panel-art/project-tracker-button.png"
-        iconWidth={24}
-        iconHeight={28}
+        iconWidth={197}
+        iconHeight={233}
         title="Project tracker"
         description={`${activeCount} active · click to view any one`}
       />
@@ -140,8 +146,8 @@ export function QuickListPanel({ openCount }: { openCount: number }) {
       <IconPanelLink
         href="/dashboard?panel=quicklists"
         iconSrc="/panel-art/quick-notes-button.png"
-        iconWidth={31}
-        iconHeight={28}
+        iconWidth={253}
+        iconHeight={228}
         title="Quick notes"
         description={`${openCount} open ${openCount === 1 ? "item" : "items"} · no intention needed`}
       />
@@ -155,8 +161,8 @@ export function JournalPanel() {
       <IconPanelLink
         href="/dashboard?panel=journals"
         iconSrc="/panel-art/journal-button.png"
-        iconWidth={34}
-        iconHeight={28}
+        iconWidth={201}
+        iconHeight={164}
         title="Journal"
         description="Write now, no scheduling needed"
       />
@@ -170,8 +176,8 @@ export function DopaminePanel() {
       <IconPanelLink
         href="/dashboard?panel=dopamine-menu"
         iconSrc="/panel-art/dopamine-tracker.png"
-        iconWidth={40}
-        iconHeight={28}
+        iconWidth={144}
+        iconHeight={100}
         title="Dopamine menu"
         description="Feeling stuck? Get an idea"
       />

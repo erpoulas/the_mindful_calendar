@@ -84,9 +84,9 @@ export function Sheet({
               />
               <div className="absolute inset-0 z-10 flex flex-col gap-4 overflow-y-auto p-6 pl-[18%] text-popover-foreground">
                 {titleRow}
-                <Drawer.Content className="flex flex-1 flex-col justify-center">
-                  {children}
-                </Drawer.Content>
+                <div className="mx-auto flex w-full max-w-[75%] flex-1 flex-col justify-center">
+                  <Drawer.Content className="flex flex-col gap-4">{children}</Drawer.Content>
+                </div>
               </div>
             </Drawer.Popup>
           ) : (
