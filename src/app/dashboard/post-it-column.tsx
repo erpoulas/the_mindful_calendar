@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
@@ -59,14 +59,7 @@ function PostItGhostCreate() {
         onClick={() => setIsCreating(true)}
         className="relative w-28 -rotate-1 cursor-pointer text-left opacity-50 hover:opacity-70"
       >
-        <Image
-          src="/panel-art/post-it-icon.png"
-          alt=""
-          width={170}
-          height={185}
-          draggable={false}
-          className="pointer-events-none h-auto w-full drop-shadow-sm select-none"
-        />
+        <PostItImage />
         <span className="font-handwritten absolute inset-x-3 top-9 bottom-2 flex items-center justify-center text-center text-sm leading-snug">
           Create new post-it
         </span>
@@ -76,14 +69,7 @@ function PostItGhostCreate() {
 
   return (
     <form action={createPostItAction} className="relative w-28 -rotate-1">
-      <Image
-        src="/panel-art/post-it-icon.png"
-        alt=""
-        width={170}
-        height={185}
-        draggable={false}
-        className="pointer-events-none h-auto w-full drop-shadow-sm select-none"
-      />
+      <PostItImage />
       <input
         name="text"
         autoFocus
@@ -99,20 +85,27 @@ function PostItGhostCreate() {
   );
 }
 
+function PostItImage() {
+  return (
+    <Image
+      src="/panel-art/post-it-icon.png"
+      alt=""
+      width={170}
+      height={185}
+      draggable={false}
+      className="pointer-events-none h-auto w-full drop-shadow-sm select-none"
+    />
+  );
+}
+
 // The visual-only note face, shared between the in-column card and the
 // DragOverlay preview rendered in calendar-dnd.tsx (so the dragged image
-// isn't clipped by the column's own overflow-hidden).
+// isn't clipped by the column's own overflow-hidden). Always clipped, not
+// expandable — it's a snapshot shown only while actively dragging.
 export function PostItVisual({ text }: { text: string }) {
   return (
     <>
-      <Image
-        src="/panel-art/post-it-icon.png"
-        alt=""
-        width={170}
-        height={185}
-        draggable={false}
-        className="pointer-events-none h-auto w-full drop-shadow-sm select-none"
-      />
+      <PostItImage />
       <p className="font-handwritten absolute inset-x-3 top-9 bottom-2 overflow-hidden text-sm leading-snug break-words">
         {text}
       </p>
@@ -125,6 +118,14 @@ function PostItCard({ id, text }: { id: string; text: string }) {
     id,
     data: { type: "postit", text },
   });
+  const [expanded, setExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = textRef.current;
+    setIsOverflowing(!!el && el.scrollHeight > el.clientHeight);
+  }, [text]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -141,12 +142,30 @@ function PostItCard({ id, text }: { id: string; text: string }) {
         isDragging ? "cursor-grabbing opacity-30" : "cursor-grab"
       }`}
     >
-      <PostItVisual text={text} />
-      <form action={deletePostItAction.bind(null, id)} className="absolute top-1 right-1">
+      <PostItImage />
+      <p
+        ref={textRef}
+        className={`font-handwritten absolute inset-x-3 top-9 bottom-2 text-sm leading-snug break-words ${
+          expanded ? "overflow-y-auto" : "overflow-hidden"
+        }`}
+      >
+        {text}
+      </p>
+      {isOverflowing && (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? "Show less of this note" : "Show the full note"}
+          className="absolute bottom-1 left-1 flex h-4 w-4 items-center justify-center rounded-full bg-background/80 text-xs leading-none text-muted-foreground hover:text-foreground"
+        >
+          {expanded ? "−" : "+"}
+        </button>
+      )}
+      <form action={deletePostItAction.bind(null, id)} className="absolute top-2 right-2">
         <button
           type="submit"
           aria-label="Dismiss post-it"
-          className="text-xs text-muted-foreground hover:text-foreground"
+          className="text-base text-muted-foreground hover:text-foreground"
         >
           ✕
         </button>
