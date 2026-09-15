@@ -20,8 +20,11 @@ const POPUP_CLASSES = {
 // For a "side" popup with a background photo, the popup's own shape is the
 // photo's aspect ratio (h-full, width derived) instead of a fixed max-width,
 // so the photo fills the panel exactly with no letterboxing or empty margin.
+// No border-l here — the photo's own edge (with its baked-in drop shadow)
+// is the panel's visual boundary, so an extra border line would just cut
+// across it.
 const SIDE_WITH_IMAGE_CLASSES =
-  "h-full border-l transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full";
+  "h-full transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full";
 
 export function Sheet({
   open,
