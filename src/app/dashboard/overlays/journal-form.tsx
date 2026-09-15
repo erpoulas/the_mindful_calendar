@@ -5,6 +5,7 @@ import type { JournalFormState } from "@/app/actions/journals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { pageInputClassName } from "./photo-page-styles";
 
 export function JournalForm({
   action,
@@ -33,6 +34,7 @@ export function JournalForm({
           placeholder="e.g. Gratitude"
           defaultValue={initialValues?.name}
           required
+          className={pageInputClassName}
         />
         {state?.errors?.name && (
           <p className="text-sm text-red-600">{state.errors.name[0]}</p>

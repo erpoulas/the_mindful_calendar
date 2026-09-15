@@ -5,6 +5,7 @@ import type { ProjectFormState } from "@/app/actions/projects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { pageInputClassName } from "./photo-page-styles";
 
 export function ProjectForm({
   action,
@@ -41,6 +42,7 @@ export function ProjectForm({
           placeholder="e.g. Train for a 5k"
           defaultValue={initialValues?.title}
           required
+          className={pageInputClassName}
         />
         {state?.errors?.title && (
           <p className="text-sm text-red-600">{state.errors.title[0]}</p>
@@ -55,6 +57,7 @@ export function ProjectForm({
           placeholder="e.g. Run the Cedar Falls 5k on Oct 12"
           defaultValue={initialValues?.endGoal}
           required
+          className={pageInputClassName}
         />
         {state?.errors?.endGoal && (
           <p className="text-sm text-red-600">{state.errors.endGoal[0]}</p>
@@ -68,6 +71,7 @@ export function ProjectForm({
           name="dueDate"
           type="date"
           defaultValue={initialValues?.dueDate?.toISOString().slice(0, 10)}
+          className={pageInputClassName}
         />
       </div>
 

@@ -84,7 +84,12 @@ export function Sheet({
                 ✕
               </Drawer.Close>
             </div>
-            <Drawer.Content className="relative z-10 flex flex-1 flex-col">
+            <Drawer.Content
+              className={cn(
+                "relative z-10 flex flex-1 flex-col",
+                sideWithImage && "justify-center",
+              )}
+            >
               {children}
             </Drawer.Content>
           </Drawer.Popup>
