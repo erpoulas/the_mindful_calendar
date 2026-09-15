@@ -7,7 +7,7 @@ import { getTodayAffirmation } from "@/lib/affirmations";
 import { listCalendarEvents } from "@/lib/calendar-events";
 import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
-import { getHiddenPanels } from "@/lib/dashboard-preferences";
+import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { listProjects } from "@/lib/projects";
 import { countOpenQuickListItems } from "@/lib/quick-lists";
@@ -35,7 +35,7 @@ import {
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
 import { MonthGrid } from "./month-grid";
-import { PanelCustomizer } from "./panel-customizer";
+import { PanelCustomizerControls, PanelList, SortablePanel } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
 import { PostItColumn } from "./post-it-column";
 import {
@@ -86,16 +86,25 @@ export default async function DashboardPage({
   const referenceDate =
     typeof startParam === "string" ? new Date(startParam) : new Date();
 
-  const [affirmation, breakdown, projects, openQuickListCount, reviewStats, hiddenPanels, postIts] =
-    await Promise.all([
-      getTodayAffirmation(db, userId),
-      getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
-      listProjects(db, userId),
-      countOpenQuickListItems(db, userId),
-      getWeeklyReviewStats(db, { userId, referenceDate }),
-      getHiddenPanels(db, userId),
-      listPostIts(db, userId),
-    ]);
+  const [
+    affirmation,
+    breakdown,
+    projects,
+    openQuickListCount,
+    reviewStats,
+    hiddenPanels,
+    panelOrder,
+    postIts,
+  ] = await Promise.all([
+    getTodayAffirmation(db, userId),
+    getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
+    listProjects(db, userId),
+    countOpenQuickListItems(db, userId),
+    getWeeklyReviewStats(db, { userId, referenceDate }),
+    getHiddenPanels(db, userId),
+    getPanelOrder(db, userId),
+    listPostIts(db, userId),
+  ]);
 
   const activeProjectCount = projects.filter((project) => project.status === "ACTIVE").length;
 
@@ -175,11 +184,11 @@ export default async function DashboardPage({
     dopamine: <DopaminePanel />,
     review: <WeeklyReviewPanel stats={reviewStats} />,
   };
-  const visiblePanelKeys = Object.keys(panelComponents).filter(
-    (key) => !hiddenPanels.includes(key),
-  );
+  const orderedPanelKeys = sortPanelKeys(Object.keys(panelComponents), panelOrder);
+  const visiblePanelKeys = orderedPanelKeys.filter((key) => !hiddenPanels.includes(key));
 
   let panelTitle = "";
+  let panelHideVisibleTitle = false;
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
   let panelBackground:
@@ -196,6 +205,7 @@ export default async function DashboardPage({
     panelContent = <AffirmationsView />;
   } else if (panel === "calendar-event") {
     panelSize = "center";
+    panelHideVisibleTitle = true;
     if (view === "edit" && id) {
       panelTitle = "Edit event";
       panelContent = <EditEventView id={id} />;
@@ -287,14 +297,21 @@ export default async function DashboardPage({
         </form>
       </div>
 
-      <CalendarDndProvider events={dndEvents} postItIds={postIts.map((postIt) => postIt.id)}>
+      <CalendarDndProvider
+        events={dndEvents}
+        postItIds={postIts.map((postIt) => postIt.id)}
+        panelKeys={visiblePanelKeys}
+        hiddenPanels={hiddenPanels}
+      >
         <DashboardShell
           sidebar={
-            <PanelCustomizer hiddenPanels={hiddenPanels}>
+            <PanelList panelKeys={visiblePanelKeys}>
               {visiblePanelKeys.map((key) => (
-                <div key={key}>{panelComponents[key]}</div>
+                <SortablePanel key={key} panelKey={key}>
+                  {panelComponents[key]}
+                </SortablePanel>
               ))}
-            </PanelCustomizer>
+            </PanelList>
           }
           postIts={<PostItColumn postIts={postIts} capped />}
         >
@@ -306,7 +323,7 @@ export default async function DashboardPage({
               priority
               aria-hidden
               sizes="40rem"
-              className="pointer-events-none z-0 object-cover object-left-top opacity-70 [mask-image:radial-gradient(circle_at_20%_20%,black_0%,transparent_85%)]"
+              className="pointer-events-none z-0 translate-y-[7%] object-cover object-center opacity-70 [mask-image:radial-gradient(circle_at_50%_50%,black_0%,transparent_85%)]"
             />
 
             <div className="relative z-10 flex shrink-0 items-center justify-between p-4 pb-2">
@@ -348,9 +365,13 @@ export default async function DashboardPage({
             {allDayRow}
 
             <div
-              className={`relative z-10 mx-4 mb-4 min-h-0 flex-1 overflow-auto rounded border border-border ${calendarBodyPadded ? "p-2" : ""}`}
+              className={`relative z-10 mx-4 mb-2 min-h-0 flex-1 overflow-auto rounded border border-border ${calendarBodyPadded ? "px-2 pb-2" : ""}`}
             >
               {calendarBody}
+            </div>
+
+            <div className="relative z-10 mx-4 mb-2 shrink-0">
+              <PanelCustomizerControls hiddenPanels={hiddenPanels} />
             </div>
           </div>
         </DashboardShell>
@@ -364,6 +385,7 @@ export default async function DashboardPage({
           key={panel}
           open={panel !== null}
           title={panelTitle}
+          hideVisibleTitle={panelHideVisibleTitle}
           size={panelSize}
           backgroundImage={panelBackground}
         >

@@ -266,6 +266,7 @@ model TodayAffirmation {
 model DashboardPreferences {
   userId       String   @id
   hiddenPanels String[] @default([])
+  panelOrder   String[] @default([])
 }
 
 // One row per user: account-level settings not tied to any one feature.

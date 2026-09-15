@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { moveCalendarEventAction } from "@/app/actions/calendar-events";
+import { reorderPanelsAction } from "@/app/actions/dashboard";
 import { reorderPostItsAction } from "@/app/actions/post-its";
 import { PostItVisual } from "./post-it-column";
 import {
@@ -26,10 +27,14 @@ import {
 export function CalendarDndProvider({
   events,
   postItIds,
+  panelKeys,
+  hiddenPanels,
   children,
 }: {
   events: TimeGridEvent[];
   postItIds: string[];
+  panelKeys: string[];
+  hiddenPanels: string[];
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -52,6 +57,25 @@ export function CalendarDndProvider({
 
     const isPostIt = e.active.data.current?.type === "postit";
     const overIsPostIt = e.over?.data.current?.type === "postit";
+    const isPanel = e.active.data.current?.type === "panel";
+    const overIsPanel = e.over?.data.current?.type === "panel";
+
+    if (isPanel && overIsPanel) {
+      const activeId = String(e.active.id);
+      if (activeId === overId) return;
+
+      const oldIndex = panelKeys.indexOf(activeId);
+      const newIndex = panelKeys.indexOf(overId);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reorderedVisible = arrayMove(panelKeys, oldIndex, newIndex);
+      const fullOrder = [...reorderedVisible, ...hiddenPanels];
+      startTransition(async () => {
+        await reorderPanelsAction(fullOrder);
+        router.refresh();
+      });
+      return;
+    }
 
     if (isPostIt && overIsPostIt) {
       const activeId = String(e.active.id);
