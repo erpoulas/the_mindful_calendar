@@ -42,7 +42,7 @@ export async function ProjectsListView() {
           <li key={project.id}>
             <Link
               href={`/dashboard?panel=projects&view=detail&id=${project.id}`}
-              className="flex items-center justify-between rounded border px-3 py-2 hover:bg-accent"
+              className="flex items-center justify-between px-1 py-1 hover:underline"
             >
               <span>{project.title}</span>
               <span className="text-sm text-muted-foreground">{STATUS_LABEL[project.status]}</span>

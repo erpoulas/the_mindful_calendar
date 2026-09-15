@@ -54,6 +54,8 @@ export function Sheet({
             className={cn(
               "isolate relative flex flex-col gap-4 overflow-y-auto border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
               sideWithImage ? SIDE_WITH_IMAGE_CLASSES : POPUP_CLASSES[size],
+              // Keeps text off the photo's own binding/tab art, which sits in its left margin.
+              sideWithImage && "pl-[18%]",
             )}
             style={
               sideWithImage

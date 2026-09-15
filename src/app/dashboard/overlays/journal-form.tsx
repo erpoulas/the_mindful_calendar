@@ -22,7 +22,7 @@ export function JournalForm({
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded border p-4">
+    <form action={formAction} className="flex flex-col gap-3">
       <h2 className="text-lg font-medium">{heading}</h2>
 
       <div className="flex flex-col gap-1.5">

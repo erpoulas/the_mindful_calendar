@@ -39,7 +39,7 @@ export async function JournalsListView() {
           <li key={journal.id}>
             <Link
               href={`/dashboard?panel=journals&view=detail&id=${journal.id}`}
-              className="flex items-center rounded border px-3 py-2 hover:bg-accent"
+              className="flex items-center px-1 py-1 hover:underline"
             >
               {journal.name}
             </Link>
