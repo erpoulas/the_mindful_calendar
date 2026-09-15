@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { CreatePostItSchema } from "@/lib/post-it-schemas";
-import { createPostIt, deletePostIt, promoteQuickListItemToPostIt } from "@/lib/post-its";
+import {
+  createPostIt,
+  deletePostIt,
+  promoteQuickListItemToPostIt,
+  reorderPostIts,
+} from "@/lib/post-its";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -26,6 +31,13 @@ export async function promoteQuickListItemToPostItAction(itemId: string) {
 export async function deletePostItAction(postItId: string) {
   const userId = await getCurrentUserId();
   await deletePostIt(db, { userId, postItId });
+
+  revalidatePath("/dashboard");
+}
+
+export async function reorderPostItsAction(orderedIds: string[]) {
+  const userId = await getCurrentUserId();
+  await reorderPostIts(db, { userId, orderedIds });
 
   revalidatePath("/dashboard");
 }

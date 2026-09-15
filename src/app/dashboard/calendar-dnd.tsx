@@ -11,7 +11,9 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 import { moveCalendarEventAction } from "@/app/actions/calendar-events";
+import { reorderPostItsAction } from "@/app/actions/post-its";
 import { PostItVisual } from "./post-it-column";
 import {
   HOUR_HEIGHT,
@@ -22,9 +24,11 @@ import {
 
 export function CalendarDndProvider({
   events,
+  postItIds,
   children,
 }: {
   events: TimeGridEvent[];
+  postItIds: string[];
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -42,15 +46,34 @@ export function CalendarDndProvider({
 
   function handleDragEnd(e: DragEndEvent) {
     setDraggedPostItText(null);
-    const overDayKey = e.over ? String(e.over.id) : undefined;
-    if (!overDayKey) return;
+    const overId = e.over ? String(e.over.id) : undefined;
+    if (!overId) return;
 
-    if (e.active.data.current?.type === "postit") {
+    const isPostIt = e.active.data.current?.type === "postit";
+    const overIsPostIt = e.over?.data.current?.type === "postit";
+
+    if (isPostIt && overIsPostIt) {
+      const activeId = String(e.active.id);
+      if (activeId === overId) return;
+
+      const oldIndex = postItIds.indexOf(activeId);
+      const newIndex = postItIds.indexOf(overId);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(postItIds, oldIndex, newIndex);
+      startTransition(async () => {
+        await reorderPostItsAction(reordered);
+        router.refresh();
+      });
+      return;
+    }
+
+    if (isPostIt) {
       const text = String(e.active.data.current?.text ?? "");
       const params = new URLSearchParams({
         panel: "calendar-event",
         view: "new",
-        date: overDayKey,
+        date: overId,
         title: text,
         postItId: String(e.active.id),
       });
@@ -69,7 +92,7 @@ export function CalendarDndProvider({
       maxStartMinutes,
     );
 
-    const overDayStart = new Date(`${overDayKey}T00:00:00Z`);
+    const overDayStart = new Date(`${overId}T00:00:00Z`);
     const newStartAt = new Date(overDayStart.getTime() + newMinutes * 60 * 1000);
 
     const durationMs = dragged.endAt

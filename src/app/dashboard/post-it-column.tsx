@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDraggable } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
 import type { listPostIts } from "@/lib/post-its";
 
@@ -29,9 +30,11 @@ export function PostItColumn({
             revalidates this server-fed prop) remounts the ghost card back to
             its resting state instead of staying stuck in "editing". */}
         <PostItGhostCreate key={postIts.length} />
-        {shown.map((postIt) => (
-          <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
-        ))}
+        <SortableContext items={shown.map((postIt) => postIt.id)} strategy={rectSortingStrategy}>
+          {shown.map((postIt) => (
+            <PostItCard key={postIt.id} id={postIt.id} text={postIt.text} />
+          ))}
+        </SortableContext>
       </div>
       {overflow > 0 && (
         <Link
@@ -116,14 +119,20 @@ export function PostItVisual({ text }: { text: string }) {
 }
 
 function PostItCard({ id, text }: { id: string; text: string }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id,
     data: { type: "postit", text },
   });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   return (
     <div
       ref={setNodeRef}
+      style={style}
       {...listeners}
       {...attributes}
       className={`relative w-28 -rotate-1 touch-none odd:rotate-1 ${

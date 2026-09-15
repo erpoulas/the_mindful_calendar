@@ -287,7 +287,7 @@ export default async function DashboardPage({
         </form>
       </div>
 
-      <CalendarDndProvider events={dndEvents}>
+      <CalendarDndProvider events={dndEvents} postItIds={postIts.map((postIt) => postIt.id)}>
         <DashboardShell
           sidebar={
             <PanelCustomizer hiddenPanels={hiddenPanels}>

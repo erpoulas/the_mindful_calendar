@@ -6,6 +6,7 @@ import {
   deletePostIt,
   listPostIts,
   promoteQuickListItemToPostIt,
+  reorderPostIts,
 } from "@/lib/post-its";
 
 describe("createPostIt", () => {
@@ -15,6 +16,27 @@ describe("createPostIt", () => {
 
       expect(postIt.text).toBe("Buy stamps");
       expect(postIt.userId).toBe("test-user-1");
+    });
+  });
+
+  it("assigns the next order after the user's existing post-its", async () => {
+    await withRollback(async (tx) => {
+      const first = await createPostIt(tx, { userId: "test-user-1", text: "First" });
+      const second = await createPostIt(tx, { userId: "test-user-1", text: "Second" });
+
+      expect(first.order).toBe(0);
+      expect(second.order).toBe(1);
+    });
+  });
+
+  it("orders relative to only that user's post-its, not everyone's", async () => {
+    await withRollback(async (tx) => {
+      await createPostIt(tx, { userId: "test-user-2", text: "Theirs" });
+      await createPostIt(tx, { userId: "test-user-2", text: "Theirs again" });
+
+      const mine = await createPostIt(tx, { userId: "test-user-1", text: "Mine" });
+
+      expect(mine.order).toBe(0);
     });
   });
 });
@@ -46,6 +68,45 @@ describe("listPostIts", () => {
       const result = await listPostIts(tx, "test-user-1");
 
       expect(result.map((p) => p.text)).toEqual(["Mine"]);
+    });
+  });
+
+  it("returns post-its by their order field, not creation time", async () => {
+    await withRollback(async (tx) => {
+      const a = await createPostIt(tx, { userId: "test-user-1", text: "A" });
+      const b = await createPostIt(tx, { userId: "test-user-1", text: "B" });
+
+      await reorderPostIts(tx, { userId: "test-user-1", orderedIds: [b.id, a.id] });
+
+      const result = await listPostIts(tx, "test-user-1");
+      expect(result.map((p) => p.text)).toEqual(["B", "A"]);
+    });
+  });
+});
+
+describe("reorderPostIts", () => {
+  it("updates order to match the given sequence", async () => {
+    await withRollback(async (tx) => {
+      const a = await createPostIt(tx, { userId: "test-user-1", text: "A" });
+      const b = await createPostIt(tx, { userId: "test-user-1", text: "B" });
+      const c = await createPostIt(tx, { userId: "test-user-1", text: "C" });
+
+      await reorderPostIts(tx, { userId: "test-user-1", orderedIds: [c.id, a.id, b.id] });
+
+      const result = await listPostIts(tx, "test-user-1");
+      expect(result.map((p) => p.text)).toEqual(["C", "A", "B"]);
+    });
+  });
+
+  it("ignores ids that don't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const mine = await createPostIt(tx, { userId: "test-user-1", text: "Mine" });
+      const theirs = await createPostIt(tx, { userId: "test-user-2", text: "Theirs" });
+
+      await reorderPostIts(tx, { userId: "test-user-1", orderedIds: [theirs.id, mine.id] });
+
+      const theirsAfter = await tx.postIt.findUnique({ where: { id: theirs.id } });
+      expect(theirsAfter?.order).toBe(0);
     });
   });
 });
