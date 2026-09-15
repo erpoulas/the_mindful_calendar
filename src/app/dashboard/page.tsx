@@ -361,6 +361,7 @@ export default async function DashboardPage({
             context, so it must be an ancestor in the element tree even
             though the Drawer's own content renders through a portal. */}
         <PanelSheet
+          key={panel}
           open={panel !== null}
           title={panelTitle}
           size={panelSize}
