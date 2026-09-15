@@ -46,10 +46,9 @@ export function TimeGrid({
         >
           {date.toLocaleDateString(undefined, {
             weekday: "short",
-            month: "short",
-            day: "numeric",
             timeZone: "UTC",
           })}
+          , {date.getUTCMonth() + 1}/{date.getUTCDate()}
         </div>
       ))}
 

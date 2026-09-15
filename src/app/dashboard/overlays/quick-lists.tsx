@@ -30,19 +30,13 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
     <div className="flex flex-col gap-6">
       <QuickListTabs lists={lists} activeId={list?.id} />
 
-      {!list && (
-        <>
-          {lists.length === 0 && (
-            <p className="text-sm text-muted-foreground">No lists yet — add one below.</p>
-          )}
-          <QuickListForm
-            action={createQuickListAction}
-            heading="New list"
-            submitLabel="Add list"
-            pendingLabel="Adding..."
-          />
-        </>
+      {lists.length === 0 && (
+        <p className="text-sm text-muted-foreground">No lists yet — create one to get started.</p>
       )}
+
+      <Link href="/dashboard?panel=quicklists&view=create" className="text-sm hover:underline">
+        + Create new list
+      </Link>
 
       {list && (
         <>
@@ -103,6 +97,17 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
         </>
       )}
     </div>
+  );
+}
+
+export function QuickListCreateView() {
+  return (
+    <QuickListForm
+      action={createQuickListAction}
+      heading="New list"
+      submitLabel="Add list"
+      pendingLabel="Adding..."
+    />
   );
 }
 
