@@ -13,6 +13,11 @@ export const getCurrentUserId = cache(async () => {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    // Demo mode: start the dev server with SKIP_LOGIN=true to browse the UI
+    // without an account. Everything is saved under one shared demo user.
+    if (process.env.SKIP_LOGIN === "true") {
+      return "demo-user";
+    }
     redirect("/login");
   }
 

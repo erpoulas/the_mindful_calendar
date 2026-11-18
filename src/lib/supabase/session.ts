@@ -45,7 +45,7 @@ export async function updateSession(request: NextRequest) {
   );
   const isPublicRoute = publicRoutes.includes(path);
 
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !user && process.env.SKIP_LOGIN !== "true") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
