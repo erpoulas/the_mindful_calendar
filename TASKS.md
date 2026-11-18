@@ -53,9 +53,11 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
-- [ ] Dashboard picks "this week" (and today's affirmation/weekly stats) by UTC date, so on Sunday evening in the Americas it already shows next week; should use the user's time zone
+- [x] Dashboard picks "this week" (and today's affirmation/weekly stats) by UTC date, so on Sunday evening in the Americas it already shows next week; should use the time zone saved in Account settings (done: 1a3ebc6)
 - [x] Unused activeCount/openCount props left after removing panel descriptions (done: 68dd0b9)
-- [ ] Question for owner: should the End field really be hidden for timed events?
+- [x] Event form hides the End field for timed events; it should always show (done: 953ce40)
+- [ ] Writing a journal entry creates its calendar event at the real UTC time, so it lands hours off (e.g. 8pm in New York shows at 1am the next day)
+- [ ] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (claimed: claude-scroll-fix, 2026-11-18)
 
 ## Sign-in polish
 - [ ] Password preview: a show/hide (eye) toggle on password fields
