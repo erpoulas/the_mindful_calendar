@@ -277,8 +277,12 @@ model DashboardPreferences {
 // One row per user: account-level settings not tied to any one feature.
 // A missing row (or a null field) means "not set yet".
 model UserSettings {
-  userId   String  @id
-  timezone String?
+  userId         String   @id
+  timezone       String?
+  // Extra zones shown beside the week view's hour labels, in display order.
+  extraTimezones String[] @default([])
+  // false = "9 AM" (am/pm), true = "09:00" (24-hour / military time).
+  use24HourClock Boolean  @default(false)
 }
 
 // One row per user who connected Google Calendar. The refresh token is the

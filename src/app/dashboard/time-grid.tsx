@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useRef } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import type { HourLabelColumn } from "@/lib/hour-labels";
 import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
@@ -29,9 +30,12 @@ export function minutesSinceMidnightUTC(date: Date) {
 export function TimeGrid({
   weekStart,
   events,
+  hourLabelColumns,
 }: {
   weekStart: Date;
   events: TimeGridEvent[];
+  /** One column of hour labels per time zone, main zone last (see buildHourLabelColumns). */
+  hourLabelColumns: HourLabelColumn[];
 }) {
   const now = useWallClockNow();
   const todayKey = now ? toDayKey(now) : null;
@@ -41,8 +45,20 @@ export function TimeGrid({
   });
 
   return (
-    <div className="grid grid-cols-[3rem_repeat(7,1fr)]">
-      <div className="sticky -top-px z-30 bg-background pt-2" />
+    <div
+      className="grid"
+      style={{
+        gridTemplateColumns: `repeat(${hourLabelColumns.length}, 3.25rem) repeat(7, minmax(0, 1fr))`,
+      }}
+    >
+      {hourLabelColumns.map((column, index) => (
+        <div
+          key={index}
+          className="sticky -top-px z-30 flex items-end justify-end bg-background px-1 pt-2 pb-1 text-[10px] text-muted-foreground"
+        >
+          {column.heading}
+        </div>
+      ))}
       {days.map(({ date, key }) => (
         <div
           key={key}
@@ -60,17 +76,19 @@ export function TimeGrid({
         </div>
       ))}
 
-      <div className="relative" style={{ height: HOUR_HEIGHT * 24 }}>
-        {Array.from({ length: 24 }, (_, hour) => (
-          <div
-            key={hour}
-            className="absolute right-1 -translate-y-2 text-[10px] text-muted-foreground"
-            style={{ top: hour * HOUR_HEIGHT }}
-          >
-            {hour === 0 ? "" : `${hour}:00`}
-          </div>
-        ))}
-      </div>
+      {hourLabelColumns.map((column, index) => (
+        <div key={index} className="relative" style={{ height: HOUR_HEIGHT * 24 }}>
+          {column.labels.map((label, hour) => (
+            <div
+              key={hour}
+              className="absolute right-1 -translate-y-2 text-[10px] whitespace-nowrap text-muted-foreground"
+              style={{ top: hour * HOUR_HEIGHT }}
+            >
+              {hour === 0 ? "" : label}
+            </div>
+          ))}
+        </div>
+      ))}
 
       {days.map(({ key }) => (
         <DayColumn

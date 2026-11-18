@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
 import {
+  getCalendarDisplaySettings,
   getUserTimezone,
+  setCalendarDisplaySettings,
   getUserTimezoneWithFallback,
   setUserTimezone,
 } from "@/lib/user-settings";
@@ -87,6 +89,67 @@ describe("setUserTimezone", () => {
 
       const theirs = await getUserTimezone(tx, "test-user-2");
       expect(theirs).toBe("Europe/London");
+    });
+  });
+});
+
+describe("getCalendarDisplaySettings", () => {
+  it("defaults to no extra zones and the 12-hour clock", async () => {
+    await withRollback(async (tx) => {
+      const result = await getCalendarDisplaySettings(tx, "test-user-1");
+      expect(result).toEqual({ extraTimezones: [], use24HourClock: false });
+    });
+  });
+});
+
+describe("setCalendarDisplaySettings", () => {
+  it("saves extra zones in order and the clock choice", async () => {
+    await withRollback(async (tx) => {
+      await setCalendarDisplaySettings(tx, {
+        userId: "test-user-1",
+        extraTimezones: ["America/Chicago", "Europe/London"],
+        use24HourClock: true,
+      });
+
+      const result = await getCalendarDisplaySettings(tx, "test-user-1");
+
+      expect(result).toEqual({
+        extraTimezones: ["America/Chicago", "Europe/London"],
+        use24HourClock: true,
+      });
+    });
+  });
+
+  it("leaves the saved main timezone alone", async () => {
+    await withRollback(async (tx) => {
+      await setUserTimezone(tx, { userId: "test-user-1", timezone: "America/Denver" });
+
+      await setCalendarDisplaySettings(tx, {
+        userId: "test-user-1",
+        extraTimezones: ["America/Chicago"],
+        use24HourClock: false,
+      });
+
+      expect(await getUserTimezone(tx, "test-user-1")).toBe("America/Denver");
+    });
+  });
+
+  it("never touches another user's settings", async () => {
+    await withRollback(async (tx) => {
+      await setCalendarDisplaySettings(tx, {
+        userId: "test-user-2",
+        extraTimezones: ["Asia/Tokyo"],
+        use24HourClock: true,
+      });
+
+      await setCalendarDisplaySettings(tx, {
+        userId: "test-user-1",
+        extraTimezones: [],
+        use24HourClock: false,
+      });
+
+      const theirs = await getCalendarDisplaySettings(tx, "test-user-2");
+      expect(theirs).toEqual({ extraTimezones: ["Asia/Tokyo"], use24HourClock: true });
     });
   });
 });

@@ -12,7 +12,8 @@ import { db } from "@/lib/db";
 import { syncGoogleCalendar } from "@/lib/google-sync";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
-import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { getCalendarDisplaySettings, getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
@@ -181,7 +182,16 @@ export default async function DashboardPage({
         </div>
       );
     }
-    calendarBody = <TimeGrid weekStart={start} events={timedEvents} />;
+    const { extraTimezones, use24HourClock } = await getCalendarDisplaySettings(db, userId);
+    const hourLabelColumns = buildHourLabelColumns({
+      day: start,
+      timeZone,
+      extraTimeZones: extraTimezones,
+      use24HourClock,
+    });
+    calendarBody = (
+      <TimeGrid weekStart={start} events={timedEvents} hourLabelColumns={hourLabelColumns} />
+    );
   }
 
   const panelComponents: Record<string, React.ReactNode> = {

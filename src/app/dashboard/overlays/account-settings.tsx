@@ -5,15 +5,21 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
-import { getUserTimezone } from "@/lib/user-settings";
-import { ChangeEmailForm, ChangePasswordForm, TimezoneForm } from "./account-settings-forms";
+import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
+import {
+  CalendarDisplayForm,
+  ChangeEmailForm,
+  ChangePasswordForm,
+  TimezoneForm,
+} from "./account-settings-forms";
 
 export async function AccountSettingsView({ googleOutcome }: { googleOutcome?: string }) {
   const userId = await getCurrentUserId();
   const supabase = await createClient();
 
-  const [timezone, { data }, googleConnection] = await Promise.all([
+  const [timezone, calendarDisplay, { data }, googleConnection] = await Promise.all([
     getUserTimezone(db, userId),
+    getCalendarDisplaySettings(db, userId),
     supabase.auth.getUser(),
     getGoogleConnection(db, userId),
   ]);
@@ -22,6 +28,7 @@ export async function AccountSettingsView({ googleOutcome }: { googleOutcome?: s
     <div className="flex flex-col gap-6">
       <GoogleCalendarSection connected={googleConnection !== null} outcome={googleOutcome} />
       <TimezoneForm currentTimezone={timezone ?? "UTC"} />
+      <CalendarDisplayForm {...calendarDisplay} />
       <ChangeEmailForm currentEmail={data.user?.email ?? ""} />
       <ChangePasswordForm />
     </div>

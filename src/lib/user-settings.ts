@@ -13,6 +13,35 @@ export async function getUserTimezoneWithFallback(
   return (await getUserTimezone(client, userId)) ?? "UTC";
 }
 
+export type CalendarDisplaySettings = {
+  extraTimezones: string[];
+  use24HourClock: boolean;
+};
+
+/** Extra time zones and clock style for the calendar; defaults for users who never saved them. */
+export async function getCalendarDisplaySettings(
+  client: DbClient,
+  userId: string,
+): Promise<CalendarDisplaySettings> {
+  const settings = await client.userSettings.findUnique({ where: { userId } });
+  return {
+    extraTimezones: settings?.extraTimezones ?? [],
+    use24HourClock: settings?.use24HourClock ?? false,
+  };
+}
+
+export async function setCalendarDisplaySettings(
+  client: DbClient,
+  params: { userId: string } & CalendarDisplaySettings,
+) {
+  const { userId, ...display } = params;
+  return client.userSettings.upsert({
+    where: { userId },
+    create: { userId, ...display },
+    update: display,
+  });
+}
+
 export async function setUserTimezone(
   client: DbClient,
   params: { userId: string; timezone: string },
