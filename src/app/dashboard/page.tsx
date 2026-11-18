@@ -72,6 +72,7 @@ export default async function DashboardPage({
     title: titleParam,
     postItId: postItIdParam,
     entryId: entryIdParam,
+    google: googleParam,
   } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
@@ -195,7 +196,11 @@ export default async function DashboardPage({
     | undefined;
   if (panel === "account") {
     panelTitle = "Account settings";
-    panelContent = <AccountSettingsView />;
+    panelContent = (
+      <AccountSettingsView
+        googleOutcome={typeof googleParam === "string" ? googleParam : undefined}
+      />
+    );
   } else if (panel === "dopamine-menu") {
     panelTitle = "Dopamine Menu";
     panelContent = <DopamineMenuView />;
