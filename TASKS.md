@@ -64,6 +64,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Week view: clicking an event only opens the edit form if you hit the title text; make the whole box clickable while keeping it draggable (done: ad85706, 78cf4f1)
 - [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
 - [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
+- [x] Dashboard is capped at 72rem and centered, leaving empty bands on wide windows; let it fill the full width (done: e46dd9f)
 
 ## Performance
 - [x] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (done: 09c568d, 677e2e6, 4902f6c)
