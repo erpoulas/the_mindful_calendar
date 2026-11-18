@@ -72,6 +72,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Calendar display options
 - [x] Account settings: show extra time zones beside the week view's hour labels (like Google Calendar), and pick 12-hour (am/pm) or 24-hour (military) time (done: 81fb82a)
+- [x] Week view: show each all-day event under the day it falls on, instead of one flat list (done: d943482)
 - [ ] Event form: pick the time zone an event's times are entered in (like Google Calendar); the event remembers it and shows in the right place on the calendar (done: ab69758)
 
 ## Going live
