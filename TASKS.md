@@ -62,6 +62,9 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [ ] No saved time zone falls back to UTC, so Google events import hours off (8am Mountain shows at 3pm); default to the browser's zone, and re-read Google events when the main zone changes (claimed: deploy session, 2026-11-18)
 - [ ] Account settings: searchable time zone picker; type a city to find and set its zone (claimed: deploy session, 2026-11-18)
 
+## Performance
+- [ ] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (claimed: speed session, 2026-11-18)
+
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
 - [x] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
@@ -75,6 +78,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Docs
 - [x] Bring README up to date with the current codebase (done: b2c9d3d)
+- [ ] Bring AGENTS.md up to date with the current codebase (claimed: readme session, 2026-11-18)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
