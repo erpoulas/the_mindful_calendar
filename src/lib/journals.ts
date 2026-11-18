@@ -1,6 +1,8 @@
 import { createCalendarEvent } from "./calendar-events";
 import type { DbClient } from "./db";
 import { getOrCreateJournalIntention } from "./intentions";
+import { getUserTimezoneWithFallback } from "./user-settings";
+import { toWallClockDate } from "./wall-clock";
 
 export async function createJournal(client: DbClient, data: { userId: string; name: string }) {
   return client.journal.create({ data });
@@ -119,10 +121,16 @@ export async function createJournalEntry(
 
   const journalIntention = await getOrCreateJournalIntention(client, params.userId);
 
+  // Events are stored as wall-clock times, so "now" must be converted to the
+  // user's time zone first -- otherwise an 8pm entry in New York lands at 1am.
+  const startAt =
+    params.startAt ??
+    toWallClockDate(new Date(), await getUserTimezoneWithFallback(client, params.userId));
+
   const event = await createCalendarEvent(client, {
     userId: params.userId,
     title: params.promptText ?? journal.name,
-    startAt: params.startAt ?? new Date(),
+    startAt,
     intentionIds: [journalIntention.id, ...(params.intentionIds ?? [])],
   });
 

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { withRollback } from "@/test/withRollback";
 import { getOrCreateJournalIntention } from "@/lib/intentions";
+import { setUserTimezone } from "@/lib/user-settings";
 import {
   addJournalPrompt,
   createJournal,
@@ -302,6 +303,31 @@ describe("createJournalEntry", () => {
 
       expect(event?.intentions.map((ei) => ei.intentionId)).toContain(health.id);
     });
+  });
+
+  it("places a spontaneous entry at the user's wall-clock time, not UTC", async () => {
+    // 1:00am UTC on Nov 19 is 8:00pm on Nov 18 in New York.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-19T01:00:00Z"));
+    try {
+      await withRollback(async (tx) => {
+        await setUserTimezone(tx, { userId: "test-user-1", timezone: "America/New_York" });
+        const journal = await createJournal(tx, { userId: "test-user-1", name: "Gratitude" });
+
+        const entry = await createJournalEntry(tx, {
+          userId: "test-user-1",
+          journalId: journal.id,
+          content: "Evening reflection",
+        });
+
+        const event = await tx.calendarEvent.findUnique({
+          where: { id: entry!.calendarEventId },
+        });
+        expect(event?.startAt).toEqual(new Date("2026-11-18T20:00:00Z"));
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("supports pre-scheduling a future entry time", async () => {
