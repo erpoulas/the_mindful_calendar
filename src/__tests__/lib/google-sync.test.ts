@@ -496,6 +496,80 @@ describe("syncGoogleCalendar", () => {
     });
   });
 
+  // The dashboard syncs in the background and redraws only when the sync
+  // changed something the calendar shows.
+  describe("reporting whether the app's events changed", () => {
+    it("reports no change when the user never connected", async () => {
+      await withRollback(async (tx) => {
+        expect(await sync(tx)).toBe(false);
+      });
+    });
+
+    it("reports no change when neither side changed", async () => {
+      const original = google.put(googleEvent("dentist", "2026-11-18"));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+        await linkedRow(tx, original);
+
+        expect(await sync(tx)).toBe(false);
+      });
+    });
+
+    it("reports no change when it only sent app events to Google", async () => {
+      await withRollback(async (tx) => {
+        await connect(tx);
+        await createCalendarEvent(tx, { userId: USER, title: "Gym", startAt: new Date("2026-11-20T07:00:00Z") });
+
+        expect(await sync(tx)).toBe(false);
+      });
+    });
+
+    it("reports a change when it imports a Google event", async () => {
+      google.put(googleEvent("dentist", "2026-11-18"));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+
+        expect(await sync(tx)).toBe(true);
+      });
+    });
+
+    it("reports a change when it copies a Google edit into the app", async () => {
+      const original = google.put(googleEvent("dentist", "2026-11-18"));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+        await linkedRow(tx, original);
+        google.put(googleEvent("dentist", "2026-11-19"));
+
+        expect(await sync(tx)).toBe(true);
+      });
+    });
+
+    it("reports a change when it deletes an event deleted in Google", async () => {
+      const original = google.put(googleEvent("dentist", "2026-11-18"));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+        await linkedRow(tx, original);
+        google.put({ ...original, status: "cancelled" });
+
+        expect(await sync(tx)).toBe(true);
+      });
+    });
+
+    it("reports a change when Google rejects the connection, so the page shows it's gone", async () => {
+      google.failWith = 401;
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+
+        expect(await sync(tx)).toBe(true);
+      });
+    });
+  });
+
   describe("tokens and failures", () => {
     it("refreshes an expired access token and saves it", async () => {
       await withRollback(async (tx) => {
@@ -526,7 +600,7 @@ describe("syncGoogleCalendar", () => {
       await withRollback(async (tx) => {
         await connect(tx);
 
-        await expect(sync(tx)).resolves.toBeUndefined();
+        await expect(sync(tx)).resolves.toBe(false);
         expect(await getGoogleConnection(tx, USER)).not.toBeNull();
       });
     });

@@ -12,7 +12,6 @@ import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-p
 import { db } from "@/lib/db";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
-import { syncGoogleCalendar } from "@/lib/google-sync";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
@@ -39,6 +38,7 @@ import {
 } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
+import { GoogleCalendarSync } from "./google-calendar-sync";
 import { GOOGLE_BANNER_DISMISSED_COOKIE, GoogleConnectBanner } from "./google-connect-banner";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizerControls, PanelList, SortablePanel } from "./panel-customizer";
@@ -101,14 +101,12 @@ export default async function DashboardPage({
       ? new Date(startParam)
       : toWallClockDate(new Date(), timeZone);
 
-  // Sync with Google Calendar first, so everything below (calendar and
-  // weekly stats alike) reads up-to-date events. Does nothing if the user
-  // hasn't connected Google.
   const { gridStart, gridEnd } = getMonthGrid(referenceDate);
   const visibleRange =
     mode === "month" ? { start: gridStart, end: gridEnd } : getWeekRange(referenceDate);
-  await syncGoogleCalendar(db, { userId, ...visibleRange, timeZone });
 
+  // Every query at once: this page re-renders on every popup click, so each
+  // query waited on in turn would add its own trip to the database.
   const [
     affirmation,
     breakdown,
@@ -118,6 +116,8 @@ export default async function DashboardPage({
     postIts,
     googleConnection,
     cookieStore,
+    events,
+    displaySettings,
   ] = await Promise.all([
     getTodayAffirmation(db, userId, timeZone),
     getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
@@ -127,7 +127,13 @@ export default async function DashboardPage({
     listPostIts(db, userId),
     getGoogleConnection(db, userId),
     cookies(),
+    listCalendarEvents(db, { userId, ...visibleRange }),
+    getCalendarDisplaySettings(db, userId),
   ]);
+
+  // Changes whenever an event on screen is added, edited or deleted, which
+  // tells GoogleCalendarSync to send the change to Google.
+  const eventsVersion = `${events.length}-${Math.max(0, ...events.map((event) => event.updatedAt.getTime()))}`;
 
   // Only nudge when connecting would actually work (the Google env vars are
   // set) and the user hasn't already closed the banner.
@@ -146,7 +152,6 @@ export default async function DashboardPage({
 
   if (mode === "month") {
     const { monthStart } = getMonthGrid(referenceDate);
-    const monthEvents = await listCalendarEvents(db, { userId, start: gridStart, end: gridEnd });
 
     const prevMonthRef = new Date(
       Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1),
@@ -158,11 +163,9 @@ export default async function DashboardPage({
     headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
-    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
+    calendarBody = <MonthGrid referenceDate={referenceDate} events={events} />;
   } else {
-    const { start, end } = getWeekRange(referenceDate);
-    const events = await listCalendarEvents(db, { userId, start, end });
-
+    const { start } = visibleRange;
     const allDayEvents = events.filter((event) => event.isAllDay);
     const timedEvents = events
       .filter((event) => !event.isAllDay && event.startAt)
@@ -200,7 +203,7 @@ export default async function DashboardPage({
         </div>
       );
     }
-    const { extraTimezones, use24HourClock } = await getCalendarDisplaySettings(db, userId);
+    const { extraTimezones, use24HourClock } = displaySettings;
     const hourLabelColumns = buildHourLabelColumns({
       day: start,
       timeZone,
@@ -328,6 +331,13 @@ export default async function DashboardPage({
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-clip">
       {savedTimeZone === null && <SaveBrowserTimezone />}
+      {googleConnection && (
+        <GoogleCalendarSync
+          start={visibleRange.start.toISOString()}
+          end={visibleRange.end.toISOString()}
+          eventsVersion={eventsVersion}
+        />
+      )}
       {showGoogleBanner && <GoogleConnectBanner />}
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
         <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>

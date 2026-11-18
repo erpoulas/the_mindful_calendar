@@ -64,14 +64,19 @@ type GoogleCall = <T>(request: (accessToken: string) => Promise<T>) => Promise<T
  * the wall-clock range on screen. Never throws: if Google is down the
  * calendar still loads from our own data. If Google has rejected the
  * connection it is deleted, so Account settings offers "Connect" again.
+ *
+ * Returns true when the sync changed what the app shows (an event came in,
+ * changed or went away, or the connection was dropped), so the dashboard
+ * knows to redraw. Sending app events to Google returns false: the app
+ * already shows them.
  */
 export async function syncGoogleCalendar(
   client: DbClient,
   params: { userId: string; start: Date; end: Date; timeZone: string; now?: Date },
-): Promise<void> {
+): Promise<boolean> {
   const { userId, timeZone, now = new Date() } = params;
   const connection = await getGoogleConnection(client, userId);
-  if (!connection) return;
+  if (!connection) return false;
 
   const sync = new GoogleSync(client, userId, timeZone, now, createGoogleCall(client, connection, now));
   try {
@@ -85,10 +90,11 @@ export async function syncGoogleCalendar(
   } catch (error) {
     if (error instanceof GoogleAuthError) {
       await deleteGoogleConnection(client, userId);
-    } else {
-      console.error("Google Calendar sync failed", error);
+      return true;
     }
+    console.error("Google Calendar sync failed", error);
   }
+  return sync.changedAppEvents;
 }
 
 /**
@@ -149,6 +155,9 @@ function createGoogleCall(
 }
 
 class GoogleSync {
+  /** Set once an app event is created, changed or deleted from Google's side. */
+  changedAppEvents = false;
+
   constructor(
     private client: DbClient,
     private userId: string,
@@ -254,6 +263,7 @@ class GoogleSync {
     }
 
     if (!row) {
+      this.changedAppEvents = true;
       await this.client.calendarEvent.create({
         data: {
           userId: this.userId,
@@ -275,6 +285,7 @@ class GoogleSync {
     const googleWins = changedInGoogle && (!changedInApp || googleEditedAt > row.updatedAt);
 
     if (googleWins) {
+      this.changedAppEvents = true;
       await this.markSynced(row.id, {
         ...fields,
         // A journal event's notes never came from Google, so don't take them from there.
@@ -304,6 +315,7 @@ class GoogleSync {
    * private journal writing, which Google never had.
    */
   private async removeDeletedInGoogle(row: SyncedRow) {
+    this.changedAppEvents = true;
     if (row.journalEntry) {
       await this.markSynced(row.id, { googleEventId: null, googleEtag: null });
     } else {
