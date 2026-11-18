@@ -43,6 +43,7 @@ export function Sheet({
   open,
   onOpenChange,
   title,
+  hideVisibleTitle,
   size = "side",
   backgroundImage,
   children,
@@ -50,6 +51,7 @@ export function Sheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  hideVisibleTitle?: boolean;
   size?: "side" | "wide" | "center";
   backgroundImage?: {
     src: string;
@@ -69,14 +71,16 @@ export function Sheet({
   const showCloseButton = !(imageBacked && size === "side");
 
   // The photo already carries its own visual identity (folder, notebook,
-  // clipboard), so photo-backed popups skip the redundant heading text — the
-  // Drawer.Title stays in the DOM (sr-only) so the popup still has an
-  // accessible name.
+  // clipboard), so photo-backed popups skip the redundant heading text.
+  // Some popups also render their own heading in their content (e.g. the
+  // event form) — those pass hideVisibleTitle to avoid a duplicate. Either
+  // way the Drawer.Title stays in the DOM (sr-only) so the popup still has
+  // an accessible name.
   const titleRow = (
     <div className="relative z-10 flex items-start justify-end gap-4">
       <Drawer.Title
         className={
-          imageBacked
+          imageBacked || hideVisibleTitle
             ? "sr-only"
             : "mr-auto font-heading text-2xl tracking-wide uppercase"
         }
@@ -86,7 +90,7 @@ export function Sheet({
       {showCloseButton && (
         <Drawer.Close
           aria-label="Close"
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-lg text-muted-foreground hover:text-foreground"
         >
           ✕
         </Drawer.Close>

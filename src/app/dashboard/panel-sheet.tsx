@@ -6,12 +6,14 @@ import { Sheet } from "@/components/ui/sheet";
 export function PanelSheet({
   open,
   title,
+  hideVisibleTitle,
   size,
   backgroundImage,
   children,
 }: {
   open: boolean;
   title: string;
+  hideVisibleTitle?: boolean;
   size?: "side" | "wide" | "center";
   backgroundImage?: {
     src: string;
@@ -30,6 +32,7 @@ export function PanelSheet({
         if (!next) router.push("/dashboard");
       }}
       title={title}
+      hideVisibleTitle={hideVisibleTitle}
       size={size}
       backgroundImage={backgroundImage}
     >

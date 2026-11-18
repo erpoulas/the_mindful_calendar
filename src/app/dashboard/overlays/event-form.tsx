@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { CalendarEventFormState } from "@/app/actions/calendar-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export function EventForm({
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const selectedIntentionIds = new Set(initialValues?.intentionIds ?? []);
+  const [isAllDay, setIsAllDay] = useState(initialValues?.isAllDay ?? false);
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded border p-4">
@@ -65,22 +66,27 @@ export function EventForm({
         <input
           type="checkbox"
           name="isAllDay"
-          defaultChecked={initialValues?.isAllDay}
+          checked={isAllDay}
+          onChange={(event) => setIsAllDay(event.target.checked)}
         />
         All day
       </label>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="startAt">Start (optional)</Label>
+        <Label htmlFor="startAt">Start</Label>
         <Input
           id="startAt"
           name="startAt"
           type="datetime-local"
           defaultValue={initialValues?.startAt?.toISOString().slice(0, 16)}
+          required
         />
+        {state?.errors?.startAt && (
+          <p className="text-sm text-red-600">{state.errors.startAt[0]}</p>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5" hidden={!isAllDay}>
         <Label htmlFor="endAt">End (optional)</Label>
         <Input
           id="endAt"

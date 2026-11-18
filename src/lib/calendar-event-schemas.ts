@@ -10,7 +10,7 @@ export const CreateCalendarEventSchema = z
       .trim()
       .min(1, "Title is required")
       .max(TITLE_MAX_LENGTH, `Keep it under ${TITLE_MAX_LENGTH} characters`),
-    startAt: z.string().trim().optional(),
+    startAt: z.string().trim().min(1, "Start is required"),
     endAt: z.string().trim().optional(),
     isAllDay: z.boolean().optional(),
     location: z.string().trim().optional(),
