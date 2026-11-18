@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useOptimistic, useRef, useState } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { createPostItAction, deletePostItAction } from "@/app/actions/post-its";
+import {
+  createPostItAction,
+  deletePostItAction,
+  updatePostItTextAction,
+} from "@/app/actions/post-its";
 import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
 import type { listPostIts } from "@/lib/post-its";
 
@@ -114,14 +118,18 @@ export function PostItVisual({ text }: { text: string }) {
 }
 
 function PostItCard({ id, text }: { id: string; text: string }) {
-  // Hides the note the moment ✕ is clicked, instead of waiting for the
-  // server to delete it and the whole dashboard to reload. React drops this
-  // once the reload brings in the real list (or puts the note back if the
-  // delete failed).
+  const [isEditing, setIsEditing] = useState(false);
+  // Optimistic values show the change the moment you make it, instead of
+  // waiting for the server to save it and the whole dashboard to reload.
+  // React drops them once the reload brings in the real data.
+  const [shownText, showText] = useOptimistic(text);
   const [isDismissed, markDismissed] = useOptimistic(false);
+  const [, startTransition] = useTransition();
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id,
-    data: { type: "postit", text },
+    data: { type: "postit", text: shownText },
+    // Dragging is switched off while editing so you can click and select text.
+    disabled: isEditing,
   });
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -130,14 +138,61 @@ function PostItCard({ id, text }: { id: string; text: string }) {
   useEffect(() => {
     const el = textRef.current;
     setIsOverflowing(!!el && el.scrollHeight > el.clientHeight);
-  }, [text]);
+  }, [shownText, isEditing]);
 
   if (isDismissed) return null;
+
+  function saveText(formData: FormData) {
+    setIsEditing(false);
+    const newText = String(formData.get("text") ?? "").trim();
+    // Clearing the note or leaving it unchanged just closes the editor.
+    if (!newText || newText === shownText) return;
+    startTransition(async () => {
+      showText(newText);
+      await updatePostItTextAction(id, formData);
+    });
+  }
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  if (isEditing) {
+    return (
+      <div ref={setNodeRef} style={style} className="relative w-28 -rotate-1 odd:rotate-1">
+        <PostItImage />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveText(new FormData(e.currentTarget));
+          }}
+          className="absolute inset-x-3 top-9 bottom-2"
+        >
+          <textarea
+            name="text"
+            autoFocus
+            defaultValue={shownText}
+            maxLength={TITLE_MAX_LENGTH}
+            aria-label="Post-it text"
+            onFocus={(e) => e.currentTarget.select()}
+            onBlur={(e) => e.currentTarget.form?.requestSubmit()}
+            onKeyDown={(e) => {
+              // Enter saves (Shift+Enter is a new line); Escape throws the edit away.
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.blur();
+              } else if (e.key === "Escape") {
+                e.currentTarget.value = shownText;
+                e.currentTarget.blur();
+              }
+            }}
+            className="font-handwritten h-full w-full resize-none border-none bg-transparent text-sm leading-snug break-words outline-none"
+          />
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -150,13 +205,17 @@ function PostItCard({ id, text }: { id: string; text: string }) {
       }`}
     >
       <PostItImage />
+      {/* A plain click edits the note; dnd-kit only starts a drag after the
+          pointer moves 8px, and it swallows the click that ends a drag. */}
       <p
         ref={textRef}
-        className={`font-handwritten absolute inset-x-3 top-9 bottom-2 text-sm leading-snug break-words ${
+        onClick={() => setIsEditing(true)}
+        title="Click to edit"
+        className={`font-handwritten absolute inset-x-3 top-9 bottom-2 cursor-text text-sm leading-snug break-words ${
           expanded ? "overflow-y-auto" : "overflow-hidden"
         }`}
       >
-        {text}
+        {shownText}
       </p>
       {isOverflowing && (
         <button

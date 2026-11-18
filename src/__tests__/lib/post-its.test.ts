@@ -7,6 +7,7 @@ import {
   listPostIts,
   promoteQuickListItemToPostIt,
   reorderPostIts,
+  updatePostItText,
 } from "@/lib/post-its";
 
 describe("createPostIt", () => {
@@ -107,6 +108,40 @@ describe("reorderPostIts", () => {
 
       const theirsAfter = await tx.postIt.findUnique({ where: { id: theirs.id } });
       expect(theirsAfter?.order).toBe(0);
+    });
+  });
+});
+
+describe("updatePostItText", () => {
+  it("changes the post-it's text and keeps its place in the order", async () => {
+    await withRollback(async (tx) => {
+      await createPostIt(tx, { userId: "test-user-1", text: "First" });
+      const postIt = await createPostIt(tx, { userId: "test-user-1", text: "Buy stamps" });
+
+      const updated = await updatePostItText(tx, {
+        userId: "test-user-1",
+        postItId: postIt.id,
+        text: "Buy stamps and envelopes",
+      });
+
+      expect(updated?.text).toBe("Buy stamps and envelopes");
+      expect(updated?.order).toBe(postIt.order);
+    });
+  });
+
+  it("returns null and leaves the post-it alone when it belongs to another user", async () => {
+    await withRollback(async (tx) => {
+      const postIt = await createPostIt(tx, { userId: "test-user-2", text: "Theirs" });
+
+      const result = await updatePostItText(tx, {
+        userId: "test-user-1",
+        postItId: postIt.id,
+        text: "Hijacked",
+      });
+
+      expect(result).toBeNull();
+      const after = await tx.postIt.findUnique({ where: { id: postIt.id } });
+      expect(after?.text).toBe("Theirs");
     });
   });
 });

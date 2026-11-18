@@ -7,6 +7,7 @@ import {
   deletePostIt,
   promoteQuickListItemToPostIt,
   reorderPostIts,
+  updatePostItText,
 } from "@/lib/post-its";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -24,6 +25,17 @@ export async function createPostItAction(formData: FormData) {
 export async function promoteQuickListItemToPostItAction(itemId: string) {
   const userId = await getCurrentUserId();
   await promoteQuickListItemToPostIt(db, { userId, itemId });
+
+  revalidatePath("/dashboard");
+}
+
+// Edits use the same text rules as creating a post-it.
+export async function updatePostItTextAction(postItId: string, formData: FormData) {
+  const validated = CreatePostItSchema.safeParse({ text: formData.get("text") });
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  await updatePostItText(db, { userId, postItId, text: validated.data.text });
 
   revalidatePath("/dashboard");
 }

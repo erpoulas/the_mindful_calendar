@@ -34,6 +34,18 @@ export async function reorderPostIts(
   );
 }
 
+export async function updatePostItText(
+  client: DbClient,
+  params: { userId: string; postItId: string; text: string },
+) {
+  const postIt = await client.postIt.findFirst({
+    where: { id: params.postItId, userId: params.userId },
+  });
+  if (!postIt) return null;
+
+  return client.postIt.update({ where: { id: postIt.id }, data: { text: params.text } });
+}
+
 export async function deletePostIt(
   client: DbClient,
   params: { userId: string; postItId: string },
