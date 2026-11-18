@@ -27,13 +27,24 @@ export function minutesSinceMidnightUTC(date: Date) {
   return date.getUTCHours() * 60 + date.getUTCMinutes();
 }
 
+// An all-day event's endAt is its last day (or null for a one-day event), so
+// it covers every day from its start day through that last day.
+function coversDay(event: TimeGridEvent, dayKey: string) {
+  const firstDayKey = toDayKey(event.startAt);
+  const lastDayKey = toDayKey(event.endAt ?? event.startAt);
+  return firstDayKey <= dayKey && dayKey <= lastDayKey;
+}
+
 export function TimeGrid({
   weekStart,
   events,
+  allDayEvents,
   hourLabelColumns,
 }: {
   weekStart: Date;
   events: TimeGridEvent[];
+  /** Shown under the day header of each day they cover. */
+  allDayEvents: TimeGridEvent[];
   /** One column of hour labels per time zone, main zone last (see buildHourLabelColumns). */
   hourLabelColumns: HourLabelColumn[];
 }) {
@@ -73,6 +84,7 @@ export function TimeGrid({
           <span>
             {date.getUTCMonth() + 1}/{date.getUTCDate()}
           </span>
+          <AllDayList events={allDayEvents.filter((event) => coversDay(event, key))} />
         </div>
       ))}
 
@@ -99,6 +111,26 @@ export function TimeGrid({
         />
       ))}
     </div>
+  );
+}
+
+function AllDayList({ events }: { events: TimeGridEvent[] }) {
+  if (events.length === 0) return null;
+
+  return (
+    <ul className="mt-1 flex w-full flex-col gap-0.5 text-left font-normal">
+      {events.map((event) => (
+        <li key={event.id}>
+          <Link
+            href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+            title={event.title}
+            className="block truncate rounded bg-accent px-1 text-[11px] hover:bg-secondary"
+          >
+            {event.title}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
