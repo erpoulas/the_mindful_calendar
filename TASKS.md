@@ -60,7 +60,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (done: 9d6a01d)
 - [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
 - [x] No saved time zone falls back to UTC, so Google events import hours off (8am Mountain shows at 3pm); default to the browser's zone, and re-read Google events when the main zone changes (done: 946bb08)
-- [ ] Account settings: searchable time zone picker; type a city to find and set its zone (claimed: deploy session, 2026-11-18)
+- [x] Account settings: searchable time zone picker; type a city to find and set its zone (done: 11248d6)
 
 ## Performance
 - [ ] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (claimed: speed session, 2026-11-18)
