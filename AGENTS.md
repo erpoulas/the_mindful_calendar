@@ -48,6 +48,14 @@ Next.js 16 and React 19 are recent and differ from older versions. Check the ins
 ### Working alongside other agents
 - Other agents may be editing files in the same folder while you work. When `git status` shows changes you didn't make, leave them alone: don't revert, reformat or "fix" them.
 - Stage only the files you changed, by name (`git add src/lib/foo.ts ...`). Never use `git add -A`, `git add .` or `git commit -a`, which would sweep another agent's half-finished work into your commit.
+- **Always name your files in the commit command too:** `git commit -m "..." -- src/lib/foo.ts src/app/bar.tsx`. Never run a bare `git commit`. All agents share one staging area (git's "index"), so a bare `git commit` also commits whatever *another* agent has staged at that moment. This really happened: a `docs(tasks)` commit swept in another agent's calendar code and had to be reverted. With file names after `--`, git commits only those files and leaves everything else staged as it was.
+- That commits each named file whole. If a file you changed also has another agent's uncommitted edits (check `git diff <file>`), their lines would go in too. In that case commit only your part from a private staging area, all in one command, so no other agent's commit can land in between:
+  ```sh
+  export GIT_INDEX_FILE=.git/index-<your label>; git read-tree HEAD \
+    && git apply --cached my-changes.patch \
+    && git commit -m "..."; unset GIT_INDEX_FILE; git reset -q -- <your files>
+  ```
+  `my-changes.patch` is `git diff <file>` with the other agent's hunks deleted. The final `git reset` updates the shared staging area to match your new commit. Afterwards, check `git show --stat HEAD` lists only your files. If this feels risky, stop and ask the user instead.
 - Before committing, run `git fetch origin`. If `origin/main` has new commits, pull them first. If that causes merge conflicts, stop and walk the user through them instead of resolving them silently.
 - If the checks below fail because of another agent's in-progress files rather than yours, tell the user instead of changing those files.
 
