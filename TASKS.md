@@ -45,15 +45,16 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Drag-to-reorder dashboard panels in customize mode (done: 14f9e51)
 
 ## Dashboard and calendar polish (uncommitted work found 2026-11-18)
-- [ ] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (claimed: claude, 2026-11-18)
-- [ ] Event form: start required, End shown only for all-day events, no duplicate popup title (claimed: claude, 2026-11-18)
-- [ ] Panel art icons for Affirmation, Time this week and Weekly review (claimed: claude, 2026-11-18)
-- [ ] Calendar "today" markers: current-time line, sticky day headers, today circle in month view (claimed: claude, 2026-11-18)
-- [ ] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (claimed: claude, 2026-11-18)
+- [x] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (done: 03f85a2)
+- [x] Event form: start required, End shown only for all-day events, no duplicate popup title (done: 0369266)
+- [x] Panel art icons for Affirmation, Time this week and Weekly review (done: e332ba9)
+- [x] Calendar "today" markers: current-time line, sticky day headers, today circle in month view (done: ec535f6)
+- [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
 
 ## Bugs
-- [ ] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (claimed: claude, 2026-11-18)
-- [ ] Unused activeCount/openCount props left after removing panel descriptions (claimed: claude, 2026-11-18)
+- [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
+- [ ] Dashboard picks "this week" (and today's affirmation/weekly stats) by UTC date, so on Sunday evening in the Americas it already shows next week; should use the user's time zone
+- [x] Unused activeCount/openCount props left after removing panel descriptions (done: 68dd0b9)
 - [ ] Question for owner: should the End field really be hidden for timed events?
 
 ## Sign-in polish
