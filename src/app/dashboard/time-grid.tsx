@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
 export const SNAP_MINUTES = 15;
@@ -32,6 +33,8 @@ export function TimeGrid({
   weekStart: Date;
   events: TimeGridEvent[];
 }) {
+  const now = useWallClockNow();
+  const todayKey = now ? toDayKey(now) : null;
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart.getTime() + i * DAY_MS);
     return { date, key: toDayKey(date) };
@@ -73,7 +76,7 @@ export function TimeGrid({
         <DayColumn
           key={key}
           dayKey={key}
-          isToday={key === toDayKey(new Date())}
+          now={key === todayKey ? now : null}
           events={events.filter((ev) => toDayKey(ev.startAt) === key)}
         />
       ))}
@@ -84,11 +87,12 @@ export function TimeGrid({
 function DayColumn({
   dayKey,
   events,
-  isToday,
+  now,
 }: {
   dayKey: string;
   events: TimeGridEvent[];
-  isToday: boolean;
+  /** Wall-clock "now" when this column is today, otherwise null. */
+  now: Date | null;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayKey });
 
@@ -105,7 +109,7 @@ function DayColumn({
           style={{ top: hour * HOUR_HEIGHT }}
         />
       ))}
-      {isToday && <NowIndicator />}
+      {now && <NowIndicator now={now} />}
       {events.map((event) => (
         <EventBlock key={event.id} event={event} />
       ))}
@@ -114,28 +118,14 @@ function DayColumn({
 }
 
 // Draws the current-time line on today's column and scrolls it into view
-// once, on mount, so the week view opens where "now" is. Position is only
-// computed on the client (useEffect, not render) so the server-rendered
-// markup never has to guess "now" and mismatch the client on hydration.
-function NowIndicator() {
-  const [top, setTop] = useState<number | null>(null);
+// once, on mount, so the week view opens where "now" is.
+function NowIndicator({ now }: { now: Date }) {
   const lineRef = useRef<HTMLDivElement>(null);
-  const hasScrolledRef = useRef(false);
+  const top = (minutesSinceMidnightUTC(now) / 60) * HOUR_HEIGHT;
 
   useEffect(() => {
-    const update = () => setTop((minutesSinceMidnightUTC(new Date()) / 60) * HOUR_HEIGHT);
-    update();
-    const interval = setInterval(update, 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (top === null || hasScrolledRef.current) return;
-    hasScrolledRef.current = true;
     lineRef.current?.scrollIntoView({ block: "center" });
-  }, [top]);
-
-  if (top === null) return null;
+  }, []);
 
   return (
     <div ref={lineRef} className="pointer-events-none absolute inset-x-0 z-20" style={{ top }}>

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
 import type { listCalendarEvents } from "@/lib/calendar-events";
+import { toDayKey } from "./time-grid";
+import { useWallClockNow } from "./use-wall-clock-now";
 
 type MonthEvent = Awaited<ReturnType<typeof listCalendarEvents>>[number];
 
@@ -10,7 +12,6 @@ export function MonthDayCell({
   dayKey,
   dayNumber,
   inMonth,
-  isToday,
   weekStartHref,
   events,
   overflow,
@@ -18,12 +19,13 @@ export function MonthDayCell({
   dayKey: string;
   dayNumber: number;
   inMonth: boolean;
-  isToday: boolean;
   weekStartHref: string;
   events: MonthEvent[];
   overflow: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayKey });
+  const now = useWallClockNow();
+  const isToday = now !== null && toDayKey(now) === dayKey;
 
   return (
     <div
