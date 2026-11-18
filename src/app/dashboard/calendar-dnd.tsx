@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   closestCenter,
   DndContext,
@@ -44,13 +44,36 @@ export function CalendarDndProvider({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  // Letting go after a drag still fires a click on the dragged item. dnd-kit
+  // stops that click from reaching React, but doesn't cancel it, so on a
+  // link (like a whole event box) the browser would still follow it and
+  // load the edit form. This blocks the browser's part for that one click.
+  const justDragged = useRef(false);
+  useEffect(() => {
+    function cancelClickAfterDrag(event: MouseEvent) {
+      if (justDragged.current) event.preventDefault();
+    }
+    window.addEventListener("click", cancelClickAfterDrag, { capture: true });
+    return () => window.removeEventListener("click", cancelClickAfterDrag, { capture: true });
+  }, []);
+
+  function clearJustDraggedAfterClick() {
+    // The click comes straight after the pointer is released, before this
+    // timer runs, so the flag only ever covers that one click.
+    setTimeout(() => {
+      justDragged.current = false;
+    }, 0);
+  }
+
   function handleDragStart(e: DragStartEvent) {
+    justDragged.current = true;
     if (e.active.data.current?.type === "postit") {
       setDraggedPostItText(String(e.active.data.current?.text ?? ""));
     }
   }
 
   function handleDragEnd(e: DragEndEvent) {
+    clearJustDraggedAfterClick();
     setDraggedPostItText(null);
     const overId = e.over ? String(e.over.id) : undefined;
     if (!overId) return;
@@ -142,7 +165,10 @@ export function CalendarDndProvider({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => setDraggedPostItText(null)}
+      onDragCancel={() => {
+        clearJustDraggedAfterClick();
+        setDraggedPostItText(null);
+      }}
     >
       <div className={`flex min-h-0 flex-1 flex-col ${isPending ? "opacity-60" : ""}`}>
         {children}

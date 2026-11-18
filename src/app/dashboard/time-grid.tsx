@@ -224,7 +224,7 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
     >
       <Link
         href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
-        className="block truncate"
+        className="block h-full truncate"
         draggable={false}
       >
         {event.title}
