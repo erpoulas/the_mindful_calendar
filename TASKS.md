@@ -65,7 +65,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
 
 ## Calendar display options
-- [ ] Account settings: show extra time zones beside the week view's hour labels (like Google Calendar), and pick 12-hour (am/pm) or 24-hour (military) time (claimed: time zones session, 2026-11-18)
+- [x] Account settings: show extra time zones beside the week view's hour labels (like Google Calendar), and pick 12-hour (am/pm) or 24-hour (military) time (done: 81fb82a)
 
 ## Going live
 - [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
