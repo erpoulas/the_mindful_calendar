@@ -61,7 +61,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
 
 ## Sign-in polish
-- [ ] Password preview: a show/hide (eye) toggle on password fields
+- [ ] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
 - [ ] Password requirements list on sign up, each one checked off live as the password meets it
 
 ## V4 — Big scope items
