@@ -9,6 +9,22 @@ type WeeklyReviewStats = Awaited<ReturnType<typeof getWeeklyReviewStats>>;
 const UNTAGGED_COLOR = "#999999";
 const DEFAULT_INTENTION_COLOR = "#4a6a99";
 
+function PanelIcon({
+  src,
+  width,
+  height,
+}: {
+  src: string;
+  width: number;
+  height: number;
+}) {
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+      <Image src={src} alt="" width={width} height={height} className="h-auto max-h-10 w-auto max-w-10 object-contain" />
+    </div>
+  );
+}
+
 function PanelShell({
   panelKey,
   children,
@@ -20,12 +36,12 @@ function PanelShell({
     <div className="relative rounded border p-3">
       <form
         action={togglePanelVisibilityAction.bind(null, panelKey)}
-        className="absolute top-1 right-1 hidden group-data-[customizing=true]:block"
+        className="absolute top-2 right-2 hidden group-data-[customizing=true]:block"
       >
         <button
           type="submit"
           aria-label="Hide this panel"
-          className="text-xs text-muted-foreground hover:text-foreground"
+          className="text-base text-muted-foreground hover:text-foreground"
         >
           ✕
         </button>
@@ -43,7 +59,10 @@ export function AffirmationPanel({
   return (
     <PanelShell panelKey="affirmation">
       <Link href="/dashboard?panel=affirmations" className="block">
-        <div className="text-xs font-medium text-muted-foreground">✨ TODAY</div>
+        <div className="flex items-center gap-2">
+          <PanelIcon src="/panel-art/positive-affirmations.png" width={736} height={685} />
+          <div className="text-sm font-medium">Today</div>
+        </div>
         <p className="mt-1 text-sm italic">
           {affirmation ? `"${affirmation.text}"` : "Add an affirmation to see one here."}
         </p>
@@ -65,7 +84,10 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
   return (
     <PanelShell panelKey="breakdown">
       <Link href="/dashboard?panel=intentions" className="block">
-        <div className="mb-1 text-xs font-medium text-muted-foreground">TIME THIS WEEK, BY INTENTION</div>
+        <div className="mb-1 flex items-center gap-2">
+          <PanelIcon src="/panel-art/time-this-week.png" width={360} height={360} />
+          <div className="text-sm font-medium">Time this week, by intention</div>
+        </div>
         {segments.length === 0 ? (
           <p className="text-sm text-muted-foreground">No events logged yet this week.</p>
         ) : (
@@ -106,20 +128,16 @@ function IconPanelLink({
   iconWidth: number;
   iconHeight: number;
   title: string;
-  description: React.ReactNode;
+  description?: React.ReactNode;
 }) {
   return (
     <Link href={href} className="flex items-center gap-2">
-      <Image
-        src={iconSrc}
-        alt=""
-        width={iconWidth}
-        height={iconHeight}
-        className="h-7 w-auto"
-      />
+      <PanelIcon src={iconSrc} width={iconWidth} height={iconHeight} />
       <div>
         <div className="text-sm font-medium">{title}</div>
-        <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+        {description ? (
+          <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+        ) : null}
       </div>
     </Link>
   );
@@ -134,7 +152,6 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
         iconWidth={197}
         iconHeight={233}
         title="Project tracker"
-        description={`${activeCount} active · click to view any one`}
       />
     </PanelShell>
   );
@@ -149,7 +166,6 @@ export function QuickListPanel({ openCount }: { openCount: number }) {
         iconWidth={253}
         iconHeight={228}
         title="Quick notes"
-        description={`${openCount} open ${openCount === 1 ? "item" : "items"} · no intention needed`}
       />
     </PanelShell>
   );
@@ -164,7 +180,6 @@ export function JournalPanel() {
         iconWidth={201}
         iconHeight={164}
         title="Journal"
-        description="Write now, no scheduling needed"
       />
     </PanelShell>
   );
@@ -179,7 +194,6 @@ export function DopaminePanel() {
         iconWidth={144}
         iconHeight={100}
         title="Dopamine menu"
-        description="Feeling stuck? Get an idea"
       />
     </PanelShell>
   );
@@ -188,7 +202,10 @@ export function DopaminePanel() {
 export function WeeklyReviewPanel({ stats }: { stats: WeeklyReviewStats }) {
   return (
     <PanelShell panelKey="review">
-      <div className="text-sm font-medium">📊 Weekly review</div>
+      <div className="flex items-center gap-2">
+        <PanelIcon src="/panel-art/weekly-review.png" width={697} height={664} />
+        <div className="text-sm font-medium">Weekly review</div>
+      </div>
       <ul className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
         <li>{stats.intentionBreakdown.totalCount} events logged this week</li>
         <li>{stats.tasksCompleted} project tasks completed</li>
