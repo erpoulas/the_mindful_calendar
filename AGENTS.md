@@ -6,18 +6,18 @@ Guidance for AI coding agents working in this repo.
 
 The Mindful Calendar is an intention-based calendar and journal app. You set broad life intentions (Health, Family, Creativity...), and projects, calendar events and journal entries count toward them. One person owns it, but they often run **several AI agents at the same time** in this repo, so the rules below are written so parallel agents don't trip over each other.
 
-The calendar at `/dashboard` is the only real page. Every other feature (Intentions, Projects, Quick Lists, Journals, Dopamine menu, Affirmations, event new/edit, month view, account settings) opens as a popup or slide-over on top of it, driven by `?panel=&view=&id=` query params. Don't add new top-level routes for features; add a panel instead.
+The calendar at `/dashboard` is the only real page (`/` redirects there). Every other feature (Intentions, Projects, Quick Lists, Journals, Post-its, Dopamine menu, Affirmations, event new/edit, account settings) opens as a popup or slide-over on top of it, driven by `?panel=&view=&id=` query params. The week/month switch is a `?mode=month` param on the same page, not a popup. Don't add new top-level routes for features; add a panel instead.
 
 - **Stack:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui on `@base-ui/react`, lucide icons, dnd-kit for drag and drop, Zod for validation. Data lives in Postgres on Supabase, accessed through Prisma 7. Sign-in uses Supabase Auth.
-- **Run:** `npm install`, then `npm run dev`. Lint with `npm run lint` and test with `npm test` (`npm run test:watch` while working).
+- **Run:** `npm install` (its `postinstall` runs `prisma generate`), then `npm run dev`. Lint with `npm run lint`, type-check with `npx tsc --noEmit` and test with `npm test` (`npm run test:watch` while working). Start the dev server with `SKIP_LOGIN=true` to browse the UI without signing in; everything is then saved under one shared `demo-user`. First-time setup (Supabase, env vars, Google OAuth) is in [README.md](./README.md).
 - **Plan docs:** [project-summary.md](./project-summary.md) holds the data model, the reasoning behind each decision and the build order. It is partly stale (the Seasons feature was removed on 2026-09-13). [TASKS.md](./TASKS.md) is the live checklist. `wireframes.html` is the original wireframe.
 - **Layout:**
   - `src/app/dashboard/` holds the calendar page, the panels and the popups (`overlays/`).
   - `src/app/actions/` holds the server actions, one file per feature. They are the thin layer between the UI and `src/lib/`.
-  - `src/app/login/`, `signup/`, `forgot-password/`, `reset-password/` and `auth/` hold sign-in.
+  - `src/app/login/`, `signup/`, `forgot-password/` and `reset-password/` hold sign-in. `src/app/auth/` holds the password-reset confirm route and the Google OAuth routes.
   - `src/lib/<feature>.ts` holds data access for each feature, and `src/lib/<feature>-schemas.ts` holds its Zod schemas. Pure helpers such as `calendar-week.ts` and `streak.ts` also live in `src/lib/`. `src/lib/db.ts` is the Prisma client and `src/lib/supabase/` the Supabase clients.
   - `src/components/ui/` holds shared building blocks, including `sheet.tsx`, the one popup primitive every panel uses.
-  - `prisma/schema.prisma` and `prisma/migrations/` hold the database tables.
+  - `prisma/schema.prisma` and `prisma/migrations/` hold the database tables. The Prisma client is generated into `generated/prisma/` (not `node_modules`), so import Prisma types from there, as `src/lib/db.ts` does. After changing the schema, run `npx prisma migrate dev --name <change>`.
   - `public/panel-art/` holds the decorative art for each panel.
   - `src/__tests__/` holds the tests, and `src/test/withRollback.ts` the helper that runs a test against the real database inside a transaction and rolls it back afterwards.
 
@@ -28,7 +28,7 @@ Calendar event times are stored as **wall-clock times in UTC fields**: an event 
 - Timestamps that only record when something happened (`completedAt`, `doneAt`, `setAt`) are real moments and stay as plain `new Date()`.
 
 ### Google Calendar sync
-Events sync both ways with Google each time the dashboard loads (`syncGoogleCalendar` in `src/lib/google-sync.ts`). Two rules keep it working:
+Events sync both ways with Google each time the dashboard loads (`syncGoogleCalendar` in `src/lib/google-sync.ts`). Google is optional: without the `GOOGLE_*` env vars, `isGoogleCalendarConfigured()` returns false and the connect options are hidden, so code touching Google must keep working when it isn't set up. Two rules keep sync working:
 - Delete calendar events only through `deleteCalendarEvent` or `removeCalendarEventRow` (`src/lib/calendar-events.ts`). They leave a note so the next sync deletes the event in Google too. A raw `calendarEvent.delete` skips that note, so the sync brings the event straight back from Google.
 - Edit events with normal Prisma updates. The sync spots app edits because `updatedAt` moves past `lastSyncedAt`.
 
@@ -79,7 +79,7 @@ Next.js 16 and React 19 are recent and differ from older versions. Check the ins
 ### Layering and TDD
 - Keep three layers separate: **data access** (`src/lib/*.ts`), **business logic** (pure helpers in `src/lib/`, called from server actions in `src/app/actions/`), and **UI** (`src/app/`, `src/components/`).
 - This project follows TDD. Write and test data-access functions **before** any UI is wired to them.
-- Tests use [Vitest](https://vitest.dev/). Run them with `npm test`.
+- Tests use [Vitest](https://vitest.dev/). Run them with `npm test`. Keep the `vmThreads` pool in `vitest.config.ts`: the default pools fail to start on this machine with a misleading "Cannot read properties of undefined (reading 'config')" error.
 - Keep tests in `src/__tests__/`, mirroring the source layout (for example `src/lib/post-its.ts` is tested by `src/__tests__/lib/post-its.test.ts`). Don't put test files next to the code.
 - Tests for data access run against the real database. Wrap them in `withRollback` from `src/test/withRollback.ts` so they never leave data behind.
 
