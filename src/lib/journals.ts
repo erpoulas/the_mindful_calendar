@@ -1,4 +1,4 @@
-import { createCalendarEvent } from "./calendar-events";
+import { createCalendarEvent, removeCalendarEventRow } from "./calendar-events";
 import type { DbClient } from "./db";
 import { getOrCreateJournalIntention } from "./intentions";
 import { getUserTimezoneWithFallback } from "./user-settings";
@@ -172,6 +172,9 @@ export async function deleteJournalEntry(
   });
   if (!entry) return null;
 
-  await client.calendarEvent.delete({ where: { id: entry.calendarEventId } });
+  const event = await client.calendarEvent.findUniqueOrThrow({
+    where: { id: entry.calendarEventId },
+  });
+  await removeCalendarEventRow(client, event);
   return entry;
 }

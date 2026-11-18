@@ -9,7 +9,7 @@ import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
-import { getGoogleEventsForRange } from "@/lib/google-events";
+import { syncGoogleCalendar } from "@/lib/google-sync";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { getUserTimezoneWithFallback } from "@/lib/user-settings";
@@ -35,7 +35,6 @@ import {
 } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
-import { GoogleBadge } from "./google-badge";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizerControls, PanelList, SortablePanel } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
@@ -94,6 +93,14 @@ export default async function DashboardPage({
       ? new Date(startParam)
       : toWallClockDate(new Date(), timeZone);
 
+  // Sync with Google Calendar first, so everything below (calendar and
+  // weekly stats alike) reads up-to-date events. Does nothing if the user
+  // hasn't connected Google.
+  const { gridStart, gridEnd } = getMonthGrid(referenceDate);
+  const visibleRange =
+    mode === "month" ? { start: gridStart, end: gridEnd } : getWeekRange(referenceDate);
+  await syncGoogleCalendar(db, { userId, ...visibleRange, timeZone });
+
   const [
     affirmation,
     breakdown,
@@ -119,11 +126,8 @@ export default async function DashboardPage({
   let dndEvents: TimeGridEvent[] = [];
 
   if (mode === "month") {
-    const { monthStart, gridStart, gridEnd } = getMonthGrid(referenceDate);
-    const [monthEvents, monthGoogleEvents] = await Promise.all([
-      listCalendarEvents(db, { userId, start: gridStart, end: gridEnd }),
-      getGoogleEventsForRange(db, { userId, start: gridStart, end: gridEnd, timeZone }),
-    ]);
+    const { monthStart } = getMonthGrid(referenceDate);
+    const monthEvents = await listCalendarEvents(db, { userId, start: gridStart, end: gridEnd });
 
     const prevMonthRef = new Date(
       Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1),
@@ -135,19 +139,12 @@ export default async function DashboardPage({
     headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
-    calendarBody = (
-      <MonthGrid referenceDate={referenceDate} events={monthEvents} googleEvents={monthGoogleEvents} />
-    );
+    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
   } else {
     const { start, end } = getWeekRange(referenceDate);
-    const [events, googleEvents] = await Promise.all([
-      listCalendarEvents(db, { userId, start, end }),
-      getGoogleEventsForRange(db, { userId, start, end, timeZone }),
-    ]);
+    const events = await listCalendarEvents(db, { userId, start, end });
 
     const allDayEvents = events.filter((event) => event.isAllDay);
-    const googleAllDayEvents = googleEvents.filter((event) => event.isAllDay);
-    const googleTimedEvents = googleEvents.filter((event) => !event.isAllDay);
     const timedEvents = events
       .filter((event) => !event.isAllDay && event.startAt)
       .map((event) => ({
@@ -165,7 +162,7 @@ export default async function DashboardPage({
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
     dndEvents = timedEvents;
     calendarBodyPadded = true;
-    if (allDayEvents.length > 0 || googleAllDayEvents.length > 0) {
+    if (allDayEvents.length > 0) {
       allDayRow = (
         <div className="relative z-10 mx-4 shrink-0 rounded border border-border bg-background p-2">
           <h2 className="text-xs font-medium text-muted-foreground">All day</h2>
@@ -180,27 +177,11 @@ export default async function DashboardPage({
                 </Link>
               </li>
             ))}
-            {googleAllDayEvents.map((event) => (
-              <li key={event.id}>
-                <a
-                  href={event.htmlLink ?? "https://calendar.google.com"}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={`${event.title} (from Google Calendar)`}
-                  className="flex items-center gap-1 rounded border border-primary/40 px-2 py-0.5 text-xs hover:bg-secondary"
-                >
-                  <GoogleBadge />
-                  {event.title}
-                </a>
-              </li>
-            ))}
           </ul>
         </div>
       );
     }
-    calendarBody = (
-      <TimeGrid weekStart={start} events={timedEvents} googleEvents={googleTimedEvents} />
-    );
+    calendarBody = <TimeGrid weekStart={start} events={timedEvents} />;
   }
 
   const panelComponents: Record<string, React.ReactNode> = {

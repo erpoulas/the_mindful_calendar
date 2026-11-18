@@ -103,8 +103,27 @@ export async function deleteCalendarEvent(
   });
   if (!event) return null;
 
-  await client.calendarEvent.delete({ where: { id: event.id } });
+  await removeCalendarEventRow(client, event);
   return event;
+}
+
+/**
+ * Deletes an event row. If it is synced with Google Calendar, it also leaves
+ * a note for the next sync to delete it there, since afterwards the row
+ * (and with it the Google id) is gone. Every app-side delete goes through here.
+ */
+export async function removeCalendarEventRow(
+  client: DbClient,
+  event: { id: string; userId: string; googleEventId: string | null },
+) {
+  if (event.googleEventId) {
+    await client.googleEventDeletion.upsert({
+      where: { googleEventId: event.googleEventId },
+      create: { googleEventId: event.googleEventId, userId: event.userId },
+      update: {},
+    });
+  }
+  await client.calendarEvent.delete({ where: { id: event.id } });
 }
 
 // A focused partial update for drag-and-drop on the time-grid -- only

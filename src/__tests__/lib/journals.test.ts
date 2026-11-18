@@ -418,6 +418,24 @@ describe("deleteJournalEntry", () => {
     });
   });
 
+  it("leaves a note to delete the event from Google too when it was synced", async () => {
+    await withRollback(async (tx) => {
+      const journal = await createJournal(tx, { userId: "test-user-1", name: "Gratitude" });
+      const entry = await createJournalEntry(tx, { userId: "test-user-1", journalId: journal.id });
+      await tx.calendarEvent.update({
+        where: { id: entry!.calendarEventId },
+        data: { googleEventId: "google-journal" },
+      });
+
+      await deleteJournalEntry(tx, { userId: "test-user-1", entryId: entry!.id });
+
+      const deletion = await tx.googleEventDeletion.findUnique({
+        where: { googleEventId: "google-journal" },
+      });
+      expect(deletion?.userId).toBe("test-user-1");
+    });
+  });
+
   it("returns null when the entry doesn't belong to the user", async () => {
     await withRollback(async (tx) => {
       const journal = await createJournal(tx, { userId: "test-user-2", name: "Theirs" });

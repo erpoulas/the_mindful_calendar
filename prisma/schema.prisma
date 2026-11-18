@@ -82,7 +82,12 @@ model CalendarEvent {
   location      String?
   notes         String?
   projectId     String?
+  // Google Calendar sync: the matching Google event, the version tag Google
+  // gave it when we last saw it (it changes whenever the event is edited in
+  // Google), and when the two were last made identical. An event edited in
+  // the app since then has updatedAt > lastSyncedAt.
   googleEventId String?   @unique
+  googleEtag    String?
   lastSyncedAt  DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -286,4 +291,15 @@ model GoogleConnection {
   accessToken          String
   accessTokenExpiresAt DateTime
   connectedAt          DateTime @default(now())
+}
+
+// An event deleted in the app that still has to be deleted in Google. The
+// next sync deletes it there, then removes this row. Kept as its own table
+// because the CalendarEvent row itself is already gone.
+model GoogleEventDeletion {
+  googleEventId String   @id
+  userId        String
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }

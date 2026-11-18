@@ -347,6 +347,31 @@ describe("deleteCalendarEvent", () => {
     });
   });
 
+  it("leaves a note to delete it from Google too when it was synced", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, { userId: "test-user-1", title: "Synced" });
+      await tx.calendarEvent.update({
+        where: { id: created.id },
+        data: { googleEventId: "google-abc" },
+      });
+
+      await deleteCalendarEvent(tx, { userId: "test-user-1", eventId: created.id });
+
+      const deletions = await tx.googleEventDeletion.findMany({ where: { userId: "test-user-1" } });
+      expect(deletions.map((deletion) => deletion.googleEventId)).toEqual(["google-abc"]);
+    });
+  });
+
+  it("leaves no Google note for an event that was never synced", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, { userId: "test-user-1", title: "App only" });
+
+      await deleteCalendarEvent(tx, { userId: "test-user-1", eventId: created.id });
+
+      expect(await tx.googleEventDeletion.count({ where: { userId: "test-user-1" } })).toBe(0);
+    });
+  });
+
   it("returns null when the event doesn't belong to the user", async () => {
     await withRollback(async (tx) => {
       const created = await createCalendarEvent(tx, {

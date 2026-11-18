@@ -1,19 +1,23 @@
 import { toWallClockDate } from "./wall-clock";
 
-// Talks to Google's OAuth and Calendar APIs with plain fetch calls. Nothing
-// here touches the database; see google-events.ts for the part that does.
+// Talks to Google's OAuth and Calendar APIs with plain fetch calls, and
+// converts between Google's event format and ours. Nothing here touches the
+// database; see google-sync.ts for the part that does.
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 const GOOGLE_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
-// Read-only for now (one-way view). Two-way sync will need the wider
-// "calendar.events" scope, and users will reconnect once to grant it.
-const GOOGLE_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events.readonly";
+// Read and write access to events (not to calendar settings or sharing).
+const GOOGLE_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
 // A safety cap so a broken nextPageToken can never loop forever.
 const MAX_EVENT_PAGES = 10;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Google needs an end time; our events may have none, which we draw as 30 minutes.
+const DEFAULT_DURATION_MS = 30 * 60 * 1000;
 
 /**
  * Google refused our credentials: the user revoked access, the refresh token
@@ -27,24 +31,31 @@ export class GoogleAuthError extends Error {
   }
 }
 
-/** A raw event as Google's Calendar API returns it (only the fields we use). */
+type GoogleTime = { date?: string; dateTime?: string; timeZone?: string };
+
+/** An event as Google's Calendar API sends and receives it (only the fields we use). */
 export type GoogleApiEvent = {
   id: string;
+  /** A version tag that changes every time the event is edited. */
+  etag?: string;
   status?: string;
+  /** When the event was last edited, as an ISO string. */
+  updated?: string;
   summary?: string;
-  htmlLink?: string;
-  start?: { date?: string; dateTime?: string };
-  end?: { date?: string; dateTime?: string };
+  location?: string;
+  description?: string;
+  start?: GoogleTime;
+  end?: GoogleTime;
 };
 
-/** A Google event ready to draw on our calendar, in wall-clock time like our own events. */
-export type GoogleCalendarItem = {
-  id: string;
+/** The fields that sync both ways, in our format (wall-clock times). */
+export type SyncedEventFields = {
   title: string;
   startAt: Date;
   endAt: Date | null;
   isAllDay: boolean;
-  htmlLink: string | null;
+  location: string | null;
+  notes: string | null;
 };
 
 function googleConfig() {
@@ -66,6 +77,10 @@ function requireGoogleConfig() {
 export function isGoogleCalendarConfigured(): boolean {
   return googleConfig() !== null;
 }
+
+// ---------------------------------------------------------------------------
+// Connecting: OAuth tokens
+// ---------------------------------------------------------------------------
 
 /** The Google sign-in page the "Connect" button sends the user to. */
 export function buildGoogleAuthUrl(state: string): string {
@@ -143,7 +158,47 @@ export async function revokeGoogleToken(token: string) {
   });
 }
 
-/** Every event on the user's main Google calendar between two real moments. */
+// ---------------------------------------------------------------------------
+// Reading and writing events
+// ---------------------------------------------------------------------------
+
+async function googleRequest(
+  accessToken: string,
+  url: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<Response> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` };
+  if (init.body !== undefined) headers["Content-Type"] = "application/json";
+
+  const response = await fetch(url, {
+    method: init.method ?? "GET",
+    headers,
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+  if (response.status === 401) {
+    throw new GoogleAuthError("Google rejected the access token");
+  }
+  return response;
+}
+
+/** 404 Not Found / 410 Gone: the event doesn't exist (any more). */
+function isGone(response: Response) {
+  return response.status === 404 || response.status === 410;
+}
+
+function failure(action: string, response: Response) {
+  return new Error(`Google ${action} failed (${response.status})`);
+}
+
+function eventUrl(googleEventId: string) {
+  return `${GOOGLE_EVENTS_URL}/${encodeURIComponent(googleEventId)}`;
+}
+
+/**
+ * Every event on the user's main Google calendar between two real moments,
+ * including ones deleted recently (status "cancelled"), so the sync can
+ * remove them from the app too.
+ */
 export async function fetchGoogleEvents(
   accessToken: string,
   range: { timeMin: Date; timeMax: Date },
@@ -157,20 +212,13 @@ export async function fetchGoogleEvents(
       timeMax: range.timeMax.toISOString(),
       // Expand repeating events into one entry per occurrence.
       singleEvents: "true",
-      orderBy: "startTime",
+      showDeleted: "true",
       maxResults: "250",
     });
     if (pageToken) params.set("pageToken", pageToken);
 
-    const response = await fetch(`${GOOGLE_EVENTS_URL}?${params}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (response.status === 401) {
-      throw new GoogleAuthError("Google rejected the access token");
-    }
-    if (!response.ok) {
-      throw new Error(`Google events request failed (${response.status})`);
-    }
+    const response = await googleRequest(accessToken, `${GOOGLE_EVENTS_URL}?${params}`);
+    if (!response.ok) throw failure("events request", response);
 
     const body: { items?: GoogleApiEvent[]; nextPageToken?: string } = await response.json();
     events.push(...(body.items ?? []));
@@ -181,30 +229,151 @@ export async function fetchGoogleEvents(
   return events;
 }
 
-function toItemDate(time: { date?: string; dateTime?: string }, timeZone: string) {
-  // All-day events carry a plain date ("2026-11-26"), which already is a
-  // wall-clock date. Timed ones carry a real moment with an offset, so they
-  // get converted to the user's wall clock like "now" does.
-  if (time.date) return new Date(`${time.date}T00:00:00Z`);
-  if (time.dateTime) return toWallClockDate(new Date(time.dateTime), timeZone);
-  return null;
+/** One event by id, or null when Google has no such event. */
+export async function getGoogleEvent(
+  accessToken: string,
+  googleEventId: string,
+): Promise<GoogleApiEvent | null> {
+  const response = await googleRequest(accessToken, eventUrl(googleEventId));
+  if (isGone(response)) return null;
+  if (!response.ok) throw failure("event request", response);
+  return response.json();
 }
 
-export function toGoogleCalendarItem(
-  event: GoogleApiEvent,
-  timeZone: string,
-): GoogleCalendarItem | null {
+/**
+ * Our event ids are UUIDs. Without the dashes they are valid Google event ids
+ * (lowercase letters a-v and digits), so each of our events always maps to
+ * the same Google id.
+ */
+export function googleEventIdFor(eventId: string) {
+  return eventId.replace(/-/g, "").toLowerCase();
+}
+
+/**
+ * Creates the event in Google under the id we choose. If an earlier attempt
+ * already created it (say the page was reloaded mid-sync), Google answers 409
+ * Conflict and the existing event is returned, so there's never a duplicate.
+ */
+export async function insertGoogleEvent(
+  accessToken: string,
+  googleEventId: string,
+  body: Omit<GoogleApiEvent, "id">,
+): Promise<GoogleApiEvent> {
+  const response = await googleRequest(accessToken, GOOGLE_EVENTS_URL, {
+    method: "POST",
+    body: { ...body, id: googleEventId },
+  });
+  if (response.status === 409) {
+    const existing = await getGoogleEvent(accessToken, googleEventId);
+    if (existing) return existing;
+  }
+  if (!response.ok) throw failure("event create", response);
+  return response.json();
+}
+
+/** Changes the given fields. Returns null if the event was deleted in Google meanwhile. */
+export async function patchGoogleEvent(
+  accessToken: string,
+  googleEventId: string,
+  body: Omit<GoogleApiEvent, "id">,
+): Promise<GoogleApiEvent | null> {
+  const response = await googleRequest(accessToken, eventUrl(googleEventId), {
+    method: "PATCH",
+    body,
+  });
+  if (isGone(response)) return null;
+  if (!response.ok) throw failure("event update", response);
+  return response.json();
+}
+
+/** Deletes the event. Already gone counts as success. */
+export async function deleteGoogleEvent(accessToken: string, googleEventId: string) {
+  const response = await googleRequest(accessToken, eventUrl(googleEventId), {
+    method: "DELETE",
+  });
+  if (isGone(response)) return;
+  if (!response.ok) throw failure("event delete", response);
+}
+
+// ---------------------------------------------------------------------------
+// Converting between Google's format and ours
+// ---------------------------------------------------------------------------
+
+/** "2026-11-18T09:00:00": a stored wall-clock time as Google's local date-time text. */
+function toGoogleDateTime(wallClock: Date) {
+  return wallClock.toISOString().slice(0, 19);
+}
+
+function toGoogleDate(wallClock: Date) {
+  return wallClock.toISOString().slice(0, 10);
+}
+
+/**
+ * Turns a Google event into our fields, in the user's wall-clock time.
+ * Returns null for cancelled events and ones with no usable start.
+ */
+export function fromGoogleEvent(event: GoogleApiEvent, timeZone: string): SyncedEventFields | null {
   if (event.status === "cancelled" || !event.start) return null;
-  const startAt = toItemDate(event.start, timeZone);
-  if (!startAt) return null;
+
+  let startAt: Date;
+  let endAt: Date | null = null;
+  const isAllDay = Boolean(event.start.date);
+
+  if (event.start.date) {
+    // All-day: plain dates, already wall-clock. Google's end date is the day
+    // *after* the last day; ours is the last day itself, or none for a
+    // one-day event.
+    startAt = new Date(`${event.start.date}T00:00:00Z`);
+    if (event.end?.date) {
+      const lastDay = new Date(new Date(`${event.end.date}T00:00:00Z`).getTime() - DAY_MS);
+      if (lastDay > startAt) endAt = lastDay;
+    }
+  } else if (event.start.dateTime) {
+    // Timed: real moments with an offset, converted to the user's wall clock.
+    startAt = toWallClockDate(new Date(event.start.dateTime), timeZone);
+    if (event.end?.dateTime) endAt = toWallClockDate(new Date(event.end.dateTime), timeZone);
+  } else {
+    return null;
+  }
 
   return {
-    // Prefixed so a Google id can never clash with one of our own event ids.
-    id: `google:${event.id}`,
     title: event.summary?.trim() || "(No title)",
     startAt,
-    endAt: event.end ? toItemDate(event.end, timeZone) : null,
-    isAllDay: Boolean(event.start.date),
-    htmlLink: event.htmlLink ?? null,
+    endAt,
+    isAllDay,
+    location: event.location || null,
+    notes: event.description || null,
+  };
+}
+
+/**
+ * Our event as the body Google expects. Timed events are sent as local
+ * date-time text plus the user's time zone, so 9:00am stays 9:00am there.
+ * Empty strings clear a location or description that was removed here.
+ */
+export function toGoogleEventBody(
+  event: SyncedEventFields,
+  timeZone: string,
+): Omit<GoogleApiEvent, "id"> {
+  let start: GoogleTime;
+  let end: GoogleTime;
+
+  if (event.isAllDay) {
+    const lastDay = event.endAt && event.endAt > event.startAt ? event.endAt : event.startAt;
+    start = { date: toGoogleDate(event.startAt) };
+    // Google wants the day after the last day.
+    end = { date: toGoogleDate(new Date(lastDay.getTime() + DAY_MS)) };
+  } else {
+    const endAt = event.endAt ?? new Date(event.startAt.getTime() + DEFAULT_DURATION_MS);
+    start = { dateTime: toGoogleDateTime(event.startAt), timeZone };
+    end = { dateTime: toGoogleDateTime(endAt), timeZone };
+  }
+
+  return {
+    summary: event.title,
+    location: event.location ?? "",
+    description: event.notes ?? "",
+    start,
+    end,
   };
 }

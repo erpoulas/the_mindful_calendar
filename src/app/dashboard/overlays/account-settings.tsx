@@ -31,7 +31,7 @@ export async function AccountSettingsView({ googleOutcome }: { googleOutcome?: s
 // Shown once after returning from Google, keyed by the ?google= param the
 // callback route adds.
 const OUTCOME_MESSAGES: Record<string, { text: string; success: boolean }> = {
-  connected: { text: "Connected. Your Google events now show on the calendar.", success: true },
+  connected: { text: "Connected. Your calendars now sync both ways.", success: true },
   cancelled: { text: "Connecting was cancelled.", success: false },
   error: { text: "Couldn't connect to Google Calendar. Please try again.", success: false },
 };
@@ -44,8 +44,8 @@ function GoogleCalendarSection({ connected, outcome }: { connected: boolean; out
       <h2 className="text-lg font-medium">Google Calendar</h2>
       <p className="text-sm text-muted-foreground">
         {connected
-          ? "Your Google Calendar events show on the calendar, read-only. Edit them in Google Calendar."
-          : "Show the events from your main Google Calendar here, read-only."}
+          ? "Syncing both ways with your main Google calendar each time this calendar loads. Intention and project links stay here; journal writing never leaves the app."
+          : "Sync both ways with your main Google calendar. Your upcoming events here are sent to Google, and Google's events show up here."}
       </p>
 
       {message && (

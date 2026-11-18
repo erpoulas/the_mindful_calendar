@@ -27,6 +27,11 @@ Calendar event times are stored as **wall-clock times in UTC fields**: an event 
 - To turn a stored time back into the real moment (for example for Google Calendar), use `fromWallClockDate` from `src/lib/wall-clock.ts`. It handles daylight-saving changes.
 - Timestamps that only record when something happened (`completedAt`, `doneAt`, `setAt`) are real moments and stay as plain `new Date()`.
 
+### Google Calendar sync
+Events sync both ways with Google each time the dashboard loads (`syncGoogleCalendar` in `src/lib/google-sync.ts`). Two rules keep it working:
+- Delete calendar events only through `deleteCalendarEvent` or `removeCalendarEventRow` (`src/lib/calendar-events.ts`). They leave a note so the next sync deletes the event in Google too. A raw `calendarEvent.delete` skips that note, so the sync brings the event straight back from Google.
+- Edit events with normal Prisma updates. The sync spots app edits because `updatedAt` moves past `lastSyncedAt`.
+
 Next.js 16 and React 19 are recent and differ from older versions. Check the installed docs or types in `node_modules/` before relying on an API you remember (see the block at the bottom of this file).
 
 ## Working agreements
