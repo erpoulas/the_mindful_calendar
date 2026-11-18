@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useOptimistic, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
@@ -114,6 +114,11 @@ export function PostItVisual({ text }: { text: string }) {
 }
 
 function PostItCard({ id, text }: { id: string; text: string }) {
+  // Hides the note the moment ✕ is clicked, instead of waiting for the
+  // server to delete it and the whole dashboard to reload. React drops this
+  // once the reload brings in the real list (or puts the note back if the
+  // delete failed).
+  const [isDismissed, markDismissed] = useOptimistic(false);
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id,
     data: { type: "postit", text },
@@ -126,6 +131,8 @@ function PostItCard({ id, text }: { id: string; text: string }) {
     const el = textRef.current;
     setIsOverflowing(!!el && el.scrollHeight > el.clientHeight);
   }, [text]);
+
+  if (isDismissed) return null;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -161,11 +168,17 @@ function PostItCard({ id, text }: { id: string; text: string }) {
           {expanded ? "−" : "+"}
         </button>
       )}
-      <form action={deletePostItAction.bind(null, id)} className="absolute top-2 right-2">
+      <form
+        action={async () => {
+          markDismissed(true);
+          await deletePostItAction(id);
+        }}
+        className="absolute top-1 right-1"
+      >
         <button
           type="submit"
           aria-label="Dismiss post-it"
-          className="text-base text-muted-foreground hover:text-foreground"
+          className="flex h-7 w-7 items-center justify-center rounded-full text-base text-muted-foreground hover:bg-background/60 hover:text-foreground"
         >
           ✕
         </button>
