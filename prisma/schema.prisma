@@ -275,3 +275,15 @@ model UserSettings {
   userId   String  @id
   timezone String?
 }
+
+// One row per user who connected Google Calendar. The refresh token is the
+// long-lived key Google hands out once at connect time; the access token is
+// the short-lived (about an hour) key actually sent with each request, kept
+// here so every page load doesn't have to ask Google for a new one.
+model GoogleConnection {
+  userId               String   @id
+  refreshToken         String
+  accessToken          String
+  accessTokenExpiresAt DateTime
+  connectedAt          DateTime @default(now())
+}
