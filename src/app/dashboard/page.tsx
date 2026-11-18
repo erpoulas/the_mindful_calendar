@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import { logout } from "@/app/actions/auth";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
@@ -9,6 +10,8 @@ import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
+import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
+import { getGoogleConnection } from "@/lib/google-connections";
 import { syncGoogleCalendar } from "@/lib/google-sync";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
@@ -36,6 +39,7 @@ import {
 } from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
+import { GOOGLE_BANNER_DISMISSED_COOKIE, GoogleConnectBanner } from "./google-connect-banner";
 import { MonthGrid } from "./month-grid";
 import { PanelCustomizerControls, PanelList, SortablePanel } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
@@ -109,6 +113,8 @@ export default async function DashboardPage({
     hiddenPanels,
     panelOrder,
     postIts,
+    googleConnection,
+    cookieStore,
   ] = await Promise.all([
     getTodayAffirmation(db, userId, timeZone),
     getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
@@ -116,7 +122,16 @@ export default async function DashboardPage({
     getHiddenPanels(db, userId),
     getPanelOrder(db, userId),
     listPostIts(db, userId),
+    getGoogleConnection(db, userId),
+    cookies(),
   ]);
+
+  // Only nudge when connecting would actually work (the Google env vars are
+  // set) and the user hasn't already closed the banner.
+  const showGoogleBanner =
+    googleConnection === null &&
+    isGoogleCalendarConfigured() &&
+    !cookieStore.has(GOOGLE_BANNER_DISMISSED_COOKIE);
 
   let headerLabel: string;
   let prevHref: string;
@@ -309,6 +324,7 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-clip">
+      {showGoogleBanner && <GoogleConnectBanner />}
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
         <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>
           Account settings
