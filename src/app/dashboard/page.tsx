@@ -9,8 +9,6 @@ import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
-import { listProjects } from "@/lib/projects";
-import { countOpenQuickListItems } from "@/lib/quick-lists";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { AccountSettingsView } from "./overlays/account-settings";
@@ -89,8 +87,6 @@ export default async function DashboardPage({
   const [
     affirmation,
     breakdown,
-    projects,
-    openQuickListCount,
     reviewStats,
     hiddenPanels,
     panelOrder,
@@ -98,15 +94,11 @@ export default async function DashboardPage({
   ] = await Promise.all([
     getTodayAffirmation(db, userId),
     getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
-    listProjects(db, userId),
-    countOpenQuickListItems(db, userId),
     getWeeklyReviewStats(db, { userId, referenceDate }),
     getHiddenPanels(db, userId),
     getPanelOrder(db, userId),
     listPostIts(db, userId),
   ]);
-
-  const activeProjectCount = projects.filter((project) => project.status === "ACTIVE").length;
 
   let headerLabel: string;
   let prevHref: string;
@@ -178,8 +170,8 @@ export default async function DashboardPage({
   const panelComponents: Record<string, React.ReactNode> = {
     affirmation: <AffirmationPanel affirmation={affirmation} />,
     breakdown: <IntentionBreakdownPanel breakdown={breakdown} />,
-    projects: <ProjectsPanel activeCount={activeProjectCount} />,
-    quicklist: <QuickListPanel openCount={openQuickListCount} />,
+    projects: <ProjectsPanel />,
+    quicklist: <QuickListPanel />,
     journal: <JournalPanel />,
     dopamine: <DopaminePanel />,
     review: <WeeklyReviewPanel stats={reviewStats} />,

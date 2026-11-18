@@ -121,29 +121,22 @@ function IconPanelLink({
   iconWidth,
   iconHeight,
   title,
-  description,
 }: {
   href: string;
   iconSrc: string;
   iconWidth: number;
   iconHeight: number;
   title: string;
-  description?: React.ReactNode;
 }) {
   return (
     <Link href={href} className="flex items-center gap-2">
       <PanelIcon src={iconSrc} width={iconWidth} height={iconHeight} />
-      <div>
-        <div className="text-sm font-medium">{title}</div>
-        {description ? (
-          <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
-        ) : null}
-      </div>
+      <div className="text-sm font-medium">{title}</div>
     </Link>
   );
 }
 
-export function ProjectsPanel({ activeCount }: { activeCount: number }) {
+export function ProjectsPanel() {
   return (
     <PanelShell panelKey="projects">
       <IconPanelLink
@@ -157,7 +150,7 @@ export function ProjectsPanel({ activeCount }: { activeCount: number }) {
   );
 }
 
-export function QuickListPanel({ openCount }: { openCount: number }) {
+export function QuickListPanel() {
   return (
     <PanelShell panelKey="quicklist">
       <IconPanelLink
