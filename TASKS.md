@@ -63,7 +63,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Account settings: searchable time zone picker; type a city to find and set its zone (done: 11248d6)
 
 ## Performance
-- [ ] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (claimed: speed session, 2026-11-18)
+- [x] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (done: 09c568d, 677e2e6, 4902f6c)
 
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
