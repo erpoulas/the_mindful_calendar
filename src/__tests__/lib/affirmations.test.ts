@@ -142,4 +142,44 @@ describe("setTodayAffirmation / getTodayAffirmation", () => {
       expect(result?.isOverride).toBe(false);
     });
   });
+
+  it("keeps an override set this morning when it's already tomorrow in UTC", async () => {
+    await withRollback(async (tx) => {
+      await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Morning override" });
+      await tx.todayAffirmation.update({
+        where: { userId: "test-user-1" },
+        data: { setAt: new Date("2026-11-18T14:00:00Z") }, // 9am Nov 18 in New York
+      });
+
+      const result = await getTodayAffirmation(
+        tx,
+        "test-user-1",
+        "America/New_York",
+        new Date("2026-11-19T03:00:00Z"), // 10pm Nov 18 in New York
+      );
+
+      expect(result?.text).toBe("Morning override");
+    });
+  });
+
+  it("drops last night's override even when it's still the same day in UTC", async () => {
+    await withRollback(async (tx) => {
+      await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Last night's override" });
+      await tx.todayAffirmation.update({
+        where: { userId: "test-user-1" },
+        data: { setAt: new Date("2026-11-18T03:00:00Z") }, // 10pm Nov 17 in New York
+      });
+
+      const result = await getTodayAffirmation(
+        tx,
+        "test-user-1",
+        "America/New_York",
+        new Date("2026-11-18T14:00:00Z"), // 9am Nov 18 in New York
+      );
+
+      expect(result?.text).toBe("Pool pick");
+    });
+  });
 });

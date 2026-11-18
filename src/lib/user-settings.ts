@@ -5,6 +5,14 @@ export async function getUserTimezone(client: DbClient, userId: string): Promise
   return settings?.timezone ?? null;
 }
 
+/** The saved timezone, or UTC for users who haven't picked one yet. */
+export async function getUserTimezoneWithFallback(
+  client: DbClient,
+  userId: string,
+): Promise<string> {
+  return (await getUserTimezone(client, userId)) ?? "UTC";
+}
+
 export async function setUserTimezone(
   client: DbClient,
   params: { userId: string; timezone: string },

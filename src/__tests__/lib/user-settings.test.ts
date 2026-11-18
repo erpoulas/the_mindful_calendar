@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
-import { getUserTimezone, setUserTimezone } from "@/lib/user-settings";
+import {
+  getUserTimezone,
+  getUserTimezoneWithFallback,
+  setUserTimezone,
+} from "@/lib/user-settings";
 
 describe("getUserTimezone", () => {
   it("returns null when the user has never set a timezone", async () => {
@@ -27,6 +31,25 @@ describe("getUserTimezone", () => {
       const result = await getUserTimezone(tx, "test-user-1");
 
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("getUserTimezoneWithFallback", () => {
+  it("falls back to UTC when the user has never set a timezone", async () => {
+    await withRollback(async (tx) => {
+      const result = await getUserTimezoneWithFallback(tx, "test-user-1");
+      expect(result).toBe("UTC");
+    });
+  });
+
+  it("returns the stored timezone", async () => {
+    await withRollback(async (tx) => {
+      await setUserTimezone(tx, { userId: "test-user-1", timezone: "America/New_York" });
+
+      const result = await getUserTimezoneWithFallback(tx, "test-user-1");
+
+      expect(result).toBe("America/New_York");
     });
   });
 });

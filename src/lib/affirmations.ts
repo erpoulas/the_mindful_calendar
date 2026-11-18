@@ -1,4 +1,5 @@
 import type { DbClient } from "./db";
+import { toWallClockDate } from "./wall-clock";
 
 export async function addAffirmation(
   client: DbClient,
@@ -45,21 +46,19 @@ export async function setTodayAffirmation(
   });
 }
 
-function isToday(date: Date) {
-  const now = new Date();
-  return (
-    date.getUTCFullYear() === now.getUTCFullYear() &&
-    date.getUTCMonth() === now.getUTCMonth() &&
-    date.getUTCDate() === now.getUTCDate()
-  );
+function isSameDay(first: Date, second: Date, timeZone: string) {
+  const dayOf = (date: Date) => toWallClockDate(date, timeZone).toISOString().slice(0, 10);
+  return dayOf(first) === dayOf(second);
 }
 
 export async function getTodayAffirmation(
   client: DbClient,
   userId: string,
+  timeZone = "UTC",
+  now = new Date(),
 ): Promise<{ text: string; isOverride: boolean } | null> {
   const override = await client.todayAffirmation.findUnique({ where: { userId } });
-  if (override && isToday(override.setAt)) {
+  if (override && isSameDay(override.setAt, now, timeZone)) {
     return { text: override.text, isOverride: true };
   }
 

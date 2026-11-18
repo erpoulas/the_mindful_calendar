@@ -11,6 +11,8 @@ import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-p
 import { db } from "@/lib/db";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
+import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
@@ -81,8 +83,13 @@ export default async function DashboardPage({
   const entryId = typeof entryIdParam === "string" ? entryIdParam : null;
   const mode = modeParam === "month" ? "month" : "week";
 
+  // Events are stored as wall-clock times, so "today" must be today in the
+  // user's saved timezone, not in UTC.
+  const timeZone = await getUserTimezoneWithFallback(db, userId);
   const referenceDate =
-    typeof startParam === "string" ? new Date(startParam) : new Date();
+    typeof startParam === "string"
+      ? new Date(startParam)
+      : toWallClockDate(new Date(), timeZone);
 
   const [
     affirmation,
@@ -92,7 +99,7 @@ export default async function DashboardPage({
     panelOrder,
     postIts,
   ] = await Promise.all([
-    getTodayAffirmation(db, userId),
+    getTodayAffirmation(db, userId, timeZone),
     getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
     getWeeklyReviewStats(db, { userId, referenceDate }),
     getHiddenPanels(db, userId),

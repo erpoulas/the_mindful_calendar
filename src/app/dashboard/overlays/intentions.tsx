@@ -10,6 +10,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getIntentionDetail, listIntentions } from "@/lib/intentions";
+import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { toWallClockDate } from "@/lib/wall-clock";
 import { IntentionForm } from "./intention-form";
 
 export async function IntentionsListView() {
@@ -52,11 +54,12 @@ export async function IntentionsListView() {
 
 export async function IntentionDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
+  const timeZone = await getUserTimezoneWithFallback(db, userId);
 
   const detail = await getIntentionDetail(db, {
     userId,
     intentionId: id,
-    referenceDate: new Date(),
+    referenceDate: toWallClockDate(new Date(), timeZone),
   });
 
   if (!detail) notFound();

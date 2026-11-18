@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getTodayAffirmation, listAffirmations } from "@/lib/affirmations";
+import { getUserTimezoneWithFallback } from "@/lib/user-settings";
 
 export async function AffirmationsView() {
   const userId = await getCurrentUserId();
+  const timeZone = await getUserTimezoneWithFallback(db, userId);
   const [today, affirmations] = await Promise.all([
-    getTodayAffirmation(db, userId),
+    getTodayAffirmation(db, userId, timeZone),
     listAffirmations(db, userId),
   ]);
 
