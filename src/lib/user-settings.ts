@@ -1,4 +1,5 @@
 import type { DbClient } from "./db";
+import { markGoogleEventsForReread } from "./google-sync";
 
 export async function getUserTimezone(client: DbClient, userId: string): Promise<string | null> {
   const settings = await client.userSettings.findUnique({ where: { userId } });
@@ -46,9 +47,13 @@ export async function setUserTimezone(
   client: DbClient,
   params: { userId: string; timezone: string },
 ) {
-  return client.userSettings.upsert({
+  const previous = await getUserTimezone(client, params.userId);
+  const settings = await client.userSettings.upsert({
     where: { userId: params.userId },
     create: { userId: params.userId, timezone: params.timezone },
     update: { timezone: params.timezone },
   });
+  // Google events were saved in the old zone's wall-clock time.
+  if (previous !== params.timezone) await markGoogleEventsForReread(client, params.userId);
+  return settings;
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { UpdateCalendarDisplaySchema, UpdateTimezoneSchema } from "@/lib/user-settings-schemas";
-import { setCalendarDisplaySettings, setUserTimezone } from "@/lib/user-settings";
+import { getUserTimezone, setCalendarDisplaySettings, setUserTimezone } from "@/lib/user-settings";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -21,6 +21,18 @@ export async function updateTimezoneAction(
   const userId = await getCurrentUserId();
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
 
+  revalidatePath("/dashboard");
+}
+
+/** Saves the browser's time zone for a user who never picked one, so times don't fall back to UTC. */
+export async function saveBrowserTimezoneAction(timezone: string) {
+  const validated = UpdateTimezoneSchema.safeParse({ timezone });
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  if (await getUserTimezone(db, userId)) return; // never overwrite a choice
+
+  await setUserTimezone(db, { userId, timezone: validated.data.timezone });
   revalidatePath("/dashboard");
 }
 

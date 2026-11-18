@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
+import type { DbClient } from "@/lib/db";
 import {
   getCalendarDisplaySettings,
   getUserTimezone,
@@ -89,6 +90,45 @@ describe("setUserTimezone", () => {
 
       const theirs = await getUserTimezone(tx, "test-user-2");
       expect(theirs).toBe("Europe/London");
+    });
+  });
+
+  // Google-linked events are stored in the main zone's wall-clock time, so
+  // a new zone means re-reading them from Google (see google-sync.test.ts).
+  async function googleLinkedEtag(tx: DbClient, change: () => Promise<unknown>) {
+    const synced = new Date("2026-11-12T00:00:00Z");
+    const event = await tx.calendarEvent.create({
+      data: {
+        userId: "test-user-1",
+        title: "Walk",
+        startAt: new Date("2026-11-18T15:00:00Z"),
+        googleEventId: "walk",
+        googleEtag: '"v1"',
+        lastSyncedAt: synced,
+        updatedAt: synced,
+      },
+    });
+    await change();
+    return (await tx.calendarEvent.findUnique({ where: { id: event.id } }))?.googleEtag;
+  }
+
+  it("marks Google-linked events for re-reading when the zone changes", async () => {
+    await withRollback(async (tx) => {
+      const etag = await googleLinkedEtag(tx, () =>
+        setUserTimezone(tx, { userId: "test-user-1", timezone: "America/Denver" }),
+      );
+      expect(etag).toBeNull();
+    });
+  });
+
+  it("leaves Google-linked events alone when the same zone is saved again", async () => {
+    await withRollback(async (tx) => {
+      await setUserTimezone(tx, { userId: "test-user-1", timezone: "America/Denver" });
+
+      const etag = await googleLinkedEtag(tx, () =>
+        setUserTimezone(tx, { userId: "test-user-1", timezone: "America/Denver" }),
+      );
+      expect(etag).toBe('"v1"');
     });
   });
 });

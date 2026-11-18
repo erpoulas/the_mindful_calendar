@@ -15,7 +15,7 @@ import { getGoogleConnection } from "@/lib/google-connections";
 import { syncGoogleCalendar } from "@/lib/google-sync";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
-import { getCalendarDisplaySettings, getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
@@ -44,6 +44,7 @@ import { MonthGrid } from "./month-grid";
 import { PanelCustomizerControls, PanelList, SortablePanel } from "./panel-customizer";
 import { PanelSheet } from "./panel-sheet";
 import { PostItColumn } from "./post-it-column";
+import { SaveBrowserTimezone } from "./save-browser-timezone";
 import {
   AffirmationPanel,
   DopaminePanel,
@@ -91,8 +92,10 @@ export default async function DashboardPage({
   const mode = modeParam === "month" ? "month" : "week";
 
   // Events are stored as wall-clock times, so "today" must be today in the
-  // user's saved timezone, not in UTC.
-  const timeZone = await getUserTimezoneWithFallback(db, userId);
+  // user's saved timezone, not in UTC. With none saved yet, the browser's
+  // zone is saved on first load (SaveBrowserTimezone) and the page re-renders.
+  const savedTimeZone = await getUserTimezone(db, userId);
+  const timeZone = savedTimeZone ?? "UTC";
   const referenceDate =
     typeof startParam === "string"
       ? new Date(startParam)
@@ -324,6 +327,7 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-clip">
+      {savedTimeZone === null && <SaveBrowserTimezone />}
       {showGoogleBanner && <GoogleConnectBanner />}
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
         <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>

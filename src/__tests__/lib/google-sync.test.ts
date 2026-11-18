@@ -4,7 +4,7 @@ import type { DbClient } from "@/lib/db";
 import { createCalendarEvent, deleteCalendarEvent } from "@/lib/calendar-events";
 import type { GoogleApiEvent } from "@/lib/google-calendar";
 import { getGoogleConnection, saveGoogleConnection } from "@/lib/google-connections";
-import { syncGoogleCalendar } from "@/lib/google-sync";
+import { markGoogleEventsForReread, syncGoogleCalendar } from "@/lib/google-sync";
 import { createJournal, createJournalEntry } from "@/lib/journals";
 
 const USER = "test-user-1";
@@ -529,6 +529,48 @@ describe("syncGoogleCalendar", () => {
         await expect(sync(tx)).resolves.toBeUndefined();
         expect(await getGoogleConnection(tx, USER)).not.toBeNull();
       });
+    });
+  });
+});
+
+describe("markGoogleEventsForReread", () => {
+  it("makes the next sync re-read the event from Google in the new time zone", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const stored = google.put(googleEvent("walk", "2026-11-18"));
+      // Imported while the main zone was UTC: 9am New York saved as 14:00.
+      await linkedRow(tx, stored, { startAt: new Date("2026-11-18T14:00:00Z") });
+
+      await markGoogleEventsForReread(tx, USER, NOW);
+      await sync(tx);
+
+      const row = await findRow(tx, "walk");
+      expect(row?.startAt).toEqual(new Date("2026-11-18T09:00:00Z"));
+      expect(google.requests).not.toContain("PATCH /events/walk");
+    });
+  });
+
+  it("leaves events with app edits not yet sent to Google alone", async () => {
+    await withRollback(async (tx) => {
+      const stored = google.put(googleEvent("walk", "2026-11-18"));
+      await linkedRow(tx, stored, { updatedAt: new Date("2026-11-13T00:00:00Z") });
+
+      await markGoogleEventsForReread(tx, USER, NOW);
+
+      const row = await findRow(tx, "walk");
+      expect(row?.googleEtag).toBe(stored.etag);
+      expect(row?.updatedAt).toEqual(new Date("2026-11-13T00:00:00Z"));
+    });
+  });
+
+  it("never touches another user's events", async () => {
+    await withRollback(async (tx) => {
+      const stored = google.put(googleEvent("walk", "2026-11-18"));
+      await linkedRow(tx, stored);
+
+      await markGoogleEventsForReread(tx, "test-user-2", NOW);
+
+      expect((await findRow(tx, "walk"))?.googleEtag).toBe(stored.etag);
     });
   });
 });

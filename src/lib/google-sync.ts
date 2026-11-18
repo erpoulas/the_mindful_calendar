@@ -91,6 +91,25 @@ export async function syncGoogleCalendar(
   }
 }
 
+/**
+ * Synced events are stored as wall-clock times in the user's main zone, so
+ * after that zone changes they sit hours off. Forgetting their Google
+ * version tag makes the next sync see them as changed in Google and read
+ * them again in the new zone. updatedAt moves with lastSyncedAt so they
+ * don't also look edited in the app (which would push the old times to
+ * Google). Events with app edits not yet sent are left alone.
+ */
+export async function markGoogleEventsForReread(client: DbClient, userId: string, now = new Date()) {
+  await client.calendarEvent.updateMany({
+    where: {
+      userId,
+      googleEventId: { not: null },
+      updatedAt: { lte: client.calendarEvent.fields.lastSyncedAt },
+    },
+    data: { googleEtag: null, lastSyncedAt: now, updatedAt: now },
+  });
+}
+
 function startOfDay(wallClock: Date) {
   return new Date(Math.floor(wallClock.getTime() / DAY_MS) * DAY_MS);
 }
