@@ -67,4 +67,5 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
 - [ ] Meal Planning (reuses the Workout Library drag-and-drop)
+- [ ] Time zone groundwork for Google sync: wall-clock → real-moment converter (DST-safe), Google env vars in .env.example, "now" rule in AGENTS.md (done: 1f110f6)
 - [ ] Google Calendar two-way sync (polling on app open)
