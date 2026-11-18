@@ -314,7 +314,7 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-clip">
+    <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-clip">
       {savedTimeZone === null && <SaveBrowserTimezone />}
       {googleConnection && (
         <GoogleCalendarSync
