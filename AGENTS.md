@@ -21,6 +21,12 @@ The calendar at `/dashboard` is the only real page. Every other feature (Intenti
   - `public/panel-art/` holds the decorative art for each panel.
   - `src/__tests__/` holds the tests, and `src/test/withRollback.ts` the helper that runs a test against the real database inside a transaction and rolls it back afterwards.
 
+### Times and time zones
+Calendar event times are stored as **wall-clock times in UTC fields**: an event at 9:00am is saved as `09:00Z` wherever the user lives. Three bugs so far came from mixing this up, so:
+- Never compare or save a raw `new Date()` as an event time. Convert "now" first with `toWallClockDate(new Date(), timeZone)`, using the time zone from `getUserTimezoneWithFallback` (`src/lib/user-settings.ts`).
+- To turn a stored time back into the real moment (for example for Google Calendar), use `fromWallClockDate` from `src/lib/wall-clock.ts`. It handles daylight-saving changes.
+- Timestamps that only record when something happened (`completedAt`, `doneAt`, `setAt`) are real moments and stay as plain `new Date()`.
+
 Next.js 16 and React 19 are recent and differ from older versions. Check the installed docs or types in `node_modules/` before relying on an API you remember (see the block at the bottom of this file).
 
 ## Working agreements
