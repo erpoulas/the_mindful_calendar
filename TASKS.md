@@ -66,6 +66,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Calendar display options
 - [x] Account settings: show extra time zones beside the week view's hour labels (like Google Calendar), and pick 12-hour (am/pm) or 24-hour (military) time (done: 81fb82a)
+- [ ] Event form: pick the time zone an event's times are entered in (like Google Calendar); the event remembers it and shows in the right place on the calendar (claimed: time zones session, 2026-11-18)
 
 ## Going live
 - [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
