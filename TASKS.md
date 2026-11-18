@@ -62,7 +62,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Sign-in polish
 - [ ] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
-- [ ] Password requirements list on sign up, each one checked off live as the password meets it
+- [ ] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
