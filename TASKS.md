@@ -77,4 +77,4 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Time zone groundwork for Google sync: wall-clock → real-moment converter (DST-safe), Google env vars in .env.example, "now" rule in AGENTS.md (done: 1f110f6)
 - [x] Google Calendar one-way view: connect a Google account in Account settings, show its events read-only on the week and month views (done: 0ffbb3c, 035dc87, 8ee47a0)
 - [x] Google Calendar two-way sync (polling on app open) (done: 8717a85, 218f950)
-- [ ] Dismissible "connect Google Calendar" banner on the dashboard when not connected (claimed: google sync session, 2026-11-18)
+- [x] Dismissible "connect Google Calendar" banner on the dashboard when not connected (done: 3c808c2)
