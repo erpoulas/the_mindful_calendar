@@ -61,6 +61,9 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
 - [x] No saved time zone falls back to UTC, so Google events import hours off (8am Mountain shows at 3pm); default to the browser's zone, and re-read Google events when the main zone changes (done: 946bb08)
 - [x] Account settings: searchable time zone picker; type a city to find and set its zone (done: 11248d6)
+- [x] Week view: clicking an event only opens the edit form if you hit the title text; make the whole box clickable while keeping it draggable (done: ad85706, 78cf4f1)
+- [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
+- [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
 
 ## Performance
 - [x] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (done: 09c568d, 677e2e6, 4902f6c)
