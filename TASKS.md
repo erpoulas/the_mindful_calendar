@@ -74,7 +74,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
 
 ## Docs
-- [ ] Bring README up to date with the current codebase (claimed: readme session, 2026-11-18)
+- [x] Bring README up to date with the current codebase (done: b2c9d3d)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
