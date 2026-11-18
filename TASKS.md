@@ -64,6 +64,9 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
 - [x] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
 
+## Going live
+- [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
+
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
 - [ ] Meal Planning (reuses the Workout Library drag-and-drop)
