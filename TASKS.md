@@ -57,8 +57,8 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Unused activeCount/openCount props left after removing panel descriptions (done: 68dd0b9)
 - [x] Event form hides the End field for timed events; it should always show (done: 953ce40)
 - [ ] Writing a journal entry creates its calendar event at the real UTC time, so it lands hours off (e.g. 8pm in New York shows at 1am the next day)
-- [ ] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (claimed: claude-scroll-fix, 2026-11-18)
-- [ ] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (claimed: claude-scroll-fix, 2026-11-18)
+- [x] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (done: 9d6a01d)
+- [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
 
 ## Sign-in polish
 - [ ] Password preview: a show/hide (eye) toggle on password fields
