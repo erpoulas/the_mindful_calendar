@@ -2,18 +2,11 @@
 
 import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
-import { GoogleBadge } from "./google-badge";
+import type { listCalendarEvents } from "@/lib/calendar-events";
 import { toDayKey } from "./time-grid";
 import { useWallClockNow } from "./use-wall-clock-now";
 
-/** One of our own events (opens the edit popup) or a read-only Google one (opens Google). */
-export type MonthCellEvent = {
-  id: string;
-  title: string;
-  startAt: Date;
-  href: string;
-  isGoogle: boolean;
-};
+type MonthEvent = Awaited<ReturnType<typeof listCalendarEvents>>[number];
 
 export function MonthDayCell({
   dayKey,
@@ -27,7 +20,7 @@ export function MonthDayCell({
   dayNumber: number;
   inMonth: boolean;
   weekStartHref: string;
-  events: MonthCellEvent[];
+  events: MonthEvent[];
   overflow: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: dayKey });
@@ -49,29 +42,15 @@ export function MonthDayCell({
       >
         {dayNumber}
       </Link>
-      {events.map((event) =>
-        event.isGoogle ? (
-          <a
-            key={event.id}
-            href={event.href}
-            target="_blank"
-            rel="noreferrer"
-            title={`${event.title} (from Google Calendar)`}
-            className="flex items-center gap-1 rounded border border-primary/40 px-1 text-xs hover:bg-secondary"
-          >
-            <GoogleBadge />
-            <span className="truncate">{event.title}</span>
-          </a>
-        ) : (
-          <Link
-            key={event.id}
-            href={event.href}
-            className="truncate rounded bg-accent px-1 text-xs hover:bg-secondary"
-          >
-            {event.title}
-          </Link>
-        ),
-      )}
+      {events.map((event) => (
+        <Link
+          key={event.id}
+          href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+          className="truncate rounded bg-accent px-1 text-xs hover:bg-secondary"
+        >
+          {event.title}
+        </Link>
+      ))}
       {overflow > 0 && (
         <Link href={weekStartHref} className="text-xs text-muted-foreground hover:underline">
           +{overflow} more
