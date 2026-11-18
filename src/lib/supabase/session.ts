@@ -35,9 +35,10 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() refreshes an expiring token first, then verifies it without
+  // a trip to Supabase (see getCurrentUserId in src/lib/auth.ts).
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
 
   const path = request.nextUrl.pathname;
   const isProtectedRoute = protectedRoutes.some((route) =>
