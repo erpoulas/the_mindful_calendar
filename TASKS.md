@@ -78,7 +78,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Docs
 - [x] Bring README up to date with the current codebase (done: b2c9d3d)
-- [ ] Bring AGENTS.md up to date with the current codebase (claimed: readme session, 2026-11-18)
+- [x] Bring AGENTS.md up to date with the current codebase (done: 6c5d1da)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
