@@ -26,7 +26,21 @@ describe("createCalendarEvent", () => {
       expect(event.location).toBeNull();
       expect(event.notes).toBeNull();
       expect(event.projectId).toBeNull();
+      expect(event.timeZone).toBeNull();
       expect(event.intentions).toEqual([]);
+    });
+  });
+
+  it("remembers the time zone the times were entered in", async () => {
+    await withRollback(async (tx) => {
+      const event = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Call with Tokyo office",
+        startAt: new Date("2026-11-15T19:00:00Z"),
+        timeZone: "Asia/Tokyo",
+      });
+
+      expect(event.timeZone).toBe("Asia/Tokyo");
     });
   });
 
@@ -269,6 +283,25 @@ describe("updateCalendarEvent", () => {
     });
   });
 
+  it("changes the event's time zone", async () => {
+    await withRollback(async (tx) => {
+      const created = await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Call",
+        timeZone: "Asia/Tokyo",
+      });
+
+      const updated = await updateCalendarEvent(tx, {
+        userId: "test-user-1",
+        eventId: created.id,
+        title: "Call",
+        timeZone: "Europe/London",
+      });
+
+      expect(updated?.timeZone).toBe("Europe/London");
+    });
+  });
+
   it("clears optional fields omitted from the update (full-form edit, not a partial patch)", async () => {
     await withRollback(async (tx) => {
       const created = await createCalendarEvent(tx, {
@@ -278,6 +311,7 @@ describe("updateCalendarEvent", () => {
         endAt: new Date("2026-09-10T10:00:00Z"),
         location: "Riverside trail",
         notes: "Bring water",
+        timeZone: "Asia/Tokyo",
       });
 
       const updated = await updateCalendarEvent(tx, {
@@ -286,6 +320,7 @@ describe("updateCalendarEvent", () => {
         title: "Long run",
       });
 
+      expect(updated?.timeZone).toBeNull();
       expect(updated?.startAt).toBeNull();
       expect(updated?.endAt).toBeNull();
       expect(updated?.location).toBeNull();

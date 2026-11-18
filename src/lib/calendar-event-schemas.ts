@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { KnownTimezone } from "./user-settings-schemas";
 
 // Matches Google Calendar's own event title (summary) character limit.
 export const TITLE_MAX_LENGTH = 1024;
@@ -17,6 +18,7 @@ export const CreateCalendarEventSchema = z
     notes: z.string().trim().optional(),
     projectId: z.string().trim().optional(),
     intentionIds: z.array(z.string()).optional(),
+    timeZone: KnownTimezone.optional(),
   })
   .refine(
     (data) => !data.startAt || !data.endAt || new Date(data.endAt) >= new Date(data.startAt),

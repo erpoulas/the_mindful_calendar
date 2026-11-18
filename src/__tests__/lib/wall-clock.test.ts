@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromWallClockDate, toWallClockDate } from "@/lib/wall-clock";
+import { convertWallClock, fromWallClockDate, toWallClockDate } from "@/lib/wall-clock";
 
 // Wall-clock dates are written with a Z because that's how the app stores
 // them: the UTC fields hold the time shown on the user's clock.
@@ -94,5 +94,31 @@ describe("toWallClockDate", () => {
     const result = toWallClockDate(instant, "UTC");
 
     expect(result.toISOString()).toBe("2026-11-18T00:00:00.000Z");
+  });
+});
+
+describe("convertWallClock", () => {
+  it("reads Chicago's 9am off Denver's clock as 8am", () => {
+    const chicagoNine = new Date("2026-11-15T09:00:00Z");
+
+    const result = convertWallClock(chicagoNine, "America/Chicago", "America/Denver");
+
+    expect(result.toISOString()).toBe("2026-11-15T08:00:00.000Z");
+  });
+
+  it("can cross midnight into the next day", () => {
+    const tokyoMorning = new Date("2026-11-16T09:00:00Z"); // Tokyo is GMT+9
+
+    const result = convertWallClock(tokyoMorning, "Asia/Tokyo", "America/New_York");
+
+    expect(result.toISOString()).toBe("2026-11-15T19:00:00.000Z");
+  });
+
+  it("leaves the time alone when both zones are the same", () => {
+    const wallClock = new Date("2026-11-15T09:00:00Z");
+
+    const result = convertWallClock(wallClock, "Europe/London", "Europe/London");
+
+    expect(result).toEqual(wallClock);
   });
 });

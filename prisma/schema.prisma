@@ -82,6 +82,10 @@ model CalendarEvent {
   location      String?
   notes         String?
   projectId     String?
+  // The zone the times were entered in (as in Google Calendar), so the edit
+  // form can show them that way again. startAt/endAt are still stored in the
+  // user's main zone. Null = entered in the main zone.
+  timeZone      String?
   // Google Calendar sync: the matching Google event, the version tag Google
   // gave it when we last saw it (it changes whenever the event is edited in
   // Google), and when the two were last made identical. An event edited in

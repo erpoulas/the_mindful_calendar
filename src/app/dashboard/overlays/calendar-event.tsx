@@ -10,6 +10,8 @@ import { getCalendarEvent } from "@/lib/calendar-events";
 import { db } from "@/lib/db";
 import { listIntentions } from "@/lib/intentions";
 import { listProjects } from "@/lib/projects";
+import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { convertWallClock } from "@/lib/wall-clock";
 import { EventForm } from "./event-form";
 
 export async function NewEventView({
@@ -22,9 +24,10 @@ export async function NewEventView({
   postItId?: string;
 }) {
   const userId = await getCurrentUserId();
-  const [projects, intentions] = await Promise.all([
+  const [projects, intentions, mainTimeZone] = await Promise.all([
     listProjects(db, userId),
     listIntentions(db, userId),
+    getUserTimezoneWithFallback(db, userId),
   ]);
 
   const initialValues = date
@@ -37,6 +40,7 @@ export async function NewEventView({
         notes: null,
         projectId: null,
         intentionIds: [],
+        timeZone: null,
       }
     : title
       ? {
@@ -48,6 +52,7 @@ export async function NewEventView({
           notes: null,
           projectId: null,
           intentionIds: [],
+          timeZone: null,
         }
       : undefined;
 
@@ -61,6 +66,7 @@ export async function NewEventView({
       intentions={intentions}
       initialValues={initialValues}
       postItId={postItId}
+      mainTimeZone={mainTimeZone}
     />
   );
 }
@@ -68,13 +74,20 @@ export async function NewEventView({
 export async function EditEventView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
-  const [event, projects, intentions] = await Promise.all([
+  const [event, projects, intentions, mainTimeZone] = await Promise.all([
     getCalendarEvent(db, { userId, eventId: id }),
     listProjects(db, userId),
     listIntentions(db, userId),
+    getUserTimezoneWithFallback(db, userId),
   ]);
 
   if (!event) notFound();
+
+  // Times are stored on the main zone's clock; show them on the clock of the
+  // zone they were entered in, as Google Calendar does.
+  const eventTimeZone = event.isAllDay ? mainTimeZone : (event.timeZone ?? mainTimeZone);
+  const toEventZone = (time: Date | null) =>
+    time && convertWallClock(time, mainTimeZone, eventTimeZone);
 
   return (
     <div className="flex flex-col gap-4">
@@ -87,14 +100,16 @@ export async function EditEventView({ id }: { id: string }) {
         intentions={intentions}
         initialValues={{
           title: event.title,
-          startAt: event.startAt,
-          endAt: event.endAt,
+          startAt: toEventZone(event.startAt),
+          endAt: toEventZone(event.endAt),
           isAllDay: event.isAllDay,
           location: event.location,
           notes: event.notes,
           projectId: event.projectId,
           intentionIds: event.intentions.map((ei) => ei.intentionId),
+          timeZone: event.isAllDay ? null : event.timeZone,
         }}
+        mainTimeZone={mainTimeZone}
       />
 
       <form action={deleteCalendarEventAction.bind(null, id)}>

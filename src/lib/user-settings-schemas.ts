@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const validTimezones = new Set(Intl.supportedValuesOf("timeZone"));
 
-const KnownTimezone = z.string().refine((tz) => validTimezones.has(tz), "Not a recognized timezone");
+export const KnownTimezone = z.string().refine((tz) => validTimezones.has(tz), "Not a recognized timezone");
 
 export const UpdateTimezoneSchema = z.object({
   timezone: KnownTimezone,

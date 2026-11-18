@@ -67,3 +67,13 @@ export function fromWallClockDate(wallClock: Date, timeZone: string): Date {
   if (matching.length === 0) return new Date(candidates[0]);
   return new Date(Math.min(...matching));
 }
+
+/**
+ * Re-reads a wall-clock time from one zone's clock on another's, e.g.
+ * 9:00am in Chicago is 8:00am in Denver. Used when an event's times are
+ * entered in a zone other than the user's main one.
+ */
+export function convertWallClock(wallClock: Date, fromTimeZone: string, toTimeZone: string): Date {
+  if (fromTimeZone === toTimeZone) return wallClock;
+  return toWallClockDate(fromWallClockDate(wallClock, fromTimeZone), toTimeZone);
+}

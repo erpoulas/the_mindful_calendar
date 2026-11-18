@@ -16,6 +16,7 @@ export function EventForm({
   intentions,
   initialValues,
   postItId,
+  mainTimeZone,
 }: {
   action: (
     state: CalendarEventFormState,
@@ -35,8 +36,12 @@ export function EventForm({
     notes: string | null;
     projectId: string | null;
     intentionIds: string[];
+    /** The zone the times above are shown in; null = the main zone. */
+    timeZone: string | null;
   };
   postItId?: string;
+  /** The user's timezone from Account settings, the default for new events. */
+  mainTimeZone: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const selectedIntentionIds = new Set(initialValues?.intentionIds ?? []);
@@ -94,6 +99,28 @@ export function EventForm({
         />
         {state?.errors?.endAt && (
           <p className="text-sm text-red-600">{state.errors.endAt[0]}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="timeZone">Time zone</Label>
+        <select
+          id="timeZone"
+          name="timeZone"
+          defaultValue={initialValues?.timeZone ?? mainTimeZone}
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+        >
+          {Intl.supportedValuesOf("timeZone").map((tz) => (
+            <option key={tz} value={tz}>
+              {tz === mainTimeZone ? `${tz} (your timezone)` : tz}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Start and end are in this time zone. Ignored for all-day events.
+        </p>
+        {state?.errors?.timeZone && (
+          <p className="text-sm text-red-600">{state.errors.timeZone[0]}</p>
         )}
       </div>
 

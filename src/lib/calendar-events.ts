@@ -12,6 +12,7 @@ export async function createCalendarEvent(
     notes?: string;
     projectId?: string;
     intentionIds?: string[];
+    timeZone?: string;
   },
 ) {
   return client.calendarEvent.create({
@@ -24,6 +25,7 @@ export async function createCalendarEvent(
       location: data.location,
       notes: data.notes,
       projectId: data.projectId,
+      timeZone: data.timeZone,
       intentions: data.intentionIds
         ? { create: data.intentionIds.map((intentionId) => ({ intentionId })) }
         : undefined,
@@ -68,6 +70,7 @@ export async function updateCalendarEvent(
     notes?: string;
     projectId?: string;
     intentionIds?: string[];
+    timeZone?: string;
   },
 ) {
   const event = await client.calendarEvent.findFirst({
@@ -85,6 +88,7 @@ export async function updateCalendarEvent(
       location: params.location ?? null,
       notes: params.notes ?? null,
       projectId: params.projectId ?? null,
+      timeZone: params.timeZone ?? null,
       intentions: {
         deleteMany: {},
         create: (params.intentionIds ?? []).map((intentionId) => ({ intentionId })),
