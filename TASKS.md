@@ -64,6 +64,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Performance
 - [x] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (done: 09c568d, 677e2e6, 4902f6c)
+- [ ] Faster popups: count the weekly breakdown once and in one grouped query; then move each popup to its own /dashboard/<panel> route (parallel routes) so opening one renders only the popup, not the whole dashboard; update the AGENTS.md popup rule to match. Waiting for the all-day and event-click sessions to finish before starting (claimed: speed session, 2026-11-18)
 
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
