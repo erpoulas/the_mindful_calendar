@@ -1,6 +1,7 @@
 import type { listCalendarEvents } from "@/lib/calendar-events";
 import { getMonthGrid } from "@/lib/calendar-month";
-import { MonthDayCell } from "./month-day-cell";
+import type { GoogleCalendarItem } from "@/lib/google-calendar";
+import { MonthDayCell, type MonthCellEvent } from "./month-day-cell";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -11,19 +12,47 @@ function toDateParam(date: Date) {
 export function MonthGrid({
   referenceDate,
   events,
+  googleEvents = [],
 }: {
   referenceDate: Date;
   events: Awaited<ReturnType<typeof listCalendarEvents>>;
+  /** Events from Google Calendar, shown read-only alongside our own. */
+  googleEvents?: GoogleCalendarItem[];
 }) {
   const { monthStart, monthEnd, gridStart, gridEnd } = getMonthGrid(referenceDate);
+
+  // One list holding both kinds, sorted by time, so the "+N more" cut-off
+  // treats them alike.
+  const cellEvents: MonthCellEvent[] = [
+    ...events.flatMap((event) =>
+      event.startAt
+        ? [
+            {
+              id: event.id,
+              title: event.title,
+              startAt: event.startAt,
+              href: `/dashboard?panel=calendar-event&view=edit&id=${event.id}`,
+              isGoogle: false,
+            },
+          ]
+        : [],
+    ),
+    ...googleEvents.map((event) => ({
+      id: event.id,
+      title: event.title,
+      startAt: event.startAt,
+      href: event.htmlLink ?? "https://calendar.google.com",
+      isGoogle: true,
+    })),
+  ].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
 
   const totalDays = (gridEnd.getTime() - gridStart.getTime()) / MS_PER_DAY;
   const weekRows = totalDays / 7;
   const days = Array.from({ length: totalDays }, (_, i) => {
     const date = new Date(gridStart.getTime() + i * MS_PER_DAY);
     const nextDate = new Date(date.getTime() + MS_PER_DAY);
-    const dayEvents = events.filter(
-      (event) => event.startAt && event.startAt >= date && event.startAt < nextDate,
+    const dayEvents = cellEvents.filter(
+      (event) => event.startAt >= date && event.startAt < nextDate,
     );
     return {
       date,

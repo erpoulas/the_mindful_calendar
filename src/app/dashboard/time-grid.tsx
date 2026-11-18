@@ -5,6 +5,8 @@ import type { CSSProperties } from "react";
 import { useEffect, useRef } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import type { GoogleCalendarItem } from "@/lib/google-calendar";
+import { GoogleBadge } from "./google-badge";
 import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
@@ -29,9 +31,12 @@ export function minutesSinceMidnightUTC(date: Date) {
 export function TimeGrid({
   weekStart,
   events,
+  googleEvents = [],
 }: {
   weekStart: Date;
   events: TimeGridEvent[];
+  /** Timed events from Google Calendar, shown read-only. */
+  googleEvents?: GoogleCalendarItem[];
 }) {
   const now = useWallClockNow();
   const todayKey = now ? toDayKey(now) : null;
@@ -78,6 +83,7 @@ export function TimeGrid({
           dayKey={key}
           now={key === todayKey ? now : null}
           events={events.filter((ev) => toDayKey(ev.startAt) === key)}
+          googleEvents={googleEvents.filter((ev) => toDayKey(ev.startAt) === key)}
         />
       ))}
     </div>
@@ -87,10 +93,12 @@ export function TimeGrid({
 function DayColumn({
   dayKey,
   events,
+  googleEvents,
   now,
 }: {
   dayKey: string;
   events: TimeGridEvent[];
+  googleEvents: GoogleCalendarItem[];
   /** Wall-clock "now" when this column is today, otherwise null. */
   now: Date | null;
 }) {
@@ -110,11 +118,22 @@ function DayColumn({
         />
       ))}
       {now && <NowIndicator now={now} />}
+      {googleEvents.map((event) => (
+        <GoogleEventBlock key={event.id} event={event} />
+      ))}
       {events.map((event) => (
         <EventBlock key={event.id} event={event} />
       ))}
     </div>
   );
+}
+
+/** Where an event sits in its day column, in px. Events with no end get 30 minutes. */
+function blockPosition(startAt: Date, endAt: Date | null) {
+  const top = (minutesSinceMidnightUTC(startAt) / 60) * HOUR_HEIGHT;
+  const durationMinutes = endAt ? (endAt.getTime() - startAt.getTime()) / (60 * 1000) : 30;
+  const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 18);
+  return { top, height };
 }
 
 // Draws the current-time line on today's column and, once on mount, scrolls
@@ -149,15 +168,8 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
     data: { type: "event" },
   });
 
-  const top = (minutesSinceMidnightUTC(event.startAt) / 60) * HOUR_HEIGHT;
-  const durationMinutes = event.endAt
-    ? (event.endAt.getTime() - event.startAt.getTime()) / (60 * 1000)
-    : 30;
-  const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 18);
-
   const style: CSSProperties = {
-    top,
-    height,
+    ...blockPosition(event.startAt, event.endAt),
     transform: CSS.Translate.toString(transform),
     zIndex: isDragging ? 10 : undefined,
   };
@@ -180,5 +192,22 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
         {event.title}
       </Link>
     </div>
+  );
+}
+
+// Read-only: not draggable, and clicking opens the event in Google Calendar.
+function GoogleEventBlock({ event }: { event: GoogleCalendarItem }) {
+  return (
+    <a
+      href={event.htmlLink ?? "https://calendar.google.com"}
+      target="_blank"
+      rel="noreferrer"
+      title={`${event.title} (from Google Calendar)`}
+      style={blockPosition(event.startAt, event.endAt)}
+      className="absolute inset-x-0.5 flex items-start gap-1 overflow-hidden rounded border border-primary/60 bg-background/90 px-1 text-[11px] leading-tight text-foreground hover:bg-accent"
+    >
+      <GoogleBadge />
+      <span className="truncate">{event.title}</span>
+    </a>
   );
 }
