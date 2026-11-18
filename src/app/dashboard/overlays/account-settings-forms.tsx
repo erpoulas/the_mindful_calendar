@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { X } from "lucide-react";
 import {
   updateEmailAction,
@@ -15,42 +15,44 @@ import {
   type TimezoneFormState,
 } from "@/app/actions/user-settings";
 import { MAX_EXTRA_TIMEZONES } from "@/lib/user-settings-schemas";
+import type { TimezoneMatch } from "@/lib/timezone-search";
+import { TimezoneSearch } from "./timezone-search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 
+/** Picking a search result saves it straight away. */
 export function TimezoneForm({ currentTimezone }: { currentTimezone: string }) {
   const [state, action, pending] = useActionState<TimezoneFormState, FormData>(
     updateTimezoneAction,
     undefined,
   );
+  const [picked, setPicked] = useState<TimezoneMatch | null>(null);
+
+  function save(match: TimezoneMatch) {
+    setPicked(match);
+    const formData = new FormData();
+    formData.set("timezone", match.timezone);
+    startTransition(() => action(formData));
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-3 rounded border p-4">
+    <section className="flex flex-col gap-3 rounded border p-4">
       <h2 className="text-lg font-medium">Timezone</h2>
+      <p className="text-sm text-muted-foreground">
+        Current: {picked ? `${picked.label} (${picked.timezone})` : currentTimezone}
+      </p>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="timezone">Timezone</Label>
-        <select
-          id="timezone"
-          name="timezone"
-          defaultValue={currentTimezone}
-          className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-        >
-          {Intl.supportedValuesOf("timeZone").map((tz) => (
-            <option key={tz} value={tz}>
-              {tz}
-            </option>
-          ))}
-        </select>
+        <Label htmlFor="timezone">Change timezone</Label>
+        <TimezoneSearch id="timezone" onPick={save} disabled={pending} />
         {state?.errors?.timezone && (
           <p className="text-sm text-red-600">{state.errors.timezone[0]}</p>
         )}
+        {pending && <p className="text-sm text-muted-foreground">Saving...</p>}
+        {!pending && state?.saved && <p className="text-sm text-green-700">Saved.</p>}
       </div>
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving..." : "Save timezone"}
-      </Button>
-    </form>
+    </section>
   );
 }
 
@@ -66,12 +68,10 @@ export function CalendarDisplayForm({
     undefined,
   );
   const [zones, setZones] = useState(extraTimezones);
-  const [zoneToAdd, setZoneToAdd] = useState("");
   const atLimit = zones.length >= MAX_EXTRA_TIMEZONES;
 
-  function addZone() {
-    if (zoneToAdd && !zones.includes(zoneToAdd) && !atLimit) setZones([...zones, zoneToAdd]);
-    setZoneToAdd("");
+  function addZone({ timezone }: TimezoneMatch) {
+    if (!zones.includes(timezone) && !atLimit) setZones([...zones, timezone]);
   }
 
   return (
@@ -114,27 +114,12 @@ export function CalendarDisplayForm({
             ))}
           </ul>
         )}
-        <div className="flex gap-2">
-          <select
-            id="add-timezone"
-            value={zoneToAdd}
-            onChange={(event) => setZoneToAdd(event.target.value)}
-            disabled={atLimit}
-            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:text-sm"
-          >
-            <option value="">{atLimit ? "Limit reached" : "Choose a time zone…"}</option>
-            {Intl.supportedValuesOf("timeZone")
-              .filter((tz) => !zones.includes(tz))
-              .map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-          </select>
-          <Button type="button" variant="outline" onClick={addZone} disabled={!zoneToAdd || atLimit}>
-            Add
-          </Button>
-        </div>
+        <TimezoneSearch
+          id="add-timezone"
+          onPick={addZone}
+          disabled={atLimit}
+          placeholder={atLimit ? "Limit reached" : "Search a city to add, e.g. London"}
+        />
         {state?.errors?.extraTimezones && (
           <p className="text-sm text-red-600">{state.errors.extraTimezones[0]}</p>
         )}

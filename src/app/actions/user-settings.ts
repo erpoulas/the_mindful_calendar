@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { UpdateCalendarDisplaySchema, UpdateTimezoneSchema } from "@/lib/user-settings-schemas";
 import { getUserTimezone, setCalendarDisplaySettings, setUserTimezone } from "@/lib/user-settings";
+import { searchTimezones, type TimezoneMatch } from "@/lib/timezone-search";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export type TimezoneFormState = { errors?: { timezone?: string[] } } | undefined;
+export type TimezoneFormState = { errors?: { timezone?: string[] }; saved?: boolean } | undefined;
 
 export async function updateTimezoneAction(
   _state: TimezoneFormState,
@@ -22,6 +23,13 @@ export async function updateTimezoneAction(
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
 
   revalidatePath("/dashboard");
+  return { saved: true };
+}
+
+/** Time zone search for the pickers in Account settings ("Boulder" → America/Denver). */
+export async function searchTimezonesAction(query: string): Promise<TimezoneMatch[]> {
+  await getCurrentUserId(); // signed-in users only
+  return searchTimezones(String(query).slice(0, 100));
 }
 
 /** Saves the browser's time zone for a user who never picked one, so times don't fall back to UTC. */
