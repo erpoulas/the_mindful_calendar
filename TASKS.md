@@ -56,16 +56,17 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Dashboard picks "this week" (and today's affirmation/weekly stats) by UTC date, so on Sunday evening in the Americas it already shows next week; should use the time zone saved in Account settings (done: 1a3ebc6)
 - [x] Unused activeCount/openCount props left after removing panel descriptions (done: 68dd0b9)
 - [x] Event form hides the End field for timed events; it should always show (done: 953ce40)
-- [ ] Writing a journal entry creates its calendar event at the real UTC time, so it lands hours off (e.g. 8pm in New York shows at 1am the next day) (done: c51104a)
+- [x] Writing a journal entry creates its calendar event at the real UTC time, so it lands hours off (e.g. 8pm in New York shows at 1am the next day) (done: c51104a)
 - [x] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (done: 9d6a01d)
 - [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
 
 ## Sign-in polish
-- [ ] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
-- [ ] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
+- [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
+- [x] Password requirements list on sign up, each one checked off live as the password meets it (done: c43821e)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
 - [ ] Meal Planning (reuses the Workout Library drag-and-drop)
-- [ ] Time zone groundwork for Google sync: wall-clock → real-moment converter (DST-safe), Google env vars in .env.example, "now" rule in AGENTS.md (done: 1f110f6)
+- [x] Time zone groundwork for Google sync: wall-clock → real-moment converter (DST-safe), Google env vars in .env.example, "now" rule in AGENTS.md (done: 1f110f6)
+- [ ] Google Calendar one-way view: connect a Google account in Account settings, show its events read-only on the week and month views (claimed: google-sync session, 2026-11-18)
 - [ ] Google Calendar two-way sync (polling on app open)
