@@ -8,11 +8,13 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     globals: true,
-    // Default "threads" pool intermittently fails to start worker threads on
-    // this machine, throwing an unrelated-looking "Cannot read properties of
-    // undefined (reading 'config')" collection error. Forks (child processes
-    // instead of worker threads) doesn't hit this.
-    pool: "forks",
+    // On this machine both the default "threads" pool and "forks" fail to
+    // start their workers, throwing an unrelated-looking "Cannot read
+    // properties of undefined (reading 'config')" error before any test runs
+    // ("forks" worked for a while, then started failing the same way).
+    // "vmThreads" runs each test file in its own VM context inside a worker
+    // and doesn't hit this.
+    pool: "vmThreads",
   },
   resolve: {
     alias: {
