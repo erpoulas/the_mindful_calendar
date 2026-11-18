@@ -4,8 +4,8 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updatePasswordAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function ResetPasswordPage() {
   const [state, action, pending] = useActionState(updatePasswordAction, undefined);
@@ -24,7 +24,7 @@ export default function ResetPasswordPage() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">New password</Label>
-          <Input id="password" name="password" type="password" required />
+          <PasswordInput id="password" name="password" required />
           {state?.errors?.password && (
             <p className="text-sm text-red-600">{state.errors.password[0]}</p>
           )}
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="confirmPassword">Confirm new password</Label>
-          <Input id="confirmPassword" name="confirmPassword" type="password" required />
+          <PasswordInput id="confirmPassword" name="confirmPassword" required />
           {state?.errors?.confirmPassword && (
             <p className="text-sm text-red-600">{state.errors.confirmPassword[0]}</p>
           )}

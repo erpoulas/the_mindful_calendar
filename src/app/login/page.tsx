@@ -6,6 +6,7 @@ import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined);
@@ -25,7 +26,7 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" name="password" type="password" required />
+          <PasswordInput id="password" name="password" required />
           {state?.errors?.password && (
             <p className="text-sm text-red-600">{state.errors.password[0]}</p>
           )}
