@@ -59,6 +59,8 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Writing a journal entry creates its calendar event at the real UTC time, so it lands hours off (e.g. 8pm in New York shows at 1am the next day) (done: c51104a)
 - [x] Current-time line's scrollIntoView scrolls the whole page, clipping the month heading and header buttons (done: 9d6a01d)
 - [x] `npm test` fails every file with "Cannot read properties of undefined (reading 'config')" under the forks pool; switch Vitest to vmThreads (done: 7b0f090)
+- [ ] No saved time zone falls back to UTC, so Google events import hours off (8am Mountain shows at 3pm); default to the browser's zone, and re-read Google events when the main zone changes (claimed: deploy session, 2026-11-18)
+- [ ] Account settings: searchable time zone picker; type a city to find and set its zone (claimed: deploy session, 2026-11-18)
 
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
