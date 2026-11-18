@@ -145,6 +145,7 @@ export default async function DashboardPage({
   let headerLabel: string;
   let prevHref: string;
   let nextHref: string;
+  let allDayRow: React.ReactNode = null;
   let calendarBody: React.ReactNode;
   let calendarBodyPadded = false;
   let dndEvents: TimeGridEvent[] = [];
@@ -165,15 +166,15 @@ export default async function DashboardPage({
     calendarBody = <MonthGrid referenceDate={referenceDate} events={events} />;
   } else {
     const { start } = visibleRange;
-    const toTimeGridEvent = (event: (typeof events)[number]): TimeGridEvent => ({
-      id: event.id,
-      title: event.title,
-      startAt: event.startAt!,
-      endAt: event.endAt,
-    });
-    const datedEvents = events.filter((event) => event.startAt);
-    const allDayEvents = datedEvents.filter((event) => event.isAllDay).map(toTimeGridEvent);
-    const timedEvents = datedEvents.filter((event) => !event.isAllDay).map(toTimeGridEvent);
+    const allDayEvents = events.filter((event) => event.isAllDay);
+    const timedEvents = events
+      .filter((event) => !event.isAllDay && event.startAt)
+      .map((event) => ({
+        id: event.id,
+        title: event.title,
+        startAt: event.startAt!,
+        endAt: event.endAt,
+      }));
 
     const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
     const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -183,6 +184,25 @@ export default async function DashboardPage({
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
     dndEvents = timedEvents;
     calendarBodyPadded = true;
+    if (allDayEvents.length > 0) {
+      allDayRow = (
+        <div className="relative z-10 mx-4 shrink-0 rounded border border-border bg-background p-2">
+          <h2 className="text-xs font-medium text-muted-foreground">All day</h2>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {allDayEvents.map((event) => (
+              <li key={event.id}>
+                <Link
+                  href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+                  className="rounded bg-accent px-2 py-0.5 text-xs hover:bg-secondary"
+                >
+                  {event.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
     const { extraTimezones, use24HourClock } = displaySettings;
     const hourLabelColumns = buildHourLabelColumns({
       day: start,
@@ -191,12 +211,7 @@ export default async function DashboardPage({
       use24HourClock,
     });
     calendarBody = (
-      <TimeGrid
-        weekStart={start}
-        events={timedEvents}
-        allDayEvents={allDayEvents}
-        hourLabelColumns={hourLabelColumns}
-      />
+      <TimeGrid weekStart={start} events={timedEvents} hourLabelColumns={hourLabelColumns} />
     );
   }
 
@@ -399,6 +414,8 @@ export default async function DashboardPage({
                 Next {mode === "month" ? "month" : "week"} →
               </Link>
             </div>
+
+            {allDayRow}
 
             <div
               data-calendar-scroll
