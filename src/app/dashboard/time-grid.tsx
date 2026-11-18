@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -38,17 +39,21 @@ export function TimeGrid({
 
   return (
     <div className="grid grid-cols-[3rem_repeat(7,1fr)]">
-      <div />
+      <div className="sticky -top-px z-30 bg-background pt-2" />
       {days.map(({ date, key }) => (
         <div
           key={key}
-          className="border-b px-1 pb-1 text-center text-xs font-medium text-foreground"
+          className="sticky -top-px z-30 flex flex-col items-center border-b bg-background px-1 pt-2 pb-1 text-center text-xs font-medium text-foreground"
         >
-          {date.toLocaleDateString(undefined, {
-            weekday: "short",
-            timeZone: "UTC",
-          })}
-          , {date.getUTCMonth() + 1}/{date.getUTCDate()}
+          <span>
+            {date.toLocaleDateString(undefined, {
+              weekday: "short",
+              timeZone: "UTC",
+            })}
+          </span>
+          <span>
+            {date.getUTCMonth() + 1}/{date.getUTCDate()}
+          </span>
         </div>
       ))}
 
@@ -68,6 +73,7 @@ export function TimeGrid({
         <DayColumn
           key={key}
           dayKey={key}
+          isToday={key === toDayKey(new Date())}
           events={events.filter((ev) => toDayKey(ev.startAt) === key)}
         />
       ))}
@@ -75,13 +81,21 @@ export function TimeGrid({
   );
 }
 
-function DayColumn({ dayKey, events }: { dayKey: string; events: TimeGridEvent[] }) {
+function DayColumn({
+  dayKey,
+  events,
+  isToday,
+}: {
+  dayKey: string;
+  events: TimeGridEvent[];
+  isToday: boolean;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: dayKey });
 
   return (
     <div
       ref={setNodeRef}
-      className={`relative border-l ${isOver ? "bg-accent" : ""}`}
+      className={`relative border-l ${isOver ? "bg-accent/30" : ""}`}
       style={{ height: HOUR_HEIGHT * 24 }}
     >
       {Array.from({ length: 24 }, (_, hour) => (
@@ -91,9 +105,42 @@ function DayColumn({ dayKey, events }: { dayKey: string; events: TimeGridEvent[]
           style={{ top: hour * HOUR_HEIGHT }}
         />
       ))}
+      {isToday && <NowIndicator />}
       {events.map((event) => (
         <EventBlock key={event.id} event={event} />
       ))}
+    </div>
+  );
+}
+
+// Draws the current-time line on today's column and scrolls it into view
+// once, on mount, so the week view opens where "now" is. Position is only
+// computed on the client (useEffect, not render) so the server-rendered
+// markup never has to guess "now" and mismatch the client on hydration.
+function NowIndicator() {
+  const [top, setTop] = useState<number | null>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    const update = () => setTop((minutesSinceMidnightUTC(new Date()) / 60) * HOUR_HEIGHT);
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (top === null || hasScrolledRef.current) return;
+    hasScrolledRef.current = true;
+    lineRef.current?.scrollIntoView({ block: "center" });
+  }, [top]);
+
+  if (top === null) return null;
+
+  return (
+    <div ref={lineRef} className="pointer-events-none absolute inset-x-0 z-20" style={{ top }}>
+      <div className="absolute top-1/2 left-0 h-2 w-2 -translate-x-1 -translate-y-1/2 rounded-full bg-red-500" />
+      <div className="h-0.5 bg-red-500" />
     </div>
   );
 }

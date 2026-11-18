@@ -17,6 +17,7 @@ export function MonthGrid({
 }) {
   const { monthStart, monthEnd, gridStart, gridEnd } = getMonthGrid(referenceDate);
 
+  const todayKey = toDateParam(new Date());
   const totalDays = (gridEnd.getTime() - gridStart.getTime()) / MS_PER_DAY;
   const weekRows = totalDays / 7;
   const days = Array.from({ length: totalDays }, (_, i) => {
@@ -56,6 +57,7 @@ export function MonthGrid({
             dayKey={weekStartParam}
             dayNumber={date.getUTCDate()}
             inMonth={inMonth}
+            isToday={weekStartParam === todayKey}
             weekStartHref={`/dashboard?start=${weekStartParam}`}
             events={shown}
             overflow={overflow}

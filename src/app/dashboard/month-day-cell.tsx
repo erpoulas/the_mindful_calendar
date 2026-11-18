@@ -10,6 +10,7 @@ export function MonthDayCell({
   dayKey,
   dayNumber,
   inMonth,
+  isToday,
   weekStartHref,
   events,
   overflow,
@@ -17,6 +18,7 @@ export function MonthDayCell({
   dayKey: string;
   dayNumber: number;
   inMonth: boolean;
+  isToday: boolean;
   weekStartHref: string;
   events: MonthEvent[];
   overflow: number;
@@ -28,9 +30,14 @@ export function MonthDayCell({
       ref={setNodeRef}
       className={`flex h-full flex-col gap-1 overflow-hidden border-r border-b border-border p-1.5 ${
         inMonth ? "" : "bg-secondary text-muted-foreground"
-      } ${isOver ? "bg-accent" : ""}`}
+      } ${isOver ? "bg-accent/30" : ""}`}
     >
-      <Link href={weekStartHref} className="text-xs hover:underline">
+      <Link
+        href={weekStartHref}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs leading-none hover:underline ${
+          isToday ? "bg-primary text-primary-foreground hover:no-underline" : ""
+        }`}
+      >
         {dayNumber}
       </Link>
       {events.map((event) => (
