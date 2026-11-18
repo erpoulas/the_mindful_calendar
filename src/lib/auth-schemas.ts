@@ -1,10 +1,20 @@
 import { z } from "zod";
 
-const passwordSchema = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(/[a-zA-Z]/, "Password must contain at least one letter")
-  .regex(/[0-9]/, "Password must contain at least one number");
+/**
+ * The password rules, in one place: the server checks them through
+ * passwordSchema, and the sign-up page shows them as a live checklist.
+ */
+export const passwordRequirements = [
+  { label: "At least 8 characters", isMet: (password: string) => password.length >= 8 },
+  { label: "A letter", isMet: (password: string) => /[a-zA-Z]/.test(password) },
+  { label: "A number", isMet: (password: string) => /[0-9]/.test(password) },
+];
+
+const passwordSchema = passwordRequirements.reduce(
+  (schema, requirement) =>
+    schema.refine(requirement.isMet, `Password needs ${requirement.label.toLowerCase()}`),
+  z.string(),
+);
 
 export const SignupSchema = z
   .object({

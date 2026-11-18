@@ -1,15 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { signup } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordRequirements } from "./password-requirements";
 
 export default function SignupPage() {
   const [state, action, pending] = useActionState(signup, undefined);
+  const [password, setPassword] = useState("");
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -26,7 +28,15 @@ export default function SignupPage() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">Password</Label>
-          <PasswordInput id="password" name="password" required />
+          <PasswordInput
+            id="password"
+            name="password"
+            required
+            aria-describedby="password-requirements"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <PasswordRequirements id="password-requirements" password={password} />
           {state?.errors?.password && (
             <p className="text-sm text-red-600">{state.errors.password[0]}</p>
           )}

@@ -1,5 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { LoginSchema, SignupSchema } from "@/lib/auth-schemas";
+import { LoginSchema, SignupSchema, passwordRequirements } from "@/lib/auth-schemas";
+
+describe("passwordRequirements", () => {
+  const metLabels = (password: string) =>
+    passwordRequirements.filter((r) => r.isMet(password)).map((r) => r.label);
+
+  it("lists length, letter and number rules", () => {
+    expect(passwordRequirements.map((r) => r.label)).toEqual([
+      "At least 8 characters",
+      "A letter",
+      "A number",
+    ]);
+  });
+
+  it("reports nothing met for an empty password", () => {
+    expect(metLabels("")).toEqual([]);
+  });
+
+  it("reports each rule independently", () => {
+    expect(metLabels("abc")).toEqual(["A letter"]);
+    expect(metLabels("12345678")).toEqual(["At least 8 characters", "A number"]);
+    expect(metLabels("abc12345")).toEqual(["At least 8 characters", "A letter", "A number"]);
+  });
+
+  it("uses the same rules as the signup schema's error messages", () => {
+    const result = SignupSchema.safeParse({
+      email: "person@example.com",
+      password: "abcdefgh",
+      confirmPassword: "abcdefgh",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual(["Password needs a number"]);
+  });
+});
 
 describe("SignupSchema", () => {
   it("accepts a valid email, matching passwords", () => {
