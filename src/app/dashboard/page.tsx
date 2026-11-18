@@ -284,7 +284,7 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="mx-auto flex h-full w-full max-w-6xl min-h-0 flex-1 flex-col overflow-clip">
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
         <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>
           Account settings
@@ -314,7 +314,7 @@ export default async function DashboardPage({
           }
           postIts={<PostItColumn postIts={postIts} capped />}
         >
-          <div className="isolate relative flex min-h-0 flex-1 flex-col overflow-hidden rounded">
+          <div className="isolate relative flex min-h-0 flex-1 flex-col overflow-clip rounded">
             <Image
               src="/panel-art/gradient-wash.png"
               alt=""
@@ -364,6 +364,7 @@ export default async function DashboardPage({
             {allDayRow}
 
             <div
+              data-calendar-scroll
               className={`relative z-10 mx-4 mb-2 min-h-0 flex-1 overflow-auto rounded border border-border ${calendarBodyPadded ? "px-2 pb-2" : ""}`}
             >
               {calendarBody}

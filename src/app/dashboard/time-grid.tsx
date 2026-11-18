@@ -117,14 +117,22 @@ function DayColumn({
   );
 }
 
-// Draws the current-time line on today's column and scrolls it into view
-// once, on mount, so the week view opens where "now" is.
+// Draws the current-time line on today's column and, once on mount, scrolls
+// the calendar's own scroll box so the week view opens centred on "now".
+// It sets scrollTop on that one box rather than calling scrollIntoView,
+// because scrollIntoView also scrolls every ancestor — including the
+// overflow-hidden page wrappers — which shoved the whole dashboard out of
+// place with no scrollbar to undo it.
 function NowIndicator({ now }: { now: Date }) {
   const lineRef = useRef<HTMLDivElement>(null);
   const top = (minutesSinceMidnightUTC(now) / 60) * HOUR_HEIGHT;
 
   useEffect(() => {
-    lineRef.current?.scrollIntoView({ block: "center" });
+    const line = lineRef.current;
+    const scrollBox = line?.closest("[data-calendar-scroll]");
+    if (!line || !scrollBox) return;
+    const lineOffset = line.getBoundingClientRect().top - scrollBox.getBoundingClientRect().top;
+    scrollBox.scrollTop += lineOffset - scrollBox.clientHeight / 2;
   }, []);
 
   return (
