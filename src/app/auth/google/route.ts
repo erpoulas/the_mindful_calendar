@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { buildGoogleAuthUrl, isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { GOOGLE_STATE_COOKIE, GOOGLE_STATE_COOKIE_OPTIONS } from "./oauth-state";
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   await getCurrentUserId(); // sends logged-out visitors to /login
 
   if (!isGoogleCalendarConfigured()) {
-    return NextResponse.redirect(new URL("/dashboard?panel=account&google=error", request.url));
+    return NextResponse.redirect(new URL(dashboardRoutes.account({ google: "error" }), request.url));
   }
 
   const state = crypto.randomUUID();

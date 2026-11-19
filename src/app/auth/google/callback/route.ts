@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { db } from "@/lib/db";
 import { exchangeCodeForTokens } from "@/lib/google-calendar";
 import { saveGoogleConnection } from "@/lib/google-connections";
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   const response = NextResponse.redirect(
-    new URL(`/dashboard?panel=account&google=${outcome}`, request.url),
+    new URL(dashboardRoutes.account({ google: outcome }), request.url),
   );
   response.cookies.set(GOOGLE_STATE_COOKIE, "", { ...GOOGLE_STATE_COOKIE_OPTIONS, maxAge: 0 });
   return response;

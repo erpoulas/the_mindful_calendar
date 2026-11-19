@@ -55,6 +55,15 @@ describe("dashboardRoutes", () => {
     expect(dashboardRoutes.project("p1")).toBe("/dashboard/projects?view=detail&id=p1");
     expect(dashboardRoutes.editProject("p1")).toBe("/dashboard/projects?view=edit&id=p1");
   });
+
+  it("opens affirmations", () => {
+    expect(dashboardRoutes.affirmations()).toBe("/dashboard/affirmations");
+  });
+
+  it("opens account settings, optionally with the result of connecting Google", () => {
+    expect(dashboardRoutes.account()).toBe("/dashboard/account");
+    expect(dashboardRoutes.account({ google: "connected" })).toBe("/dashboard/account?google=connected");
+  });
 });
 
 describe("stringParam", () => {

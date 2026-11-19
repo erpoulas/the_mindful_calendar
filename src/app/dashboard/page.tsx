@@ -18,8 +18,6 @@ import { getMonthGrid } from "@/lib/calendar-month";
 import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
-import { AccountSettingsView } from "./overlays/account-settings";
-import { AffirmationsView } from "./overlays/affirmations";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
@@ -60,7 +58,6 @@ export default async function DashboardPage({
     panel: panelParam,
     view: viewParam,
     id: idParam,
-    google: googleParam,
   } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
@@ -194,17 +191,7 @@ export default async function DashboardPage({
   let panelBackground:
     | { src: string; width: number; height: number; contentInsetClassName?: string }
     | undefined;
-  if (panel === "account") {
-    panelTitle = "Account settings";
-    panelContent = (
-      <AccountSettingsView
-        googleOutcome={typeof googleParam === "string" ? googleParam : undefined}
-      />
-    );
-  } else if (panel === "affirmations") {
-    panelTitle = "Affirmations";
-    panelContent = <AffirmationsView />;
-  } else if (panel === "intentions") {
+  if (panel === "intentions") {
     if (view === "edit" && id) {
       panelTitle = "Edit intention";
       panelContent = <IntentionEditView id={id} />;
@@ -233,7 +220,7 @@ export default async function DashboardPage({
       )}
       {showGoogleBanner && <GoogleConnectBanner />}
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
-        <Link href="/dashboard?panel=account" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href={dashboardRoutes.account()} className={buttonVariants({ variant: "outline", size: "sm" })}>
           Account settings
         </Link>
         <form action={logout}>

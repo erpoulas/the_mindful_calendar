@@ -59,7 +59,7 @@ export function AffirmationPanel({
 }) {
   return (
     <PanelShell panelKey="affirmation">
-      <Link href="/dashboard?panel=affirmations" className="block">
+      <Link href={dashboardRoutes.affirmations()} className="block">
         <div className="flex items-center gap-2">
           <PanelIcon src="/panel-art/positive-affirmations.png" width={736} height={685} />
           <div className="text-sm font-medium">Today</div>
