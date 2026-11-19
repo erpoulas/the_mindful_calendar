@@ -48,6 +48,13 @@ describe("dashboardRoutes", () => {
     expect(dashboardRoutes.newQuickList()).toBe("/dashboard/quick-lists?view=create");
     expect(dashboardRoutes.editQuickList("q1")).toBe("/dashboard/quick-lists?view=edit&id=q1");
   });
+
+  it("gives each project screen its own address", () => {
+    expect(dashboardRoutes.projects()).toBe("/dashboard/projects");
+    expect(dashboardRoutes.newProject()).toBe("/dashboard/projects?view=create");
+    expect(dashboardRoutes.project("p1")).toBe("/dashboard/projects?view=detail&id=p1");
+    expect(dashboardRoutes.editProject("p1")).toBe("/dashboard/projects?view=edit&id=p1");
+  });
 });
 
 describe("stringParam", () => {

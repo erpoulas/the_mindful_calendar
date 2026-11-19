@@ -36,6 +36,11 @@ export const dashboardRoutes = {
   quickLists: (activeId?: string) => withQuery("/dashboard/quick-lists", { id: activeId }),
   newQuickList: () => withQuery("/dashboard/quick-lists", { view: "create" }),
   editQuickList: (id: string) => withQuery("/dashboard/quick-lists", { view: "edit", id }),
+
+  projects: () => "/dashboard/projects",
+  newProject: () => withQuery("/dashboard/projects", { view: "create" }),
+  project: (id: string) => withQuery("/dashboard/projects", { view: "detail", id }),
+  editProject: (id: string) => withQuery("/dashboard/projects", { view: "edit", id }),
 };
 
 /**

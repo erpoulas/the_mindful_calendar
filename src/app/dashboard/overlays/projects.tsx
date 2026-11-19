@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { listIntentions } from "@/lib/intentions";
 import { getProjectDetail, listProjects } from "@/lib/projects";
 import { ProjectForm } from "./project-form";
@@ -38,7 +39,7 @@ export async function ProjectsListView() {
         {projects.map((project) => (
           <li key={project.id}>
             <Link
-              href={`/dashboard?panel=projects&view=detail&id=${project.id}`}
+              href={dashboardRoutes.project(project.id)}
               className="flex items-center justify-between px-1 py-1 hover:underline"
             >
               <span>{project.title}</span>
@@ -48,7 +49,7 @@ export async function ProjectsListView() {
         ))}
       </ul>
 
-      <Link href="/dashboard?panel=projects&view=create" className="text-sm hover:underline">
+      <Link href={dashboardRoutes.newProject()} className="text-sm hover:underline">
         + Create new project
       </Link>
     </div>
@@ -110,7 +111,7 @@ export async function ProjectDetailView({ id }: { id: string }) {
           </form>
         )}
         <Link
-          href={`/dashboard?panel=projects&view=edit&id=${project.id}`}
+          href={dashboardRoutes.editProject(project.id)}
           className={buttonVariants({ variant: "outline" })}
         >
           Edit

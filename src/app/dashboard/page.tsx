@@ -21,12 +21,6 @@ import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
-import {
-  ProjectCreateView,
-  ProjectDetailView,
-  ProjectEditView,
-  ProjectsListView,
-} from "./overlays/projects";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
 import { GoogleCalendarSync } from "./google-calendar-sync";
@@ -220,21 +214,6 @@ export default async function DashboardPage({
     } else {
       panelTitle = "Intentions";
       panelContent = <IntentionsListView />;
-    }
-  } else if (panel === "projects") {
-    panelBackground = { src: "/panel-art/project-tracker-side-popup.png", width: 863, height: 1108 };
-    if (view === "edit" && id) {
-      panelTitle = "Edit project";
-      panelContent = <ProjectEditView id={id} />;
-    } else if (view === "detail" && id) {
-      panelTitle = "Project";
-      panelContent = <ProjectDetailView id={id} />;
-    } else if (view === "create") {
-      panelTitle = "New project";
-      panelContent = <ProjectCreateView />;
-    } else {
-      panelTitle = "Projects";
-      panelContent = <ProjectsListView />;
     }
   } else if (panel === "postits") {
     panelTitle = "Post-its";

@@ -141,7 +141,7 @@ export function ProjectsPanel() {
   return (
     <PanelShell panelKey="projects">
       <IconPanelLink
-        href="/dashboard?panel=projects"
+        href={dashboardRoutes.projects()}
         iconSrc="/panel-art/project-tracker-button.png"
         iconWidth={197}
         iconHeight={233}
