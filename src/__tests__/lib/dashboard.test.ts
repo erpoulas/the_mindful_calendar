@@ -71,6 +71,39 @@ describe("getWeeklyIntentionBreakdown", () => {
     });
   });
 
+  it("lists every intention in the order it was created, each with its own count", async () => {
+    await withRollback(async (tx) => {
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const family = await createIntention(tx, { userId: "test-user-1", name: "Family" });
+      const art = await createIntention(tx, { userId: "test-user-1", name: "Art" });
+      for (const title of ["Run", "Swim"]) {
+        await createCalendarEvent(tx, {
+          userId: "test-user-1",
+          title,
+          startAt: duringThisWeek,
+          intentionIds: [health.id],
+        });
+      }
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Dinner",
+        startAt: duringThisWeek,
+        intentionIds: [family.id],
+      });
+
+      const result = await getWeeklyIntentionBreakdown(tx, {
+        userId: "test-user-1",
+        referenceDate,
+      });
+
+      expect(result.breakdown).toEqual([
+        { intentionId: health.id, name: "Health", count: 2, percent: 67 },
+        { intentionId: family.id, name: "Family", count: 1, percent: 33 },
+        { intentionId: art.id, name: "Art", count: 0, percent: 0 },
+      ]);
+    });
+  });
+
   it("counts an untagged event separately from the intention breakdown", async () => {
     await withRollback(async (tx) => {
       const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });

@@ -7,24 +7,19 @@ export async function getWeeklyIntentionBreakdown(
 ) {
   const { start, end } = getWeekRange(params.referenceDate);
 
-  const intentions = await client.intention.findMany({
-    where: { userId: params.userId },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const [breakdownCounts, totalCount, untaggedCount] = await Promise.all([
-    Promise.all(
-      intentions.map(async (intention) => {
-        const count = await client.calendarEvent.count({
-          where: {
-            userId: params.userId,
-            startAt: { gte: start, lt: end },
-            intentions: { some: { intentionId: intention.id } },
-          },
-        });
-        return { intentionId: intention.id, name: intention.name, count };
-      }),
-    ),
+  // Four queries side by side, however many intentions there are: one
+  // grouped count gives every intention's number at once, instead of one
+  // count query per intention.
+  const [intentions, countsByIntention, totalCount, untaggedCount] = await Promise.all([
+    client.intention.findMany({
+      where: { userId: params.userId },
+      orderBy: { createdAt: "asc" },
+    }),
+    client.eventIntention.groupBy({
+      by: ["intentionId"],
+      where: { event: { userId: params.userId, startAt: { gte: start, lt: end } } },
+      _count: { _all: true },
+    }),
     client.calendarEvent.count({
       where: { userId: params.userId, startAt: { gte: start, lt: end } },
     }),
@@ -36,6 +31,15 @@ export async function getWeeklyIntentionBreakdown(
       },
     }),
   ]);
+
+  const countByIntentionId = new Map(
+    countsByIntention.map((row) => [row.intentionId, row._count._all]),
+  );
+  const breakdownCounts = intentions.map((intention) => ({
+    intentionId: intention.id,
+    name: intention.name,
+    count: countByIntentionId.get(intention.id) ?? 0,
+  }));
 
   const toPercent = (count: number) =>
     totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;

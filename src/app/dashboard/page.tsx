@@ -7,7 +7,7 @@ import { getCurrentUserId } from "@/lib/auth";
 import { getTodayAffirmation } from "@/lib/affirmations";
 import { listCalendarEvents } from "@/lib/calendar-events";
 import { getWeekRange } from "@/lib/calendar-week";
-import { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
+import { getWeeklyReviewStats } from "@/lib/dashboard";
 import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
@@ -109,7 +109,6 @@ export default async function DashboardPage({
   // query waited on in turn would add its own trip to the database.
   const [
     affirmation,
-    breakdown,
     reviewStats,
     hiddenPanels,
     panelOrder,
@@ -120,7 +119,7 @@ export default async function DashboardPage({
     displaySettings,
   ] = await Promise.all([
     getTodayAffirmation(db, userId, timeZone),
-    getWeeklyIntentionBreakdown(db, { userId, referenceDate }),
+    // Also holds the intention breakdown, so it isn't fetched a second time.
     getWeeklyReviewStats(db, { userId, referenceDate }),
     getHiddenPanels(db, userId),
     getPanelOrder(db, userId),
@@ -202,7 +201,7 @@ export default async function DashboardPage({
 
   const panelComponents: Record<string, React.ReactNode> = {
     affirmation: <AffirmationPanel affirmation={affirmation} />,
-    breakdown: <IntentionBreakdownPanel breakdown={breakdown} />,
+    breakdown: <IntentionBreakdownPanel breakdown={reviewStats.intentionBreakdown} />,
     projects: <ProjectsPanel />,
     quicklist: <QuickListPanel />,
     journal: <JournalPanel />,
