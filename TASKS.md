@@ -50,7 +50,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Panel art icons for Affirmation, Time this week and Weekly review (done: e332ba9)
 - [x] Calendar "today" markers: current-time line, sticky day headers, today circle in month view (done: ec535f6)
 - [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
-- [ ] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync)
+- [x] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync) (done: adb5185, eb13238, 7b23dea)
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
