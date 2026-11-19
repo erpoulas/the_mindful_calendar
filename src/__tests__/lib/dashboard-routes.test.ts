@@ -31,6 +31,16 @@ describe("dashboardRoutes", () => {
       expect(dashboardRoutes.editEvent("e1")).toBe("/dashboard/event?view=edit&id=e1");
     });
   });
+
+  it("gives each journal screen its own address", () => {
+    expect(dashboardRoutes.journals()).toBe("/dashboard/journals");
+    expect(dashboardRoutes.newJournal()).toBe("/dashboard/journals?view=create");
+    expect(dashboardRoutes.journal("j1")).toBe("/dashboard/journals?view=detail&id=j1");
+    expect(dashboardRoutes.editJournal("j1")).toBe("/dashboard/journals?view=edit&id=j1");
+    expect(dashboardRoutes.editJournalEntry("j1", "n1")).toBe(
+      "/dashboard/journals?view=entry-edit&id=j1&entryId=n1",
+    );
+  });
 });
 
 describe("stringParam", () => {

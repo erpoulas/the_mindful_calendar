@@ -16,6 +16,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getJournalDetail, getRandomJournalPrompt, listJournals } from "@/lib/journals";
 import { JournalForm } from "./journal-form";
 
@@ -38,7 +39,7 @@ export async function JournalsListView() {
         {journals.map((journal) => (
           <li key={journal.id}>
             <Link
-              href={`/dashboard?panel=journals&view=detail&id=${journal.id}`}
+              href={dashboardRoutes.journal(journal.id)}
               className="flex items-center px-1 py-1 hover:underline"
             >
               {journal.name}
@@ -47,7 +48,7 @@ export async function JournalsListView() {
         ))}
       </ul>
 
-      <Link href="/dashboard?panel=journals&view=create" className="text-sm hover:underline">
+      <Link href={dashboardRoutes.newJournal()} className="text-sm hover:underline">
         + Create new journal
       </Link>
     </div>
@@ -80,7 +81,7 @@ export async function JournalDetailView({ id }: { id: string }) {
         <h2 className="text-lg font-semibold">{journal.name}</h2>
         <div className="flex gap-2">
           <Link
-            href={`/dashboard?panel=journals&view=edit&id=${journal.id}`}
+            href={dashboardRoutes.editJournal(journal.id)}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Edit
@@ -188,7 +189,7 @@ export async function JournalDetailView({ id }: { id: string }) {
           {journal.entries.map((entry) => (
             <li key={entry.id}>
               <Link
-                href={`/dashboard?panel=journals&view=entry-edit&id=${journal.id}&entryId=${entry.id}`}
+                href={dashboardRoutes.editJournalEntry(journal.id, entry.id)}
                 className="block rounded border px-3 py-2 hover:bg-accent"
               >
                 <p className="text-xs text-muted-foreground">

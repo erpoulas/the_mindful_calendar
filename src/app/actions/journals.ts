@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import {
   AddJournalPromptSchema,
   CreateJournalEntrySchema,
@@ -105,7 +106,7 @@ export async function createJournalEntryAction(journalId: string, formData: Form
   });
 
   revalidatePath("/dashboard", "layout");
-  redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
+  redirect(dashboardRoutes.journal(journalId));
 }
 
 export async function updateJournalEntryAction(
@@ -122,7 +123,7 @@ export async function updateJournalEntryAction(
   await updateJournalEntry(db, { userId, entryId, content: validated.data.content });
 
   revalidatePath("/dashboard", "layout");
-  redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
+  redirect(dashboardRoutes.journal(journalId));
 }
 
 export async function deleteJournalEntryAction(entryId: string, journalId: string) {
@@ -130,5 +131,5 @@ export async function deleteJournalEntryAction(entryId: string, journalId: strin
   await deleteJournalEntry(db, { userId, entryId });
 
   revalidatePath("/dashboard", "layout");
-  redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
+  redirect(dashboardRoutes.journal(journalId));
 }

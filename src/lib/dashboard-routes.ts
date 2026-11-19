@@ -25,6 +25,13 @@ export const dashboardRoutes = {
   newEvent: (prefill: { date?: string; title?: string; postItId?: string } = {}) =>
     withQuery("/dashboard/event", { view: "new", ...prefill }),
   editEvent: (id: string) => withQuery("/dashboard/event", { view: "edit", id }),
+
+  journals: () => "/dashboard/journals",
+  newJournal: () => withQuery("/dashboard/journals", { view: "create" }),
+  journal: (id: string) => withQuery("/dashboard/journals", { view: "detail", id }),
+  editJournal: (id: string) => withQuery("/dashboard/journals", { view: "edit", id }),
+  editJournalEntry: (id: string, entryId: string) =>
+    withQuery("/dashboard/journals", { view: "entry-edit", id, entryId }),
 };
 
 /**

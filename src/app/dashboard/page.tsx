@@ -23,13 +23,6 @@ import { AffirmationsView } from "./overlays/affirmations";
 import { QuickListCreateView, QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
-  JournalCreateView,
-  JournalDetailView,
-  JournalEditView,
-  JournalEntryEditView,
-  JournalsListView,
-} from "./overlays/journals";
-import {
   ProjectCreateView,
   ProjectDetailView,
   ProjectEditView,
@@ -74,14 +67,12 @@ export default async function DashboardPage({
     panel: panelParam,
     view: viewParam,
     id: idParam,
-    entryId: entryIdParam,
     google: googleParam,
   } = await searchParams;
   const userId = await getCurrentUserId();
   const panel = typeof panelParam === "string" ? panelParam : null;
   const view = typeof viewParam === "string" ? viewParam : null;
   const id = typeof idParam === "string" ? idParam : null;
-  const entryId = typeof entryIdParam === "string" ? entryIdParam : null;
   const mode = modeParam === "month" ? "month" : "week";
 
   // Events are stored as wall-clock times, so "today" must be today in the
@@ -266,24 +257,6 @@ export default async function DashboardPage({
     } else {
       panelTitle = "Projects";
       panelContent = <ProjectsListView />;
-    }
-  } else if (panel === "journals") {
-    panelBackground = { src: "/panel-art/side-popup-journal.png", width: 818, height: 1099 };
-    if (view === "entry-edit" && id && entryId) {
-      panelTitle = "Entry";
-      panelContent = <JournalEntryEditView id={id} entryId={entryId} />;
-    } else if (view === "edit" && id) {
-      panelTitle = "Edit journal";
-      panelContent = <JournalEditView id={id} />;
-    } else if (view === "detail" && id) {
-      panelTitle = "Journal";
-      panelContent = <JournalDetailView id={id} />;
-    } else if (view === "create") {
-      panelTitle = "New journal";
-      panelContent = <JournalCreateView />;
-    } else {
-      panelTitle = "Journals";
-      panelContent = <JournalsListView />;
     }
   } else if (panel === "postits") {
     panelTitle = "Post-its";

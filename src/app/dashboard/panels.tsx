@@ -169,7 +169,7 @@ export function JournalPanel() {
   return (
     <PanelShell panelKey="journal">
       <IconPanelLink
-        href="/dashboard?panel=journals"
+        href={dashboardRoutes.journals()}
         iconSrc="/panel-art/journal-button.png"
         iconWidth={201}
         iconHeight={164}
