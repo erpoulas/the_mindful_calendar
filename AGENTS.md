@@ -39,25 +39,12 @@ Next.js 16 and React 19 are recent and differ from older versions. Check the ins
 ### Task list (TASKS.md)
 - [TASKS.md](./TASKS.md) is the checklist of features and fixes. Read it before starting any feature.
 - Before starting a new feature, tell the user where it sits in the plan (TASKS.md and `project-summary.md`) and what it maps to.
-- Only start a task that has no `(claimed: ...)` on its line. Claim it **before** writing code by adding `(claimed: <agent label>, <date>)`, for example `(claimed: agent-2, 2026-11-18)`. Use the label the user gave you, or a short description of your session if they gave none. This tells the other agents running at the same time to pick something else.
-- If the user asks for work that isn't in TASKS.md, first check that nothing similar is already there. If a match turns up, add to that task instead of making a duplicate. Otherwise add a new `[ ]` line in the matching section, then claim it.
-- When a task is finished and committed, check it off (`[ ]` to `[x]`), remove the claim and add the commit hash, for example `(done: 14f9e51)`.
-- A claim with an old date may have been abandoned. Ask the user before taking it over.
-- Don't check off, re-word or remove a task another agent claimed unless the user asks.
+- If the user asks for work that isn't in TASKS.md, first check that nothing similar is already there. If a match turns up, add to that task instead of making a duplicate. Otherwise add a new `[ ]` line in the matching section.
+- When a task is finished and committed, check it off (`[ ]` to `[x]`) and add the commit hash, for example `(done: 14f9e51)`.
 
-### Working alongside other agents
-- Other agents may be editing files in the same folder while you work. When `git status` shows changes you didn't make, leave them alone: don't revert, reformat or "fix" them.
-- Stage only the files you changed, by name (`git add src/lib/foo.ts ...`). Never use `git add -A`, `git add .` or `git commit -a`, which would sweep another agent's half-finished work into your commit.
-- **Always name your files in the commit command too:** `git commit -m "..." -- src/lib/foo.ts src/app/bar.tsx`. Never run a bare `git commit`. All agents share one staging area (git's "index"), so a bare `git commit` also commits whatever *another* agent has staged at that moment. This really happened: a `docs(tasks)` commit swept in another agent's calendar code and had to be reverted. With file names after `--`, git commits only those files and leaves everything else staged as it was.
-- That commits each named file whole. If a file you changed also has another agent's uncommitted edits (check `git diff <file>`), their lines would go in too. In that case commit only your part from a private staging area, all in one command, so no other agent's commit can land in between:
-  ```sh
-  export GIT_INDEX_FILE=.git/index-<your label>; git read-tree HEAD \
-    && git apply --cached my-changes.patch \
-    && git commit -m "..."; unset GIT_INDEX_FILE; git reset -q -- <your files>
-  ```
-  `my-changes.patch` is `git diff <file>` with the other agent's hunks deleted. The final `git reset` updates the shared staging area to match your new commit. Afterwards, check `git show --stat HEAD` lists only your files. If this feels risky, stop and ask the user instead.
-- Before committing, run `git fetch origin`. If `origin/main` has new commits, pull them first. If that causes merge conflicts, stop and walk the user through them instead of resolving them silently.
-- If the checks below fail because of another agent's in-progress files rather than yours, tell the user instead of changing those files.
+### Staging files
+- When `git status` shows changes you didn't make, they are probably the owner's. Leave them alone (don't revert, reformat or "fix" them) and ask if they get in your way.
+- Stage only the files you changed, by name (`git add src/lib/foo.ts ...`). Never use `git add -A`, `git add .` or `git commit -a`, which can sweep stray files such as build output or scratch files into your commit.
 
 ### Safety and boundaries
 - Never read, write or edit the real `.env` file. Only touch `.env.example`.
