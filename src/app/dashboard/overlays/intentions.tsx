@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { findIntentionColor } from "@/lib/intention-colors";
 import { getIntentionDetail, listIntentions } from "@/lib/intentions";
 import { getUserTimezoneWithFallback } from "@/lib/user-settings";
 import { toWallClockDate } from "@/lib/wall-clock";
@@ -25,22 +26,26 @@ export async function IntentionsListView() {
         {intentions.length === 0 && (
           <p className="text-sm text-muted-foreground">No intentions yet — add one below.</p>
         )}
-        {intentions.map((intention) => (
-          <li key={intention.id}>
-            <Link
-              href={dashboardRoutes.intention(intention.id)}
-              className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
-            >
-              {intention.color && (
-                <span
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: intention.color }}
-                />
-              )}
-              {intention.name}
-            </Link>
-          </li>
-        ))}
+        {intentions.map((intention) => {
+          const color = findIntentionColor(intention.color);
+          return (
+            <li key={intention.id}>
+              <Link
+                href={dashboardRoutes.intention(intention.id)}
+                className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
+              >
+                {color && (
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  />
+                )}
+                {intention.name}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
 
       <IntentionForm
