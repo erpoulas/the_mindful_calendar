@@ -9,6 +9,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getIntentionDetail, listIntentions } from "@/lib/intentions";
 import { getUserTimezoneWithFallback } from "@/lib/user-settings";
 import { toWallClockDate } from "@/lib/wall-clock";
@@ -27,7 +28,7 @@ export async function IntentionsListView() {
         {intentions.map((intention) => (
           <li key={intention.id}>
             <Link
-              href={`/dashboard?panel=intentions&view=detail&id=${intention.id}`}
+              href={dashboardRoutes.intention(intention.id)}
               className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
             >
               {intention.color && (
@@ -73,7 +74,7 @@ export async function IntentionDetailView({ id }: { id: string }) {
       {!detail.intention.isSystem && (
         <div className="flex gap-2">
           <Link
-            href={`/dashboard?panel=intentions&view=edit&id=${detail.intention.id}`}
+            href={dashboardRoutes.editIntention(detail.intention.id)}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Edit

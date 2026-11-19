@@ -84,7 +84,7 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
 
   return (
     <PanelShell panelKey="breakdown">
-      <Link href="/dashboard?panel=intentions" className="block">
+      <Link href={dashboardRoutes.intentions()} className="block">
         <div className="mb-1 flex items-center gap-2">
           <PanelIcon src="/panel-art/time-this-week.png" width={360} height={360} />
           <div className="text-sm font-medium">Time this week, by intention</div>

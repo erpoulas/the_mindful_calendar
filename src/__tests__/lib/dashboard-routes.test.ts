@@ -56,6 +56,12 @@ describe("dashboardRoutes", () => {
     expect(dashboardRoutes.editProject("p1")).toBe("/dashboard/projects?view=edit&id=p1");
   });
 
+  it("gives each intention screen its own address", () => {
+    expect(dashboardRoutes.intentions()).toBe("/dashboard/intentions");
+    expect(dashboardRoutes.intention("i1")).toBe("/dashboard/intentions?view=detail&id=i1");
+    expect(dashboardRoutes.editIntention("i1")).toBe("/dashboard/intentions?view=edit&id=i1");
+  });
+
   it("opens affirmations", () => {
     expect(dashboardRoutes.affirmations()).toBe("/dashboard/affirmations");
   });

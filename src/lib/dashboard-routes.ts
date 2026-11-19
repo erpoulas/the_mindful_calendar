@@ -42,6 +42,10 @@ export const dashboardRoutes = {
   project: (id: string) => withQuery("/dashboard/projects", { view: "detail", id }),
   editProject: (id: string) => withQuery("/dashboard/projects", { view: "edit", id }),
 
+  intentions: () => "/dashboard/intentions",
+  intention: (id: string) => withQuery("/dashboard/intentions", { view: "detail", id }),
+  editIntention: (id: string) => withQuery("/dashboard/intentions", { view: "edit", id }),
+
   affirmations: () => "/dashboard/affirmations",
   // google is how connecting Google Calendar went, shown as a message.
   account: (result: { google?: string } = {}) => withQuery("/dashboard/account", result),

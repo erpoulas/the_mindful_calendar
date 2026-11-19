@@ -18,7 +18,6 @@ import { getMonthGrid } from "@/lib/calendar-month";
 import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
-import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
 import { GoogleCalendarSync } from "./google-calendar-sync";
@@ -56,13 +55,9 @@ export default async function DashboardPage({
     start: startParam,
     mode: modeParam,
     panel: panelParam,
-    view: viewParam,
-    id: idParam,
   } = await searchParams;
   const userId = await getCurrentUserId();
-  const panel = typeof panelParam === "string" ? panelParam : null;
-  const view = typeof viewParam === "string" ? viewParam : null;
-  const id = typeof idParam === "string" ? idParam : null;
+  const showPostIts = panelParam === "postits";
   const mode = modeParam === "month" ? "month" : "week";
 
   // Events are stored as wall-clock times, so "today" must be today in the
@@ -79,8 +74,8 @@ export default async function DashboardPage({
   const visibleRange =
     mode === "month" ? { start: gridStart, end: gridEnd } : getWeekRange(referenceDate);
 
-  // Every query at once: this page re-renders on every popup click, so each
-  // query waited on in turn would add its own trip to the database.
+  // Every query at once: each query waited on in turn would add its own trip
+  // to the database to every page load and week change.
   const [
     affirmation,
     reviewStats,
@@ -185,28 +180,6 @@ export default async function DashboardPage({
   const orderedPanelKeys = sortPanelKeys(Object.keys(panelComponents), panelOrder);
   const visiblePanelKeys = orderedPanelKeys.filter((key) => !hiddenPanels.includes(key));
 
-  let panelTitle = "";
-  let panelContent: React.ReactNode = null;
-  let panelSize: "side" | "wide" | "center" = "side";
-  let panelBackground:
-    | { src: string; width: number; height: number; contentInsetClassName?: string }
-    | undefined;
-  if (panel === "intentions") {
-    if (view === "edit" && id) {
-      panelTitle = "Edit intention";
-      panelContent = <IntentionEditView id={id} />;
-    } else if (view === "detail" && id) {
-      panelTitle = "Intention";
-      panelContent = <IntentionDetailView id={id} />;
-    } else {
-      panelTitle = "Intentions";
-      panelContent = <IntentionsListView />;
-    }
-  } else if (panel === "postits") {
-    panelTitle = "Post-its";
-    panelSize = "wide";
-    panelContent = <PostItColumn postIts={postIts} />;
-  }
 
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-clip">
@@ -308,19 +281,14 @@ export default async function DashboardPage({
           </div>
         </DashboardShell>
 
-        {/* Inside CalendarDndProvider, not a sibling of it, so drag-and-drop
-            still works for post-its rendered in the "+N more" pop-out
-            (the panel=postits case above) — dnd-kit's DndContext is a React
-            context, so it must be an ancestor in the element tree even
-            though the Drawer's own content renders through a portal. */}
-        <PanelSheet
-          key={panel}
-          open={panel !== null}
-          title={panelTitle}
-          size={panelSize}
-          backgroundImage={panelBackground}
-        >
-          {panelContent}
+        {/* The "+N more" post-its pop-out (?panel=postits) is the one popup
+            that stays on this page instead of getting its own route under
+            @panel: it must sit inside CalendarDndProvider so its post-its
+            can still be dragged onto the calendar. dnd-kit's DndContext is
+            a React context, so it must be an ancestor in the element tree
+            even though the Drawer's own content renders through a portal. */}
+        <PanelSheet open={showPostIts} title="Post-its" size="wide">
+          {showPostIts && <PostItColumn postIts={postIts} />}
         </PanelSheet>
       </CalendarDndProvider>
     </div>
