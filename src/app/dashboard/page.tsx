@@ -20,7 +20,6 @@ import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
-import { QuickListCreateView, QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
   ProjectCreateView,
@@ -211,27 +210,6 @@ export default async function DashboardPage({
   } else if (panel === "affirmations") {
     panelTitle = "Affirmations";
     panelContent = <AffirmationsView />;
-  } else if (panel === "quicklists") {
-    panelSize = "center";
-    panelBackground = {
-      src: "/panel-art/quick-notes-pop-up.png",
-      width: 614,
-      height: 996,
-      // This photo has a clip along the top edge and punch holes down the
-      // left, instead of a plain left-edge binding like the journal/project
-      // photos, so it needs clearance on both sides.
-      contentInsetClassName: "pt-[20%] pl-[16%]",
-    };
-    if (view === "edit" && id) {
-      panelTitle = "Edit list";
-      panelContent = <QuickListEditView id={id} />;
-    } else if (view === "create") {
-      panelTitle = "New list";
-      panelContent = <QuickListCreateView />;
-    } else {
-      panelTitle = "Quick Lists";
-      panelContent = <QuickListsView activeId={id ?? undefined} />;
-    }
   } else if (panel === "intentions") {
     if (view === "edit" && id) {
       panelTitle = "Edit intention";

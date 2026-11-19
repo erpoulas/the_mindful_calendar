@@ -155,7 +155,7 @@ export function QuickListPanel() {
   return (
     <PanelShell panelKey="quicklist">
       <IconPanelLink
-        href="/dashboard?panel=quicklists"
+        href={dashboardRoutes.quickLists()}
         iconSrc="/panel-art/quick-notes-button.png"
         iconWidth={253}
         iconHeight={228}

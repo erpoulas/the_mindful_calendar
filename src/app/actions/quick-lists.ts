@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { AddQuickListItemSchema, CreateQuickListSchema } from "@/lib/quick-list-schemas";
 import {
   addQuickListItem,
@@ -31,7 +32,7 @@ export async function createQuickListAction(
   const list = await createQuickList(db, { userId, name: validated.data.name });
 
   revalidatePath("/dashboard", "layout");
-  redirect(`/dashboard?panel=quicklists&id=${list.id}`);
+  redirect(dashboardRoutes.quickLists(list.id));
 }
 
 export async function updateQuickListAction(

@@ -35,7 +35,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
         <p className="text-sm text-muted-foreground">No lists yet — create one to get started.</p>
       )}
 
-      <Link href="/dashboard?panel=quicklists&view=create" className="text-sm hover:underline">
+      <Link href={dashboardRoutes.newQuickList()} className="text-sm hover:underline">
         + Create new list
       </Link>
 
@@ -45,7 +45,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
             <h2 className="text-lg font-semibold">{list.name}</h2>
             <div className="flex gap-2">
               <Link
-                href={`/dashboard?panel=quicklists&view=edit&id=${list.id}`}
+                href={dashboardRoutes.editQuickList(list.id)}
                 className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 Edit

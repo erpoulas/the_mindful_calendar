@@ -41,6 +41,13 @@ describe("dashboardRoutes", () => {
       "/dashboard/journals?view=entry-edit&id=j1&entryId=n1",
     );
   });
+
+  it("gives each quick list screen its own address, opening a chosen list's tab", () => {
+    expect(dashboardRoutes.quickLists()).toBe("/dashboard/quick-lists");
+    expect(dashboardRoutes.quickLists("q1")).toBe("/dashboard/quick-lists?id=q1");
+    expect(dashboardRoutes.newQuickList()).toBe("/dashboard/quick-lists?view=create");
+    expect(dashboardRoutes.editQuickList("q1")).toBe("/dashboard/quick-lists?view=edit&id=q1");
+  });
 });
 
 describe("stringParam", () => {
