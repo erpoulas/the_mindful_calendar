@@ -1,5 +1,13 @@
 import type { DbClient } from "./db";
 
+/**
+ * Loads the intentions' colors with each event, which `eventColor`
+ * (src/lib/intention-colors.ts) needs to pick the event's color.
+ */
+export const withIntentionColors = {
+  intentions: { select: { intention: { select: { color: true, createdAt: true } } } },
+} as const;
+
 export async function createCalendarEvent(
   client: DbClient,
   data: {
@@ -44,6 +52,7 @@ export async function listCalendarEvents(
       startAt: { gte: params.start, lt: params.end },
     },
     orderBy: { startAt: "asc" },
+    include: withIntentionColors,
   });
 }
 

@@ -4,6 +4,7 @@ import type { DbClient } from "@/lib/db";
 import { createCalendarEvent, deleteCalendarEvent } from "@/lib/calendar-events";
 import type { GoogleApiEvent } from "@/lib/google-calendar";
 import { getGoogleConnection, saveGoogleConnection } from "@/lib/google-connections";
+import { createIntention, updateIntention } from "@/lib/intentions";
 import { markGoogleEventsForReread, syncGoogleCalendar } from "@/lib/google-sync";
 import { createJournal, createJournalEntry } from "@/lib/journals";
 
@@ -315,6 +316,36 @@ describe("syncGoogleCalendar", () => {
       });
     });
 
+    it("sends the new color after the event's intention changes color", async () => {
+      const original = google.put(googleEvent("dentist", "2026-11-18", { colorId: "2" }));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+        const health = await createIntention(tx, { userId: USER, name: "Health", color: "sage" });
+        const row = await linkedRow(tx, original);
+        await tx.eventIntention.create({ data: { eventId: row.id, intentionId: health.id } });
+        await tx.calendarEvent.update({ where: { id: row.id }, data: { updatedAt: LAST_SYNC } });
+
+        await updateIntention(tx, { userId: USER, intentionId: health.id, name: "Health", color: "tomato" });
+        await sync(tx);
+
+        expect(google.events.get("dentist")?.colorId).toBe("11");
+      });
+    });
+
+    it("leaves Google's own color on an event with no colored intention", async () => {
+      const original = google.put(googleEvent("dentist", "2026-11-18", { colorId: "5" }));
+
+      await withRollback(async (tx) => {
+        await connect(tx);
+        await linkedRow(tx, original, { title: "Dentist, renamed here", updatedAt: new Date("2026-11-16T00:00:00Z") });
+
+        await sync(tx);
+
+        expect(google.events.get("dentist")).toMatchObject({ summary: "Dentist, renamed here", colorId: "5" });
+      });
+    });
+
     it("when both sides changed, the most recent edit wins: Google's", async () => {
       const original = google.put(googleEvent("dentist", "2026-11-18"));
 
@@ -412,6 +443,23 @@ describe("syncGoogleCalendar", () => {
         expect((await tx.calendarEvent.findUnique({ where: { id: event.id } }))?.googleEventId).toBe(
           googleId,
         );
+      });
+    });
+
+    it("sends the event in its intention's color", async () => {
+      await withRollback(async (tx) => {
+        await connect(tx);
+        const health = await createIntention(tx, { userId: USER, name: "Health", color: "sage" });
+        const event = await createCalendarEvent(tx, {
+          userId: USER,
+          title: "Gym",
+          startAt: new Date("2026-11-20T07:00:00Z"),
+          intentionIds: [health.id],
+        });
+
+        await sync(tx);
+
+        expect(google.events.get(event.id.replace(/-/g, ""))?.colorId).toBe("2");
       });
     });
 

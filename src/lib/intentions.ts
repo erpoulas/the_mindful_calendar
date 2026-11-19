@@ -33,10 +33,27 @@ export async function updateIntention(
   });
   if (!intention) return null;
 
-  return client.intention.update({
+  const color = params.color ?? null;
+  const updated = await client.intention.update({
     where: { id: intention.id },
-    data: { name: params.name, color: params.color ?? null },
+    data: { name: params.name, color },
   });
+
+  // Events take their color from the intention when drawn, so the app
+  // already shows the new color. Google holds its own copy, so mark the
+  // synced events as edited: the next sync sends them with the new color.
+  if (color !== intention.color) {
+    await client.calendarEvent.updateMany({
+      where: {
+        userId: params.userId,
+        googleEventId: { not: null },
+        intentions: { some: { intentionId: intention.id } },
+      },
+      data: { updatedAt: new Date() },
+    });
+  }
+
+  return updated;
 }
 
 export async function deleteIntention(

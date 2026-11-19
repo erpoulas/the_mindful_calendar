@@ -18,6 +18,8 @@ import {
   getGoogleConnection,
   saveGoogleAccessToken,
 } from "./google-connections";
+import { withIntentionColors } from "./calendar-events";
+import { eventColor } from "./intention-colors";
 import { fromWallClockDate, toWallClockDate } from "./wall-clock";
 
 // Two-way Google Calendar sync, run each time the calendar loads ("polling
@@ -34,13 +36,16 @@ import { fromWallClockDate, toWallClockDate } from "./wall-clock";
 // If both changed, whichever was edited most recently wins.
 //
 // Intention and project links never leave the app, and journal events send
-// only their title (which is the prompt), never the writing itself.
+// only their title (which is the prompt), never the writing itself. An
+// event's color is sent too: that of its intention (see intention-colors.ts).
+// An event with no colored intention sends none, so a color picked in
+// Google stays.
 
 // Refresh a little before the real expiry so a token never dies mid-request.
 const EXPIRY_MARGIN_MS = 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const withJournalFlag = { journalEntry: { select: { id: true } } } as const;
+const withSyncExtras = { journalEntry: { select: { id: true } }, ...withIntentionColors } as const;
 
 type SyncedRow = {
   id: string;
@@ -55,6 +60,7 @@ type SyncedRow = {
   lastSyncedAt: Date | null;
   updatedAt: Date;
   journalEntry: { id: string } | null;
+  intentions: { intention: { color: string | null; createdAt: Date } }[];
 };
 
 type GoogleCall = <T>(request: (accessToken: string) => Promise<T>) => Promise<T>;
@@ -197,7 +203,7 @@ class GoogleSync {
           { googleEventId: { in: [...googleIds] } },
         ],
       },
-      include: withJournalFlag,
+      include: withSyncExtras,
     });
     const rowsByGoogleId = new Map(rows.map((row) => [row.googleEventId!, row]));
 
@@ -222,7 +228,7 @@ class GoogleSync {
         googleEventId: { not: null },
         updatedAt: { gt: this.client.calendarEvent.fields.lastSyncedAt },
       },
-      include: withJournalFlag,
+      include: withSyncExtras,
     });
     for (const row of rows) {
       // Fetch Google's copy first, in case it changed there too.
@@ -241,7 +247,7 @@ class GoogleSync {
         startAt: { not: null },
         OR: [{ startAt: { gte: eligible.connectedDay } }, { createdAt: { gte: eligible.connectedAt } }],
       },
-      include: withJournalFlag,
+      include: withSyncExtras,
     });
     for (const row of rows) {
       const googleEventId = googleEventIdFor(row.id);
@@ -338,7 +344,8 @@ class GoogleSync {
   }
 
   private toGoogleBody(row: SyncedRow) {
-    return toGoogleEventBody(
+    const color = eventColor(row.intentions);
+    const body = toGoogleEventBody(
       {
         title: row.title,
         startAt: row.startAt!,
@@ -350,5 +357,6 @@ class GoogleSync {
       },
       this.timeZone,
     );
+    return color ? { ...body, colorId: color.googleColorId } : body;
   }
 }

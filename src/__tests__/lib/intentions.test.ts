@@ -217,6 +217,50 @@ describe("updateIntention", () => {
     });
   });
 
+  it("marks the intention's Google-synced events as edited when its color changes, so the next sync sends the new color", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
+      const lastSync = new Date("2026-11-01T00:00:00Z");
+      const event = await tagEvent(tx, { userId: "test-user-1", intentionId: intention.id });
+      await tx.calendarEvent.update({
+        where: { id: event.id },
+        data: { googleEventId: "google-1", lastSyncedAt: lastSync, updatedAt: lastSync },
+      });
+
+      await updateIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        name: "Health",
+        color: "tomato",
+      });
+
+      const row = await tx.calendarEvent.findUniqueOrThrow({ where: { id: event.id } });
+      expect(row.updatedAt.getTime()).toBeGreaterThan(lastSync.getTime());
+    });
+  });
+
+  it("leaves the intention's events alone when the color stays the same", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
+      const lastSync = new Date("2026-11-01T00:00:00Z");
+      const event = await tagEvent(tx, { userId: "test-user-1", intentionId: intention.id });
+      await tx.calendarEvent.update({
+        where: { id: event.id },
+        data: { googleEventId: "google-1", lastSyncedAt: lastSync, updatedAt: lastSync },
+      });
+
+      await updateIntention(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        name: "Wellness",
+        color: "sage",
+      });
+
+      const row = await tx.calendarEvent.findUniqueOrThrow({ where: { id: event.id } });
+      expect(row.updatedAt).toEqual(lastSync);
+    });
+  });
+
   it("returns null when the intention doesn't belong to the user", async () => {
     await withRollback(async (tx) => {
       const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });

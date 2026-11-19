@@ -44,6 +44,8 @@ export type GoogleApiEvent = {
   summary?: string;
   location?: string;
   description?: string;
+  /** One of Google's 11 event colors, "1" to "11". Unset = the calendar's color. */
+  colorId?: string;
   start?: GoogleTime;
   end?: GoogleTime;
 };
