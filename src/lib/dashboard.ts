@@ -38,6 +38,7 @@ export async function getWeeklyIntentionBreakdown(
   const breakdownCounts = intentions.map((intention) => ({
     intentionId: intention.id,
     name: intention.name,
+    color: intention.color,
     count: countByIntentionId.get(intention.id) ?? 0,
   }));
 

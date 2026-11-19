@@ -17,6 +17,7 @@ import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
 import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
+import { eventColor } from "@/lib/intention-colors";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
@@ -138,6 +139,7 @@ export default async function DashboardPage({
       title: event.title,
       startAt: event.startAt!,
       endAt: event.endAt,
+      color: eventColor(event.intentions),
     });
     const datedEvents = events.filter((event) => event.startAt);
     const allDayEvents = datedEvents.filter((event) => event.isAllDay).map(toTimeGridEvent);

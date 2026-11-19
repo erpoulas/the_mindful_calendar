@@ -7,6 +7,7 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { HourLabelColumn } from "@/lib/hour-labels";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import type { IntentionColor } from "@/lib/intention-colors";
 import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
@@ -18,7 +19,14 @@ export type TimeGridEvent = {
   title: string;
   startAt: Date;
   endAt: Date | null;
+  /** From the event's intention; null keeps the plain look. */
+  color: IntentionColor | null;
 };
+
+/** Inline colors for an event drawn in its intention's color. */
+export function eventColorStyle(color: IntentionColor | null): CSSProperties | undefined {
+  return color ? { backgroundColor: color.hex, color: color.textHex } : undefined;
+}
 
 export function toDayKey(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -125,7 +133,10 @@ function AllDayList({ events }: { events: TimeGridEvent[] }) {
           <Link
             href={dashboardRoutes.editEvent(event.id)}
             title={event.title}
-            className="block truncate rounded bg-accent px-1 text-[11px] hover:bg-secondary"
+            style={eventColorStyle(event.color)}
+            className={`block truncate rounded px-1 text-[11px] ${
+              event.color ? "hover:opacity-85" : "bg-accent hover:bg-secondary"
+            }`}
           >
             {event.title}
           </Link>
@@ -211,6 +222,7 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
     height,
     transform: CSS.Translate.toString(transform),
     zIndex: isDragging ? 10 : undefined,
+    ...eventColorStyle(event.color),
   };
 
   return (
@@ -219,7 +231,9 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`absolute inset-x-0.5 touch-none overflow-hidden rounded bg-primary px-1 text-[11px] leading-tight text-primary-foreground ${
+      className={`absolute inset-x-0.5 touch-none overflow-hidden rounded px-1 text-[11px] leading-tight ${
+        event.color ? "" : "bg-primary text-primary-foreground"
+      } ${
         isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
       }`}
     >

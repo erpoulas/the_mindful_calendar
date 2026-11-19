@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { findIntentionColor } from "@/lib/intention-colors";
 
 type IntentionBreakdown = Awaited<ReturnType<typeof getWeeklyIntentionBreakdown>>;
 type WeeklyReviewStats = Awaited<ReturnType<typeof getWeeklyReviewStats>>;
@@ -76,7 +77,11 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
   const segments = [
     ...breakdown.breakdown
       .filter((b) => b.count > 0)
-      .map((b) => ({ label: b.name, percent: b.percent, color: DEFAULT_INTENTION_COLOR })),
+      .map((b) => ({
+        label: b.name,
+        percent: b.percent,
+        color: findIntentionColor(b.color)?.hex ?? DEFAULT_INTENTION_COLOR,
+      })),
     ...(breakdown.untagged.count > 0
       ? [{ label: "Untagged", percent: breakdown.untagged.percent, color: UNTAGGED_COLOR }]
       : []),

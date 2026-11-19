@@ -26,9 +26,9 @@ describe("getWeeklyIntentionBreakdown", () => {
     });
   });
 
-  it("counts an event tagged to one intention", async () => {
+  it("counts an event tagged to one intention, with the intention's color", async () => {
     await withRollback(async (tx) => {
-      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
       await createCalendarEvent(tx, {
         userId: "test-user-1",
         title: "Run",
@@ -43,7 +43,7 @@ describe("getWeeklyIntentionBreakdown", () => {
 
       expect(result.totalCount).toBe(1);
       expect(result.breakdown).toEqual([
-        { intentionId: health.id, name: "Health", count: 1, percent: 100 },
+        { intentionId: health.id, name: "Health", color: "sage", count: 1, percent: 100 },
       ]);
       expect(result.untagged).toEqual({ count: 0, percent: 0 });
     });
@@ -97,9 +97,9 @@ describe("getWeeklyIntentionBreakdown", () => {
       });
 
       expect(result.breakdown).toEqual([
-        { intentionId: health.id, name: "Health", count: 2, percent: 67 },
-        { intentionId: family.id, name: "Family", count: 1, percent: 33 },
-        { intentionId: art.id, name: "Art", count: 0, percent: 0 },
+        { intentionId: health.id, name: "Health", color: null, count: 2, percent: 67 },
+        { intentionId: family.id, name: "Family", color: null, count: 1, percent: 33 },
+        { intentionId: art.id, name: "Art", color: null, count: 0, percent: 0 },
       ]);
     });
   });
@@ -120,7 +120,7 @@ describe("getWeeklyIntentionBreakdown", () => {
 
       expect(result.totalCount).toBe(1);
       expect(result.breakdown).toEqual([
-        { intentionId: health.id, name: "Health", count: 0, percent: 0 },
+        { intentionId: health.id, name: "Health", color: null, count: 0, percent: 0 },
       ]);
       expect(result.untagged).toEqual({ count: 1, percent: 100 });
     });
