@@ -10,6 +10,7 @@ import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyReviewStats } from "@/lib/dashboard";
 import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
 import { listPostIts } from "@/lib/post-its";
@@ -19,7 +20,6 @@ import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
-import { EditEventView, NewEventView } from "./overlays/calendar-event";
 import { QuickListCreateView, QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
@@ -74,9 +74,6 @@ export default async function DashboardPage({
     panel: panelParam,
     view: viewParam,
     id: idParam,
-    date: dateParam,
-    title: titleParam,
-    postItId: postItIdParam,
     entryId: entryIdParam,
     google: googleParam,
   } = await searchParams;
@@ -84,9 +81,6 @@ export default async function DashboardPage({
   const panel = typeof panelParam === "string" ? panelParam : null;
   const view = typeof viewParam === "string" ? viewParam : null;
   const id = typeof idParam === "string" ? idParam : null;
-  const date = typeof dateParam === "string" ? dateParam : undefined;
-  const title = typeof titleParam === "string" ? titleParam : undefined;
-  const postItId = typeof postItIdParam === "string" ? postItIdParam : undefined;
   const entryId = typeof entryIdParam === "string" ? entryIdParam : null;
   const mode = modeParam === "month" ? "month" : "week";
 
@@ -211,7 +205,6 @@ export default async function DashboardPage({
   const visiblePanelKeys = orderedPanelKeys.filter((key) => !hiddenPanels.includes(key));
 
   let panelTitle = "";
-  let panelHideVisibleTitle = false;
   let panelContent: React.ReactNode = null;
   let panelSize: "side" | "wide" | "center" = "side";
   let panelBackground:
@@ -227,16 +220,6 @@ export default async function DashboardPage({
   } else if (panel === "affirmations") {
     panelTitle = "Affirmations";
     panelContent = <AffirmationsView />;
-  } else if (panel === "calendar-event") {
-    panelSize = "center";
-    panelHideVisibleTitle = true;
-    if (view === "edit" && id) {
-      panelTitle = "Edit event";
-      panelContent = <EditEventView id={id} />;
-    } else {
-      panelTitle = "New event";
-      panelContent = <NewEventView date={date} title={title} postItId={postItId} />;
-    }
   } else if (panel === "quicklists") {
     panelSize = "center";
     panelBackground = {
@@ -380,7 +363,7 @@ export default async function DashboardPage({
                     Month
                   </Link>
                 </div>
-                <Link href="/dashboard?panel=calendar-event&view=new" className={buttonVariants()}>
+                <Link href={dashboardRoutes.newEvent()} className={buttonVariants()}>
                   New event
                 </Link>
               </div>
@@ -417,7 +400,6 @@ export default async function DashboardPage({
           key={panel}
           open={panel !== null}
           title={panelTitle}
-          hideVisibleTitle={panelHideVisibleTitle}
           size={panelSize}
           backgroundImage={panelBackground}
         >

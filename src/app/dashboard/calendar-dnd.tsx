@@ -16,6 +16,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { moveCalendarEventAction } from "@/app/actions/calendar-events";
 import { reorderPanelsAction } from "@/app/actions/dashboard";
 import { reorderPostItsAction } from "@/app/actions/post-its";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { PostItVisual } from "./post-it-column";
 import {
   HOUR_HEIGHT,
@@ -118,14 +119,7 @@ export function CalendarDndProvider({
 
     if (isPostIt) {
       const text = String(e.active.data.current?.text ?? "");
-      const params = new URLSearchParams({
-        panel: "calendar-event",
-        view: "new",
-        date: overId,
-        title: text,
-        postItId: String(e.active.id),
-      });
-      router.push(`/dashboard?${params.toString()}`);
+      router.push(dashboardRoutes.newEvent({ date: overId, title: text, postItId: String(e.active.id) }));
       return;
     }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
 import type { listCalendarEvents } from "@/lib/calendar-events";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { toDayKey } from "./time-grid";
 import { useWallClockNow } from "./use-wall-clock-now";
 
@@ -45,7 +46,7 @@ export function MonthDayCell({
       {events.map((event) => (
         <Link
           key={event.id}
-          href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+          href={dashboardRoutes.editEvent(event.id)}
           className="truncate rounded bg-accent px-1 text-xs hover:bg-secondary"
         >
           {event.title}

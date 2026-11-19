@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { HourLabelColumn } from "@/lib/hour-labels";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
@@ -122,7 +123,7 @@ function AllDayList({ events }: { events: TimeGridEvent[] }) {
       {events.map((event) => (
         <li key={event.id}>
           <Link
-            href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+            href={dashboardRoutes.editEvent(event.id)}
             title={event.title}
             className="block truncate rounded bg-accent px-1 text-[11px] hover:bg-secondary"
           >
@@ -223,7 +224,7 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
       }`}
     >
       <Link
-        href={`/dashboard?panel=calendar-event&view=edit&id=${event.id}`}
+        href={dashboardRoutes.editEvent(event.id)}
         className="block h-full truncate"
         draggable={false}
       >

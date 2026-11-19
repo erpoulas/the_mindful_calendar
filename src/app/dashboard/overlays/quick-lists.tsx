@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getQuickListDetail, listQuickLists } from "@/lib/quick-lists";
 import { QuickListForm } from "./quick-list-form";
 import { QuickListTabs } from "./quick-list-tabs";
@@ -76,7 +77,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
                   {item.text}
                 </span>
                 <Link
-                  href={`/dashboard?panel=calendar-event&view=new&title=${encodeURIComponent(item.text)}`}
+                  href={dashboardRoutes.newEvent({ title: item.text })}
                   className="text-sm text-muted-foreground underline"
                 >
                   Schedule
