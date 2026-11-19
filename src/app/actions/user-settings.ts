@@ -22,7 +22,7 @@ export async function updateTimezoneAction(
   const userId = await getCurrentUserId();
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { saved: true };
 }
 
@@ -41,7 +41,7 @@ export async function saveBrowserTimezoneAction(timezone: string) {
   if (await getUserTimezone(db, userId)) return; // never overwrite a choice
 
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export type CalendarDisplayFormState =
@@ -63,6 +63,6 @@ export async function updateCalendarDisplayAction(
   const userId = await getCurrentUserId();
   await setCalendarDisplaySettings(db, { userId, ...validated.data });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { saved: true };
 }

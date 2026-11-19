@@ -35,5 +35,5 @@ export async function disconnectGoogleCalendarAction() {
     );
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }

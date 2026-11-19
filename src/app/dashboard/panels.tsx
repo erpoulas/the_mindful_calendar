@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { getWeeklyIntentionBreakdown, getWeeklyReviewStats } from "@/lib/dashboard";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 
 type IntentionBreakdown = Awaited<ReturnType<typeof getWeeklyIntentionBreakdown>>;
 type WeeklyReviewStats = Awaited<ReturnType<typeof getWeeklyReviewStats>>;
@@ -182,7 +183,7 @@ export function DopaminePanel() {
   return (
     <PanelShell panelKey="dopamine">
       <IconPanelLink
-        href="/dashboard?panel=dopamine-menu"
+        href={dashboardRoutes.dopamineMenu()}
         iconSrc="/panel-art/dopamine-tracker.png"
         iconWidth={144}
         iconHeight={100}

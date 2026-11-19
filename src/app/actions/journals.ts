@@ -36,7 +36,7 @@ export async function createJournalAction(
   const userId = await getCurrentUserId();
   await createJournal(db, { userId, name: validated.data.name });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateJournalAction(
@@ -52,7 +52,7 @@ export async function updateJournalAction(
   const userId = await getCurrentUserId();
   await updateJournal(db, { userId, journalId, name: validated.data.name });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -60,7 +60,7 @@ export async function deleteJournalAction(journalId: string) {
   const userId = await getCurrentUserId();
   await deleteJournal(db, { userId, journalId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -71,14 +71,14 @@ export async function addJournalPromptAction(journalId: string, formData: FormDa
   const userId = await getCurrentUserId();
   await addJournalPrompt(db, { userId, journalId, text: validated.data.text });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteJournalPromptAction(promptId: string, journalId: string) {
   const userId = await getCurrentUserId();
   await deleteJournalPrompt(db, { userId, promptId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function pickJournalPromptAction() {
@@ -104,7 +104,7 @@ export async function createJournalEntryAction(journalId: string, formData: Form
     startAt: validated.data.startAt ? new Date(validated.data.startAt) : undefined,
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
 }
 
@@ -121,7 +121,7 @@ export async function updateJournalEntryAction(
   const userId = await getCurrentUserId();
   await updateJournalEntry(db, { userId, entryId, content: validated.data.content });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
 }
 
@@ -129,6 +129,6 @@ export async function deleteJournalEntryAction(entryId: string, journalId: strin
   const userId = await getCurrentUserId();
   await deleteJournalEntry(db, { userId, entryId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect(`/dashboard?panel=journals&view=detail&id=${journalId}`);
 }

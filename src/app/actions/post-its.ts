@@ -19,14 +19,14 @@ export async function createPostItAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await createPostIt(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function promoteQuickListItemToPostItAction(itemId: string) {
   const userId = await getCurrentUserId();
   await promoteQuickListItemToPostIt(db, { userId, itemId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 // Edits use the same text rules as creating a post-it.
@@ -37,19 +37,19 @@ export async function updatePostItTextAction(postItId: string, formData: FormDat
   const userId = await getCurrentUserId();
   await updatePostItText(db, { userId, postItId, text: validated.data.text });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deletePostItAction(postItId: string) {
   const userId = await getCurrentUserId();
   await deletePostIt(db, { userId, postItId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function reorderPostItsAction(orderedIds: string[]) {
   const userId = await getCurrentUserId();
   await reorderPostIts(db, { userId, orderedIds });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }

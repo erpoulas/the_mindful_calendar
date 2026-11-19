@@ -13,14 +13,14 @@ export async function addDopamineMenuItemAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await addDopamineMenuItem(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteDopamineMenuItemAction(itemId: string) {
   const userId = await getCurrentUserId();
   await deleteDopamineMenuItem(db, { userId, itemId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function pickDopamineMenuItemAction() {

@@ -9,12 +9,12 @@ export async function togglePanelVisibilityAction(panelKey: string) {
   const userId = await getCurrentUserId();
   await togglePanelVisibility(db, { userId, panelKey });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function reorderPanelsAction(orderedKeys: string[]) {
   const userId = await getCurrentUserId();
   await reorderPanels(db, { userId, orderedKeys });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }

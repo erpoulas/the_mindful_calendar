@@ -39,7 +39,7 @@ export async function createIntentionAction(
   const userId = await getCurrentUserId();
   await createIntention(db, { userId, ...validated.data });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateIntentionAction(
@@ -56,7 +56,7 @@ export async function updateIntentionAction(
   const userId = await getCurrentUserId();
   await updateIntention(db, { userId, intentionId, ...validated.data });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -64,6 +64,6 @@ export async function deleteIntentionAction(intentionId: string) {
   const userId = await getCurrentUserId();
   await deleteIntention(db, { userId, intentionId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }

@@ -20,7 +20,6 @@ import { toWallClockDate } from "@/lib/wall-clock";
 import { AccountSettingsView } from "./overlays/account-settings";
 import { AffirmationsView } from "./overlays/affirmations";
 import { EditEventView, NewEventView } from "./overlays/calendar-event";
-import { DopamineMenuView } from "./overlays/dopamine-menu";
 import { QuickListCreateView, QuickListEditView, QuickListsView } from "./overlays/quick-lists";
 import { IntentionDetailView, IntentionEditView, IntentionsListView } from "./overlays/intentions";
 import {
@@ -225,9 +224,6 @@ export default async function DashboardPage({
         googleOutcome={typeof googleParam === "string" ? googleParam : undefined}
       />
     );
-  } else if (panel === "dopamine-menu") {
-    panelTitle = "Dopamine Menu";
-    panelContent = <DopamineMenuView />;
   } else if (panel === "affirmations") {
     panelTitle = "Affirmations";
     panelContent = <AffirmationsView />;

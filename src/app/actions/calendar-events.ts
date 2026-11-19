@@ -93,7 +93,7 @@ export async function createCalendarEventAction(
     await deletePostIt(db, { userId, postItId });
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -120,7 +120,7 @@ export async function updateCalendarEventAction(
     intentionIds: validated.data.intentionIds,
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -128,7 +128,7 @@ export async function deleteCalendarEventAction(eventId: string) {
   const userId = await getCurrentUserId();
   await deleteCalendarEvent(db, { userId, eventId });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   redirect("/dashboard");
 }
 
@@ -142,5 +142,5 @@ export async function moveCalendarEventAction(
   const userId = await getCurrentUserId();
   await moveCalendarEvent(db, { userId, eventId, startAt, endAt });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
 }
