@@ -4,6 +4,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 import { useDashboardCustomization } from "./dashboard-shell";
+import { useDroppedPositions } from "./dropped-positions-context";
 
 const PANEL_LABELS: Record<string, string> = {
   affirmation: "Today's affirmation",
@@ -16,13 +17,15 @@ const PANEL_LABELS: Record<string, string> = {
 };
 
 export function PanelList({
-  panelKeys,
+  panelKeys: savedPanelKeys,
   children,
 }: {
   panelKeys: string[];
   children: React.ReactNode;
 }) {
   const { isCustomizing } = useDashboardCustomization();
+  const droppedOrder = useDroppedPositions().panelOrder;
+  const panelKeys = droppedOrder ?? savedPanelKeys;
 
   return (
     <div
@@ -47,6 +50,11 @@ export function SortablePanel({
   children: React.ReactNode;
 }) {
   const { isCustomizing } = useDashboardCustomization();
+  // The panels arrive from the server in their saved order. A panel just
+  // dragged elsewhere is moved with CSS order (the list is a flex column)
+  // until the new order is saved and the server sends the panels again.
+  const droppedOrder = useDroppedPositions().panelOrder;
+  const droppedIndex = droppedOrder ? droppedOrder.indexOf(panelKey) : -1;
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: panelKey,
     data: { type: "panel" },
@@ -56,6 +64,7 @@ export function SortablePanel({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    order: droppedIndex === -1 ? undefined : droppedIndex,
   };
 
   return (

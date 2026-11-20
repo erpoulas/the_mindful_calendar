@@ -11,7 +11,9 @@ import {
   updatePostItTextAction,
 } from "@/app/actions/post-its";
 import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
+import { sortByOrder } from "@/lib/dropped-positions";
 import type { listPostIts } from "@/lib/post-its";
+import { useDroppedPositions } from "./dropped-positions-context";
 
 // How many post-its the permanent column shows before overflowing into the
 // "+N more" pop-out — same fixed-cap approach used for month-grid day cells,
@@ -19,12 +21,14 @@ import type { listPostIts } from "@/lib/post-its";
 const VISIBLE_CAP = 5;
 
 export function PostItColumn({
-  postIts,
+  postIts: savedPostIts,
   capped = false,
 }: {
   postIts: Awaited<ReturnType<typeof listPostIts>>;
   capped?: boolean;
 }) {
+  // A post-it just dragged to a new spot stays there while the order is saved.
+  const postIts = sortByOrder(savedPostIts, useDroppedPositions().postItOrder, (postIt) => postIt.id);
   const shown = capped ? postIts.slice(0, VISIBLE_CAP) : postIts;
   const overflow = postIts.length - shown.length;
 

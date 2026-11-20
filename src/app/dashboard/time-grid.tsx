@@ -7,7 +7,9 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { HourLabelColumn } from "@/lib/hour-labels";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { applyEventMoves } from "@/lib/dropped-positions";
 import type { IntentionColor } from "@/lib/intention-colors";
+import { useDroppedPositions } from "./dropped-positions-context";
 import { useWallClockNow } from "./use-wall-clock-now";
 
 export const HOUR_HEIGHT = 48; // px per hour
@@ -46,7 +48,7 @@ function coversDay(event: TimeGridEvent, dayKey: string) {
 
 export function TimeGrid({
   weekStart,
-  events,
+  events: savedEvents,
   allDayEvents,
   hourLabelColumns,
 }: {
@@ -58,6 +60,8 @@ export function TimeGrid({
   hourLabelColumns: HourLabelColumn[];
 }) {
   const now = useWallClockNow();
+  // An event just dragged shows at its new time while the move is saved.
+  const events = applyEventMoves(savedEvents, useDroppedPositions().eventMoves);
   const todayKey = now ? toDayKey(now) : null;
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart.getTime() + i * DAY_MS);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   closestCenter,
   DndContext,
@@ -17,6 +17,8 @@ import { moveCalendarEventAction } from "@/app/actions/calendar-events";
 import { reorderPanelsAction } from "@/app/actions/dashboard";
 import { reorderPostItsAction } from "@/app/actions/post-its";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { noDroppedPositions, type DroppedPositions } from "@/lib/dropped-positions";
+import { DroppedPositionsContext } from "./dropped-positions-context";
 import { PostItVisual } from "./post-it-column";
 import {
   HOUR_HEIGHT,
@@ -40,6 +42,16 @@ export function CalendarDndProvider({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // Set inside the same transition as the save, so React drops it the
+  // moment the action's response brings the saved page.
+  const [droppedPositions, showDropped] = useOptimistic(
+    noDroppedPositions,
+    (current, change: Partial<DroppedPositions>) => ({
+      ...current,
+      ...change,
+      eventMoves: { ...current.eventMoves, ...change.eventMoves },
+    }),
+  );
   const [draggedPostItText, setDraggedPostItText] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -94,9 +106,11 @@ export function CalendarDndProvider({
 
       const reorderedVisible = arrayMove(panelKeys, oldIndex, newIndex);
       const fullOrder = [...reorderedVisible, ...hiddenPanels];
+      // The action's response already carries the updated page (it calls
+      // revalidatePath), so no router.refresh() is needed afterwards.
       startTransition(async () => {
+        showDropped({ panelOrder: reorderedVisible });
         await reorderPanelsAction(fullOrder);
-        router.refresh();
       });
       return;
     }
@@ -111,8 +125,8 @@ export function CalendarDndProvider({
 
       const reordered = arrayMove(postItIds, oldIndex, newIndex);
       startTransition(async () => {
+        showDropped({ postItOrder: reordered });
         await reorderPostItsAction(reordered);
-        router.refresh();
       });
       return;
     }
@@ -148,12 +162,13 @@ export function CalendarDndProvider({
     if (unchanged) return;
 
     startTransition(async () => {
+      showDropped({ eventMoves: { [dragged.id]: { startAt: newStartAt, endAt: newEndAt } } });
       await moveCalendarEventAction(dragged.id, newStartAt, newEndAt);
-      router.refresh();
     });
   }
 
   return (
+    <DroppedPositionsContext.Provider value={droppedPositions}>
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
@@ -175,5 +190,6 @@ export function CalendarDndProvider({
         )}
       </DragOverlay>
     </DndContext>
+    </DroppedPositionsContext.Provider>
   );
 }
