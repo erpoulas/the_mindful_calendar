@@ -74,7 +74,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
 - [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
 - [x] Dashboard is capped at 72rem and centered, leaving empty bands on wide windows; let it fill the full width (done: e46dd9f)
-- [ ] Month view: event titles are cut off and look broken. On busy days the chips are squashed into thin bars with only the top half of the text showing ("morning w", "csci 4273" sliced through), some days show empty slivers, and chip heights differ from day to day. Each visible event should be a full-height, single-line chip with "…" at the end, with the rest moved into "+N more" (claimed: perf session, 2026-11-20)
+- [x] Month view: event titles are cut off and look broken. On busy days the chips are squashed into thin bars with only the top half of the text showing ("morning w", "csci 4273" sliced through), some days show empty slivers, and chip heights differ from day to day. Each visible event should be a full-height, single-line chip with "…" at the end, with the rest moved into "+N more" (done: 5dd2a28)
 
 - [x] `npm test`: the GoogleCalendarSync and NavigationProgress component tests (12 tests) fail because their `vi.mock("next/navigation")` isn't applied, so the real router runs ("invariant expected app router to be mounted"). This blocks every commit, since the checks must pass. Cause: Vitest treats `c:` and `C:` as different paths on Windows (done: 9028e84)
 
