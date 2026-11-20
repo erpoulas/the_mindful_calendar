@@ -46,6 +46,7 @@ export function Sheet({
   hideVisibleTitle,
   size = "side",
   backgroundImage,
+  headerStart,
   children,
 }: {
   open: boolean;
@@ -59,6 +60,8 @@ export function Sheet({
     height: number;
     contentInsetClassName?: string;
   };
+  /** Shown at the left of the header, before the title (e.g. back/forward buttons). */
+  headerStart?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const imageBacked =
@@ -78,15 +81,18 @@ export function Sheet({
   // an accessible name.
   const titleRow = (
     <div className="relative z-10 flex items-start justify-end gap-4">
-      <Drawer.Title
-        className={
-          imageBacked || hideVisibleTitle
-            ? "sr-only"
-            : "mr-auto font-heading text-2xl tracking-wide uppercase"
-        }
-      >
-        {title}
-      </Drawer.Title>
+      <div className="mr-auto flex items-center gap-3">
+        {headerStart}
+        <Drawer.Title
+          className={
+            imageBacked || hideVisibleTitle
+              ? "sr-only"
+              : "font-heading text-2xl tracking-wide uppercase"
+          }
+        >
+          {title}
+        </Drawer.Title>
+      </div>
       {showCloseButton && (
         <Drawer.Close
           aria-label="Close"

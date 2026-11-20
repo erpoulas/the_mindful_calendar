@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/ui/sheet";
+import { PopupHistoryButtons } from "./popup-history";
 
 export function PanelSheet({
   open,
@@ -35,6 +36,7 @@ export function PanelSheet({
       hideVisibleTitle={hideVisibleTitle}
       size={size}
       backgroundImage={backgroundImage}
+      headerStart={<PopupHistoryButtons />}
     >
       {children}
     </Sheet>

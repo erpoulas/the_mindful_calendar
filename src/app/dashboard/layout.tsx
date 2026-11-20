@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { NavigationProgress } from "./navigation-progress";
+import { PopupHistoryProvider } from "./popup-history";
 
 // `children` is the calendar (page.tsx) and `panel` is the open popup, if
 // any (the @panel folder). They render side by side, so opening a popup
@@ -12,7 +13,10 @@ export default function DashboardLayout({ children, panel }: LayoutProps<"/dashb
         <NavigationProgress />
       </Suspense>
       {children}
-      {panel}
+      {/* Suspense because the popup history reads the URL's search params. */}
+      <Suspense fallback={null}>
+        <PopupHistoryProvider>{panel}</PopupHistoryProvider>
+      </Suspense>
     </div>
   );
 }
