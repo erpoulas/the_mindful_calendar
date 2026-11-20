@@ -140,9 +140,15 @@ export async function ProjectDetailView({ id }: { id: string }) {
                   }`}
                 />
               </form>
-              <span className={task.done ? "text-muted-foreground line-through" : ""}>
+              <span className={`flex-1 ${task.done ? "text-muted-foreground line-through" : ""}`}>
                 {task.text}
               </span>
+              <Link
+                href={dashboardRoutes.newEvent({ title: task.text, projectId: project.id })}
+                className="text-sm text-muted-foreground underline"
+              >
+                Schedule
+              </Link>
             </li>
           ))}
         </ul>

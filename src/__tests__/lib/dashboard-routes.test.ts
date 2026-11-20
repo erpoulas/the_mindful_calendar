@@ -27,6 +27,12 @@ describe("dashboardRoutes", () => {
       );
     });
 
+    it("schedules a project task as an event already linked to its project", () => {
+      expect(dashboardRoutes.newEvent({ title: "Draft chapter 1", projectId: "p1" })).toBe(
+        "/dashboard/event?view=new&title=Draft+chapter+1&projectId=p1",
+      );
+    });
+
     it("edits one event", () => {
       expect(dashboardRoutes.editEvent("e1")).toBe("/dashboard/event?view=edit&id=e1");
     });

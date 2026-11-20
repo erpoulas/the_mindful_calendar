@@ -16,6 +16,7 @@ export default async function EventPanel({ searchParams }: PageProps<"/dashboard
           date={stringParam(query.date)}
           title={stringParam(query.title)}
           postItId={stringParam(query.postItId)}
+          projectId={stringParam(query.projectId)}
         />
       )}
     </PanelSheet>

@@ -18,10 +18,12 @@ export async function NewEventView({
   date,
   title,
   postItId,
+  projectId,
 }: {
   date?: string;
   title?: string;
   postItId?: string;
+  projectId?: string;
 }) {
   const userId = await getCurrentUserId();
   const [projects, intentions, mainTimeZone] = await Promise.all([
@@ -30,27 +32,17 @@ export async function NewEventView({
     getUserTimezoneWithFallback(db, userId),
   ]);
 
-  const initialValues = date
-    ? {
-        title: title ?? "",
-        startAt: new Date(`${date}T00:00:00Z`),
-        endAt: null,
-        isAllDay: true,
-        location: null,
-        notes: null,
-        projectId: null,
-        intentionIds: [],
-        timeZone: null,
-      }
-    : title
+  // A date (from a post-it dropped on the month view) makes an all-day event.
+  const initialValues =
+    date || title || projectId
       ? {
-          title,
-          startAt: null,
+          title: title ?? "",
+          startAt: date ? new Date(`${date}T00:00:00Z`) : null,
           endAt: null,
-          isAllDay: false,
+          isAllDay: Boolean(date),
           location: null,
           notes: null,
-          projectId: null,
+          projectId: projectId ?? null,
           intentionIds: [],
           timeZone: null,
         }

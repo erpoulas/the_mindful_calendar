@@ -22,7 +22,9 @@ export const dashboardRoutes = {
   calendar: () => "/dashboard",
   dopamineMenu: () => "/dashboard/dopamine-menu",
 
-  newEvent: (prefill: { date?: string; title?: string; postItId?: string } = {}) =>
+  newEvent: (
+    prefill: { date?: string; title?: string; postItId?: string; projectId?: string } = {},
+  ) =>
     withQuery("/dashboard/event", { view: "new", ...prefill }),
   editEvent: (id: string) => withQuery("/dashboard/event", { view: "edit", id }),
 
