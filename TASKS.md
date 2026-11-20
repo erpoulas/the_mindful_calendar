@@ -43,7 +43,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-it overflow pop-out, ghost-card creation, drag-to-reorder (done: 0d522dd)
 - [x] Expand toggle for clipped post-its (done: bac28b9)
 - [x] Drag-to-reorder dashboard panels in customize mode (done: 14f9e51)
-- [ ] Easy back-and-forth inside popups: from a journal, project or intention detail, a "back to list" link plus a way to jump straight to another one (previous/next or a switcher, like Quick Lists' tabs) without closing the popup. Start with Journals, then Projects and Intentions. Build on the per-panel routes from the "Faster popups" task. Also add back and forward buttons in the popup header that step through the screens you've visited inside the popup (like a browser's back/forward), so you can retrace your steps without closing it. (header back/forward buttons done: 96d2da5; "back to list" links and previous/next switchers still open)
+- [ ] Easy back-and-forth inside popups: from a journal, project or intention detail, a "back to list" link plus a way to jump straight to another one (previous/next or a switcher, like Quick Lists' tabs) without closing the popup. Start with Journals, then Projects and Intentions. Build on the per-panel routes from the "Faster popups" task. Also add back and forward buttons in the popup header that step through the screens you've visited inside the popup (like a browser's back/forward), so you can retrace your steps without closing it. (header back/forward buttons done: 96d2da5; "back to list" links and previous/next switchers still open). Do Journals first: opening an entry (`JournalEntryEditView` in `src/app/dashboard/overlays/journals.tsx`) shows only the edit form, with no link back to the journal or its entry list (reported 2026-11-20)
 
 ## Dashboard and calendar polish (uncommitted work found 2026-11-18)
 - [x] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (done: 03f85a2)
@@ -53,12 +53,14 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
 - [x] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync) (done: adb5185, eb13238, 7b23dea)
 - [x] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions (done: 8101d1f)
-- [ ] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too
-- [ ] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does
+- [ ] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too (claimed: helper agent, 2026-11-20)
+- [ ] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does (claimed: helper agent, 2026-11-20)
 - [ ] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features
-- [ ] Quick Lists: edit an item's text in place (click it, like post-its)
-- [ ] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links)
-- [ ] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items
+- [ ] Quick Lists: edit an item's text in place (click it, like post-its) (claimed: perf session, 2026-11-20)
+- [ ] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links) (claimed: perf session, 2026-11-20)
+- [ ] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items (claimed: perf session, 2026-11-20)
+- [ ] Journals popup: make entries easier to view. Today the entry list sits at the bottom of a journal, under the new-entry form and the prompt pool, shows only the first 120 characters, and clicking an entry jumps straight into an edit form. Let entries be read in full (a reading view, with editing as a separate step) and put the entries where they are easy to reach
+- [ ] Journals popup: make the UI cuter, with softer cards for entries, friendlier headings and empty states, and the panel art and fonts from the Canva mockup (1cf71a6)
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
