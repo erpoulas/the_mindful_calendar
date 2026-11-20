@@ -43,7 +43,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-it overflow pop-out, ghost-card creation, drag-to-reorder (done: 0d522dd)
 - [x] Expand toggle for clipped post-its (done: bac28b9)
 - [x] Drag-to-reorder dashboard panels in customize mode (done: 14f9e51)
-- [ ] Easy back-and-forth inside popups: from a journal, project or intention detail, a "back to list" link plus a way to jump straight to another one (previous/next or a switcher, like Quick Lists' tabs) without closing the popup. Start with Journals, then Projects and Intentions. Build on the per-panel routes from the "Faster popups" task. Also add back and forward buttons in the popup header that step through the screens you've visited inside the popup (like a browser's back/forward), so you can retrace your steps without closing it.
+- [ ] Easy back-and-forth inside popups: from a journal, project or intention detail, a "back to list" link plus a way to jump straight to another one (previous/next or a switcher, like Quick Lists' tabs) without closing the popup. Start with Journals, then Projects and Intentions. Build on the per-panel routes from the "Faster popups" task. Also add back and forward buttons in the popup header that step through the screens you've visited inside the popup (like a browser's back/forward), so you can retrace your steps without closing it. (header back/forward buttons done: 96d2da5; "back to list" links and previous/next switchers still open)
 
 ## Dashboard and calendar polish (uncommitted work found 2026-11-18)
 - [x] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (done: 03f85a2)
