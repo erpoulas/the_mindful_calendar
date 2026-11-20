@@ -60,7 +60,7 @@ export function AffirmationPanel({
 }) {
   return (
     <PanelShell panelKey="affirmation">
-      <Link href={dashboardRoutes.affirmations()} className="block">
+      <Link href={dashboardRoutes.affirmations()} prefetch className="block">
         <div className="flex items-center gap-2">
           <PanelIcon src="/panel-art/positive-affirmations.png" width={736} height={685} />
           <div className="text-sm font-medium">Today</div>
@@ -89,7 +89,7 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
 
   return (
     <PanelShell panelKey="breakdown">
-      <Link href={dashboardRoutes.intentions()} className="block">
+      <Link href={dashboardRoutes.intentions()} prefetch className="block">
         <div className="mb-1 flex items-center gap-2">
           <PanelIcon src="/panel-art/time-this-week.png" width={360} height={360} />
           <div className="text-sm font-medium">Time this week, by intention</div>
@@ -134,8 +134,11 @@ function IconPanelLink({
   iconHeight: number;
   title: string;
 }) {
+  // prefetch loads the whole popup, data included, as soon as the dashboard
+  // shows this panel (deployed app only), so a click opens it already
+  // filled in. Its reads are stored (stored-reads.ts), so this is cheap.
   return (
-    <Link href={href} className="flex items-center gap-2">
+    <Link href={href} prefetch className="flex items-center gap-2">
       <PanelIcon src={iconSrc} width={iconWidth} height={iconHeight} />
       <div className="text-sm font-medium">{title}</div>
     </Link>

@@ -202,7 +202,7 @@ export default async function DashboardPage({
       )}
       {showGoogleBanner && <GoogleConnectBanner />}
       <div className="flex shrink-0 items-center justify-end gap-2 border-b p-4 pb-3">
-        <Link href={dashboardRoutes.account()} className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href={dashboardRoutes.account()} prefetch className={buttonVariants({ variant: "outline", size: "sm" })}>
           Account settings
         </Link>
         <form action={logout}>
@@ -262,7 +262,7 @@ export default async function DashboardPage({
                     Month
                   </Link>
                 </div>
-                <Link href={dashboardRoutes.newEvent()} className={buttonVariants()}>
+                <Link href={dashboardRoutes.newEvent()} prefetch className={buttonVariants()}>
                   New event
                 </Link>
               </div>

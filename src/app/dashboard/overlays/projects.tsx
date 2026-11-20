@@ -36,8 +36,10 @@ export async function ProjectsListView() {
         )}
         {projects.map((project) => (
           <li key={project.id}>
+            {/* prefetch: loads each project's screen while the list is open. */}
             <Link
               href={dashboardRoutes.project(project.id)}
+              prefetch
               className="flex items-center justify-between px-1 py-1 hover:underline"
             >
               <span>{project.title}</span>

@@ -16,6 +16,8 @@ export function QuickListTabs({
         <Link
           key={list.id}
           href={dashboardRoutes.quickLists(list.id)}
+          // Loads each list while the popup is open, so switching tabs is instant.
+          prefetch
           className={`rounded px-3 py-1 text-sm ${
             list.id === activeId
               ? "bg-primary text-primary-foreground"

@@ -30,8 +30,10 @@ export async function IntentionsListView() {
           const color = findIntentionColor(intention.color);
           return (
             <li key={intention.id}>
+              {/* prefetch: loads each intention's screen while the list is open. */}
               <Link
                 href={dashboardRoutes.intention(intention.id)}
+                prefetch
                 className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
               >
                 {color && (

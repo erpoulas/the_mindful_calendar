@@ -39,8 +39,10 @@ export async function JournalsListView() {
         )}
         {journals.map((journal) => (
           <li key={journal.id}>
+            {/* prefetch: loads each journal's screen while the list is open. */}
             <Link
               href={dashboardRoutes.journal(journal.id)}
+              prefetch
               className="flex items-center px-1 py-1 hover:underline"
             >
               {journal.name}
