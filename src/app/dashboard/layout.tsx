@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { RememberCalendarUrl } from "./calendar-location";
 import { NavigationProgress } from "./navigation-progress";
 import { PopupHistoryProvider } from "./popup-history";
 
@@ -8,9 +9,10 @@ import { PopupHistoryProvider } from "./popup-history";
 export default function DashboardLayout({ children, panel }: LayoutProps<"/dashboard">) {
   return (
     <div className="flex h-dvh flex-col overflow-clip">
-      {/* Suspense because NavigationProgress reads the URL's search params. */}
+      {/* Suspense because these read the URL's search params. */}
       <Suspense fallback={null}>
         <NavigationProgress />
+        <RememberCalendarUrl />
       </Suspense>
       {children}
       {/* Suspense because the popup history reads the URL's search params. */}

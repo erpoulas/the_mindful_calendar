@@ -1,7 +1,9 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Sheet } from "@/components/ui/sheet";
+import { getCalendarReturnUrl } from "./calendar-location";
 import { PopupHistoryButtons } from "./popup-history";
 
 /**
@@ -35,14 +37,25 @@ export function PanelSheet({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const view = useSearchParams().get("view");
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view");
   const shownTitle = (view && titlesByView?.[view]) || title;
+
+  // Closing hides the popup at once, without waiting for the calendar's
+  // address to load. It's remembered per address, so a popup that stays
+  // mounted (the post-its pop-out) can open again on its next visit.
+  const currentUrl = `${usePathname()}?${searchParams.toString()}`;
+  const [closedAtUrl, setClosedAtUrl] = useState<string | null>(null);
+  const closing = closedAtUrl === currentUrl;
 
   return (
     <Sheet
-      open={open}
+      open={open && !closing}
       onOpenChange={(next) => {
-        if (!next) router.push("/dashboard");
+        if (next) return;
+        setClosedAtUrl(currentUrl);
+        // Back to the week or month that was on screen, not always today.
+        router.push(getCalendarReturnUrl());
       }}
       title={shownTitle}
       hideVisibleTitle={hideVisibleTitle}
