@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
+import { findIntentionColor } from "@/lib/intention-colors";
 
 export function EventForm({
   action,
@@ -26,7 +27,7 @@ export function EventForm({
   submitLabel: string;
   pendingLabel: string;
   projects: { id: string; title: string }[];
-  intentions: { id: string; name: string }[];
+  intentions: { id: string; name: string; color: string | null }[];
   initialValues?: {
     title: string;
     startAt: Date | null;
@@ -163,17 +164,29 @@ export function EventForm({
 
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1 text-sm font-medium">Intentions (optional)</legend>
-        {intentions.map((intention) => (
-          <label key={intention.id} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="intentionIds"
-              value={intention.id}
-              defaultChecked={selectedIntentionIds.has(intention.id)}
-            />
-            {intention.name}
-          </label>
-        ))}
+        {intentions.map((intention) => {
+          // The same dot as the intentions list, so you can see which color
+          // the event will be on the calendar.
+          const color = findIntentionColor(intention.color);
+          return (
+            <label key={intention.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="intentionIds"
+                value={intention.id}
+                defaultChecked={selectedIntentionIds.has(intention.id)}
+              />
+              {color && (
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                />
+              )}
+              {intention.name}
+            </label>
+          );
+        })}
       </fieldset>
 
       <Button type="submit" disabled={pending}>
