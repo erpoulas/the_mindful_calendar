@@ -76,7 +76,7 @@ export async function addJournalPromptAction(journalId: string, formData: FormDa
   forgetStoredAfterSave(userId, ["journals"]);
 }
 
-export async function deleteJournalPromptAction(promptId: string, journalId: string) {
+export async function deleteJournalPromptAction(promptId: string) {
   const userId = await getCurrentUserId();
   await deleteJournalPrompt(db, { userId, promptId });
 

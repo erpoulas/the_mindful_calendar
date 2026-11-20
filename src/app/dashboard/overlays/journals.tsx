@@ -20,6 +20,7 @@ import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getRandomJournalPrompt } from "@/lib/journals";
 import { JournalForm } from "./journal-form";
+import { RemovableList } from "./removable-list";
 
 const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
   dateStyle: "medium",
@@ -158,29 +159,15 @@ export async function JournalDetailView({ id }: { id: string }) {
 
       <div>
         <h3 className="text-sm font-medium text-muted-foreground">Prompt pool</h3>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {journal.prompts.length === 0 && (
-            <p className="text-sm text-muted-foreground">No saved prompts yet.</p>
-          )}
-          {journal.prompts.map((prompt) => (
-            <li key={prompt.id} className="flex items-center justify-between gap-2 text-sm">
-              <span>{prompt.text}</span>
-              <form action={deleteJournalPromptAction.bind(null, prompt.id, journal.id)}>
-                <Button type="submit" variant="ghost" size="sm">
-                  Remove
-                </Button>
-              </form>
-            </li>
-          ))}
-        </ul>
-
-        <form
-          action={addJournalPromptAction.bind(null, journal.id)}
-          className="mt-3 flex gap-2"
-        >
-          <Input name="text" placeholder="Save a prompt you found elsewhere" required />
-          <Button type="submit">Save</Button>
-        </form>
+        <RemovableList
+          items={journal.prompts.map(({ id, text }) => ({ id, text }))}
+          emptyText="No saved prompts yet."
+          addPlaceholder="Save a prompt you found elsewhere"
+          addLabel="Save"
+          removeAction={deleteJournalPromptAction}
+          addAction={addJournalPromptAction.bind(null, journal.id)}
+          listClassName="mt-2 flex flex-col gap-1.5"
+        />
       </div>
 
       <div>

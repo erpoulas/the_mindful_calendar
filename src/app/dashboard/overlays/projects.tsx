@@ -10,13 +10,12 @@ import {
   toggleProjectTaskAction,
   updateProjectAction,
 } from "@/app/actions/projects";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedIntentions, storedProjectDetail, storedProjects } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { Checklist } from "./checklist";
 import { ProjectForm } from "./project-form";
+import { ProjectOverview } from "./project-overview";
 
 const STATUS_LABEL = {
   ACTIVE: "Active",
@@ -79,87 +78,32 @@ export async function ProjectDetailView({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-lg font-semibold">{project.title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{project.endGoal}</p>
-        {project.dueDate && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            Due {project.dueDate.toLocaleDateString()}
-          </p>
-        )}
-        <p className="mt-1 text-sm font-medium">{project.status}</p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {project.status === "ACTIVE" && (
-          <form action={pauseProjectAction.bind(null, project.id)}>
-            <Button type="submit" variant="outline">
-              Pause
-            </Button>
-          </form>
-        )}
-        {project.status === "PAUSED" && (
-          <form action={resumeProjectAction.bind(null, project.id)}>
-            <Button type="submit" variant="outline">
-              Resume
-            </Button>
-          </form>
-        )}
-        {project.status !== "COMPLETED" && (
-          <form action={completeProjectAction.bind(null, project.id)}>
-            <Button type="submit">Mark complete</Button>
-          </form>
-        )}
-        <Link
-          href={dashboardRoutes.editProject(project.id)}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Edit
-        </Link>
-        <form action={deleteProjectAction.bind(null, project.id)}>
-          <ConfirmSubmitButton confirmMessage="Delete this project? This can't be undone.">
-            Delete
-          </ConfirmSubmitButton>
-        </form>
-      </div>
+      <ProjectOverview
+        projectId={project.id}
+        title={project.title}
+        endGoal={project.endGoal}
+        dueLabel={project.dueDate ? project.dueDate.toLocaleDateString() : null}
+        status={project.status}
+        editHref={dashboardRoutes.editProject(project.id)}
+        pauseAction={pauseProjectAction}
+        resumeAction={resumeProjectAction}
+        completeAction={completeProjectAction}
+        deleteAction={deleteProjectAction}
+      />
 
       <div>
         <h3 className="text-lg font-medium">Tasks</h3>
-        <ul className="mt-2 flex flex-col gap-2">
-          {project.tasks.length === 0 && (
-            <p className="text-sm text-muted-foreground">No tasks yet.</p>
-          )}
-          {project.tasks.map((task) => (
-            <li key={task.id} className="flex items-center gap-2">
-              <form action={toggleProjectTaskAction.bind(null, task.id, project.id)}>
-                <button
-                  type="submit"
-                  aria-label={task.done ? "Mark not done" : "Mark done"}
-                  className={`h-5 w-5 rounded border ${
-                    task.done ? "border-primary bg-primary" : "border-border bg-background"
-                  }`}
-                />
-              </form>
-              <span className={`flex-1 ${task.done ? "text-muted-foreground line-through" : ""}`}>
-                {task.text}
-              </span>
-              <Link
-                href={dashboardRoutes.newEvent({ title: task.text, projectId: project.id })}
-                className="text-sm text-muted-foreground underline"
-              >
-                Schedule
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        <form
-          action={addProjectTaskAction.bind(null, project.id)}
-          className="mt-3 flex gap-2"
-        >
-          <Input name="text" placeholder="Add a task" required />
-          <Button type="submit">Add</Button>
-        </form>
+        <Checklist
+          listId={project.id}
+          items={project.tasks.map(({ id, text, done }) => ({ id, text, done }))}
+          emptyText="No tasks yet."
+          addPlaceholder="Add a task"
+          toggleAction={toggleProjectTaskAction}
+          addAction={addProjectTaskAction}
+          scheduleProjectId={project.id}
+          listClassName="mt-2 flex flex-col gap-2"
+          formClassName="mt-3 flex gap-2"
+        />
       </div>
     </div>
   );

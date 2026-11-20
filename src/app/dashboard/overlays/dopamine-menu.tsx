@@ -5,7 +5,7 @@ import {
   pickDopamineMenuItemAction,
 } from "@/app/actions/dopamine-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { RemovableList } from "./removable-list";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedDopamineMenuItems } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
@@ -44,28 +44,15 @@ export async function DopamineMenuView() {
 
       <div>
         <h2 className="text-sm font-medium text-muted-foreground">Your menu</h2>
-        <ul className="mt-2 flex flex-col gap-2">
-          {items.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nothing here yet — save something you found below.
-            </p>
-          )}
-          {items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
-              <span>{item.text}</span>
-              <form action={deleteDopamineMenuItemAction.bind(null, item.id)}>
-                <Button type="submit" variant="ghost" size="sm">
-                  Remove
-                </Button>
-              </form>
-            </li>
-          ))}
-        </ul>
-
-        <form action={addDopamineMenuItemAction} className="mt-3 flex gap-2">
-          <Input name="text" placeholder="e.g. Take a 10 minute walk" required />
-          <Button type="submit">Add</Button>
-        </form>
+        <RemovableList
+          items={items.map(({ id, text }) => ({ id, text }))}
+          emptyText="Nothing here yet — save something you found below."
+          addPlaceholder="e.g. Take a 10 minute walk"
+          addLabel="Add"
+          removeAction={deleteDopamineMenuItemAction}
+          addAction={addDopamineMenuItemAction}
+          listClassName="mt-2 flex flex-col gap-2"
+        />
       </div>
     </div>
   );

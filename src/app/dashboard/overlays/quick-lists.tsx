@@ -9,11 +9,11 @@ import {
 } from "@/app/actions/quick-lists";
 import { promoteQuickListItemToPostItAction } from "@/app/actions/post-its";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedQuickListDetail, storedQuickLists } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { Checklist } from "./checklist";
 import { QuickListForm } from "./quick-list-form";
 import { QuickListTabs } from "./quick-list-tabs";
 
@@ -63,43 +63,17 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
             </div>
           </div>
 
-          <ul className="flex flex-col gap-2">
-            {list.items.length === 0 && (
-              <p className="text-sm text-muted-foreground">No items yet — add one below.</p>
-            )}
-            {list.items.map((item) => (
-              <li key={item.id} className="flex items-center gap-2">
-                <form action={toggleQuickListItemAction.bind(null, item.id, list.id)}>
-                  <button
-                    type="submit"
-                    aria-label={item.done ? "Mark not done" : "Mark done"}
-                    className={`h-5 w-5 rounded border ${
-                      item.done ? "border-primary bg-primary" : "border-border bg-background"
-                    }`}
-                  />
-                </form>
-                <span className={`flex-1 ${item.done ? "text-muted-foreground line-through" : ""}`}>
-                  {item.text}
-                </span>
-                <Link
-                  href={dashboardRoutes.newEvent({ title: item.text })}
-                  className="text-sm text-muted-foreground underline"
-                >
-                  Schedule
-                </Link>
-                <form action={promoteQuickListItemToPostItAction.bind(null, item.id)}>
-                  <button type="submit" className="text-sm text-muted-foreground underline">
-                    → Post-it
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-
-          <form action={addQuickListItemAction.bind(null, list.id)} className="flex gap-2">
-            <Input name="text" placeholder="Add an item" required />
-            <Button type="submit">Add</Button>
-          </form>
+          <Checklist
+            listId={list.id}
+            items={list.items.map(({ id, text, done }) => ({ id, text, done }))}
+            emptyText="No items yet — add one below."
+            addPlaceholder="Add an item"
+            toggleAction={toggleQuickListItemAction}
+            addAction={addQuickListItemAction}
+            promoteToPostItAction={promoteQuickListItemToPostItAction}
+            listClassName="flex flex-col gap-2"
+            formClassName="flex gap-2"
+          />
         </>
       )}
     </div>

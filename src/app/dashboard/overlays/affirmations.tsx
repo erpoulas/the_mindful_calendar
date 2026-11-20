@@ -6,6 +6,7 @@ import {
 } from "@/app/actions/affirmations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RemovableList } from "./removable-list";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedAffirmations, storedTimezone } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
@@ -52,31 +53,15 @@ export async function AffirmationsView() {
 
       <div>
         <h2 className="text-sm font-medium text-muted-foreground">Your list</h2>
-        <ul className="mt-2 flex flex-col gap-2">
-          {affirmations.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nothing here yet — save one you found below.
-            </p>
-          )}
-          {affirmations.map((affirmation) => (
-            <li
-              key={affirmation.id}
-              className="flex items-center justify-between gap-2 text-sm"
-            >
-              <span>{affirmation.text}</span>
-              <form action={deleteAffirmationAction.bind(null, affirmation.id)}>
-                <Button type="submit" variant="ghost" size="sm">
-                  Remove
-                </Button>
-              </form>
-            </li>
-          ))}
-        </ul>
-
-        <form action={addAffirmationAction} className="mt-3 flex gap-2">
-          <Input name="text" placeholder="e.g. I am capable of hard things" required />
-          <Button type="submit">Add to my list</Button>
-        </form>
+        <RemovableList
+          items={affirmations.map(({ id, text }) => ({ id, text }))}
+          emptyText="Nothing here yet — save one you found below."
+          addPlaceholder="e.g. I am capable of hard things"
+          addLabel="Add to my list"
+          removeAction={deleteAffirmationAction}
+          addAction={addAffirmationAction}
+          listClassName="mt-2 flex flex-col gap-2"
+        />
       </div>
     </div>
   );
