@@ -1,11 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CreateIntentionSchema } from "@/lib/intention-schemas";
 import { createIntention, deleteIntention, updateIntention } from "@/lib/intentions";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export type IntentionFormState =
@@ -39,7 +39,7 @@ export async function createIntentionAction(
   const userId = await getCurrentUserId();
   await createIntention(db, { userId, ...validated.data });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["intentions"]);
 }
 
 export async function updateIntentionAction(
@@ -56,7 +56,7 @@ export async function updateIntentionAction(
   const userId = await getCurrentUserId();
   await updateIntention(db, { userId, intentionId, ...validated.data });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["intentions","events"]);
   redirect("/dashboard");
 }
 
@@ -64,6 +64,6 @@ export async function deleteIntentionAction(intentionId: string) {
   const userId = await getCurrentUserId();
   await deleteIntention(db, { userId, intentionId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["intentions","events","projects"]);
   redirect("/dashboard");
 }

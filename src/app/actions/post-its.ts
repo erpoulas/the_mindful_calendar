@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { CreatePostItSchema } from "@/lib/post-it-schemas";
 import {
   createPostIt,
@@ -10,6 +9,7 @@ import {
   updatePostItText,
 } from "@/lib/post-its";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export async function createPostItAction(formData: FormData) {
@@ -19,14 +19,14 @@ export async function createPostItAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await createPostIt(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["postIts"]);
 }
 
 export async function promoteQuickListItemToPostItAction(itemId: string) {
   const userId = await getCurrentUserId();
   await promoteQuickListItemToPostIt(db, { userId, itemId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["postIts","quickLists"]);
 }
 
 // Edits use the same text rules as creating a post-it.
@@ -37,19 +37,19 @@ export async function updatePostItTextAction(postItId: string, formData: FormDat
   const userId = await getCurrentUserId();
   await updatePostItText(db, { userId, postItId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["postIts"]);
 }
 
 export async function deletePostItAction(postItId: string) {
   const userId = await getCurrentUserId();
   await deletePostIt(db, { userId, postItId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["postIts"]);
 }
 
 export async function reorderPostItsAction(orderedIds: string[]) {
   const userId = await getCurrentUserId();
   await reorderPostIts(db, { userId, orderedIds });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["postIts"]);
 }

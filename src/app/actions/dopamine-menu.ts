@@ -1,9 +1,10 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { AddDopamineMenuItemSchema } from "@/lib/dopamine-menu-schemas";
 import { addDopamineMenuItem, deleteDopamineMenuItem } from "@/lib/dopamine-menu";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export async function addDopamineMenuItemAction(formData: FormData) {
@@ -13,14 +14,14 @@ export async function addDopamineMenuItemAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await addDopamineMenuItem(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["dopamineMenu"]);
 }
 
 export async function deleteDopamineMenuItemAction(itemId: string) {
   const userId = await getCurrentUserId();
   await deleteDopamineMenuItem(db, { userId, itemId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["dopamineMenu"]);
 }
 
 export async function pickDopamineMenuItemAction() {

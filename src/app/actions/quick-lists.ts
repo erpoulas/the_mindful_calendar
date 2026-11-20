@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { AddQuickListItemSchema, CreateQuickListSchema } from "@/lib/quick-list-schemas";
@@ -13,6 +12,7 @@ import {
   updateQuickList,
 } from "@/lib/quick-lists";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export type QuickListFormState =
@@ -31,7 +31,7 @@ export async function createQuickListAction(
   const userId = await getCurrentUserId();
   const list = await createQuickList(db, { userId, name: validated.data.name });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["quickLists"]);
   redirect(dashboardRoutes.quickLists(list.id));
 }
 
@@ -48,7 +48,7 @@ export async function updateQuickListAction(
   const userId = await getCurrentUserId();
   await updateQuickList(db, { userId, quickListId, name: validated.data.name });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["quickLists"]);
   redirect("/dashboard");
 }
 
@@ -56,7 +56,7 @@ export async function deleteQuickListAction(quickListId: string) {
   const userId = await getCurrentUserId();
   await deleteQuickList(db, { userId, quickListId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["quickLists"]);
   redirect("/dashboard");
 }
 
@@ -67,12 +67,12 @@ export async function addQuickListItemAction(quickListId: string, formData: Form
   const userId = await getCurrentUserId();
   await addQuickListItem(db, { userId, quickListId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["quickLists"]);
 }
 
 export async function toggleQuickListItemAction(itemId: string, quickListId: string) {
   const userId = await getCurrentUserId();
   await toggleQuickListItem(db, { userId, itemId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["quickLists"]);
 }

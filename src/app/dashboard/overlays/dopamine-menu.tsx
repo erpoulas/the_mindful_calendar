@@ -7,14 +7,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
+import { storedDopamineMenuItems } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
-import { getRandomDopamineMenuItem, listDopamineMenuItems } from "@/lib/dopamine-menu";
+import { getRandomDopamineMenuItem } from "@/lib/dopamine-menu";
 
 export async function DopamineMenuView() {
   const userId = await getCurrentUserId();
   const [pick, items] = await Promise.all([
     getRandomDopamineMenuItem(db, userId),
-    listDopamineMenuItems(db, userId),
+    storedDopamineMenuItems(userId),
   ]);
 
   return (

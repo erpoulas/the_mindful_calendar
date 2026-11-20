@@ -12,9 +12,8 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { storedQuickListDetail, storedQuickLists } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { getQuickListDetail, listQuickLists } from "@/lib/quick-lists";
 import { QuickListForm } from "./quick-list-form";
 import { QuickListTabs } from "./quick-list-tabs";
 
@@ -23,14 +22,14 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
   // With a list picked in the URL, load it alongside the tabs. Otherwise the
   // first list is shown, which needs the tabs first to know which it is.
   const [lists, pickedList] = await Promise.all([
-    listQuickLists(db, userId),
-    activeId ? getQuickListDetail(db, { userId, quickListId: activeId }) : null,
+    storedQuickLists(userId),
+    activeId ? storedQuickListDetail(userId, activeId) : null,
   ]);
   const firstId = lists[0]?.id;
   const list = activeId
     ? pickedList
     : firstId
-      ? await getQuickListDetail(db, { userId, quickListId: firstId })
+      ? await storedQuickListDetail(userId, firstId)
       : null;
 
   return (
@@ -120,7 +119,7 @@ export function QuickListCreateView() {
 
 export async function QuickListEditView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
-  const list = await getQuickListDetail(db, { userId, quickListId: id });
+  const list = await storedQuickListDetail(userId, id);
   if (!list) notFound();
 
   return (

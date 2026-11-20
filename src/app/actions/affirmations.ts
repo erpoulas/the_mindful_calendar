@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { AddAffirmationSchema, SetTodayAffirmationSchema } from "@/lib/affirmation-schemas";
 import {
   addAffirmation,
@@ -8,6 +8,7 @@ import {
   setTodayAffirmation,
 } from "@/lib/affirmations";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export async function addAffirmationAction(formData: FormData) {
@@ -17,14 +18,14 @@ export async function addAffirmationAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await addAffirmation(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["affirmations"]);
 }
 
 export async function deleteAffirmationAction(affirmationId: string) {
   const userId = await getCurrentUserId();
   await deleteAffirmation(db, { userId, affirmationId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["affirmations"]);
 }
 
 export async function setTodayAffirmationAction(formData: FormData) {
@@ -34,7 +35,7 @@ export async function setTodayAffirmationAction(formData: FormData) {
   const userId = await getCurrentUserId();
   await setTodayAffirmation(db, { userId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["affirmations"]);
 }
 
 export async function pickAffirmationAction() {

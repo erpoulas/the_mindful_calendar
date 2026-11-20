@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { syncGoogleCalendar } from "@/lib/google-sync";
-import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { storedTimezone } from "@/lib/stored-reads";
+import { forgetStoredFromRoute } from "@/lib/stored-results";
 
 /**
  * Syncs the calendar range on screen with Google. The dashboard calls this
@@ -25,7 +26,10 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = await getCurrentUserId();
-  const timeZone = await getUserTimezoneWithFallback(db, userId);
+  const timeZone = await storedTimezone(userId);
   const changed = await syncGoogleCalendar(db, { userId, start, end, timeZone });
+  // Google's changes reach the events (and, when an event is deleted, the
+  // journal entry written on it), so their stored copies are now out of date.
+  if (changed) forgetStoredFromRoute(userId, ["events", "journals"]);
   return NextResponse.json({ changed });
 }

@@ -15,9 +15,10 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
+import { storedJournalDetail, storedJournals } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { getJournalDetail, getRandomJournalPrompt, listJournals } from "@/lib/journals";
+import { getRandomJournalPrompt } from "@/lib/journals";
 import { JournalForm } from "./journal-form";
 
 const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
@@ -28,7 +29,7 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
 
 export async function JournalsListView() {
   const userId = await getCurrentUserId();
-  const journals = await listJournals(db, userId);
+  const journals = await storedJournals(userId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,7 +71,7 @@ export async function JournalDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const [journal, suggestedPrompt] = await Promise.all([
-    getJournalDetail(db, { userId, journalId: id }),
+    storedJournalDetail(userId, id),
     getRandomJournalPrompt(db, { userId, journalId: id }),
   ]);
   if (!journal) notFound();
@@ -213,7 +214,7 @@ export async function JournalDetailView({ id }: { id: string }) {
 export async function JournalEditView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
-  const journal = await getJournalDetail(db, { userId, journalId: id });
+  const journal = await storedJournalDetail(userId, id);
   if (!journal) notFound();
 
   return (
@@ -236,7 +237,7 @@ export async function JournalEntryEditView({
 }) {
   const userId = await getCurrentUserId();
 
-  const journal = await getJournalDetail(db, { userId, journalId: id });
+  const journal = await storedJournalDetail(userId, id);
   if (!journal) notFound();
 
   const entry = journal.entries.find((e) => e.id === entryId);

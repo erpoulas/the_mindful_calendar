@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CreateCalendarEventSchema } from "@/lib/calendar-event-schemas";
 import {
@@ -11,6 +10,7 @@ import {
   updateCalendarEvent,
 } from "@/lib/calendar-events";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 import { deletePostIt } from "@/lib/post-its";
 import { getUserTimezoneWithFallback } from "@/lib/user-settings";
@@ -93,7 +93,7 @@ export async function createCalendarEventAction(
     await deletePostIt(db, { userId, postItId });
   }
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["events","postIts"]);
   redirect("/dashboard");
 }
 
@@ -120,7 +120,7 @@ export async function updateCalendarEventAction(
     intentionIds: validated.data.intentionIds,
   });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["events"]);
   redirect("/dashboard");
 }
 
@@ -128,7 +128,7 @@ export async function deleteCalendarEventAction(eventId: string) {
   const userId = await getCurrentUserId();
   await deleteCalendarEvent(db, { userId, eventId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["events","journals"]);
   redirect("/dashboard");
 }
 
@@ -142,5 +142,5 @@ export async function moveCalendarEventAction(
   const userId = await getCurrentUserId();
   await moveCalendarEvent(db, { userId, eventId, startAt, endAt });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["events"]);
 }

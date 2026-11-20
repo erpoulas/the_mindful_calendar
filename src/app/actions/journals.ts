@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { refresh, revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { z } from "zod";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import {
@@ -21,6 +21,7 @@ import {
   updateJournalEntry,
 } from "@/lib/journals";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export type JournalFormState = { errors?: { name?: string[] } } | undefined;
@@ -37,7 +38,7 @@ export async function createJournalAction(
   const userId = await getCurrentUserId();
   await createJournal(db, { userId, name: validated.data.name });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
 }
 
 export async function updateJournalAction(
@@ -53,7 +54,7 @@ export async function updateJournalAction(
   const userId = await getCurrentUserId();
   await updateJournal(db, { userId, journalId, name: validated.data.name });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
   redirect("/dashboard");
 }
 
@@ -61,7 +62,7 @@ export async function deleteJournalAction(journalId: string) {
   const userId = await getCurrentUserId();
   await deleteJournal(db, { userId, journalId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
   redirect("/dashboard");
 }
 
@@ -72,14 +73,14 @@ export async function addJournalPromptAction(journalId: string, formData: FormDa
   const userId = await getCurrentUserId();
   await addJournalPrompt(db, { userId, journalId, text: validated.data.text });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
 }
 
 export async function deleteJournalPromptAction(promptId: string, journalId: string) {
   const userId = await getCurrentUserId();
   await deleteJournalPrompt(db, { userId, promptId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
 }
 
 export async function pickJournalPromptAction() {
@@ -105,7 +106,7 @@ export async function createJournalEntryAction(journalId: string, formData: Form
     startAt: validated.data.startAt ? new Date(validated.data.startAt) : undefined,
   });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals","events","intentions"]);
   redirect(dashboardRoutes.journal(journalId));
 }
 
@@ -122,7 +123,7 @@ export async function updateJournalEntryAction(
   const userId = await getCurrentUserId();
   await updateJournalEntry(db, { userId, entryId, content: validated.data.content });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals"]);
   redirect(dashboardRoutes.journal(journalId));
 }
 
@@ -130,6 +131,6 @@ export async function deleteJournalEntryAction(entryId: string, journalId: strin
   const userId = await getCurrentUserId();
   await deleteJournalEntry(db, { userId, entryId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["journals","events"]);
   redirect(dashboardRoutes.journal(journalId));
 }

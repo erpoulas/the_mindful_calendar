@@ -1,11 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { UpdateCalendarDisplaySchema, UpdateTimezoneSchema } from "@/lib/user-settings-schemas";
 import { getUserTimezone, setCalendarDisplaySettings, setUserTimezone } from "@/lib/user-settings";
 import { searchTimezones, type TimezoneMatch } from "@/lib/timezone-search";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export type TimezoneFormState = { errors?: { timezone?: string[] }; saved?: boolean } | undefined;
@@ -22,7 +22,7 @@ export async function updateTimezoneAction(
   const userId = await getCurrentUserId();
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["settings","events"]);
   return { saved: true };
 }
 
@@ -41,7 +41,7 @@ export async function saveBrowserTimezoneAction(timezone: string) {
   if (await getUserTimezone(db, userId)) return; // never overwrite a choice
 
   await setUserTimezone(db, { userId, timezone: validated.data.timezone });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["settings","events"]);
 }
 
 export type CalendarDisplayFormState =
@@ -63,6 +63,6 @@ export async function updateCalendarDisplayAction(
   const userId = await getCurrentUserId();
   await setCalendarDisplaySettings(db, { userId, ...validated.data });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["settings"]);
   return { saved: true };
 }

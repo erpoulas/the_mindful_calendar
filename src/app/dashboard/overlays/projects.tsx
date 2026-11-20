@@ -14,10 +14,8 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { storedIntentions, storedProjectDetail, storedProjects } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { listIntentions } from "@/lib/intentions";
-import { getProjectDetail, listProjects } from "@/lib/projects";
 import { ProjectForm } from "./project-form";
 
 const STATUS_LABEL = {
@@ -28,7 +26,7 @@ const STATUS_LABEL = {
 
 export async function ProjectsListView() {
   const userId = await getCurrentUserId();
-  const projects = await listProjects(db, userId);
+  const projects = await storedProjects(userId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,7 +56,7 @@ export async function ProjectsListView() {
 
 export async function ProjectCreateView() {
   const userId = await getCurrentUserId();
-  const intentions = await listIntentions(db, userId);
+  const intentions = await storedIntentions(userId);
 
   return (
     <ProjectForm
@@ -74,7 +72,7 @@ export async function ProjectCreateView() {
 export async function ProjectDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
-  const project = await getProjectDetail(db, { userId, projectId: id });
+  const project = await storedProjectDetail(userId, id);
   if (!project) notFound();
 
   return (
@@ -169,8 +167,8 @@ export async function ProjectEditView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const [project, intentions] = await Promise.all([
-    getProjectDetail(db, { userId, projectId: id }),
-    listIntentions(db, userId),
+    storedProjectDetail(userId, id),
+    storedIntentions(userId),
   ]);
 
   if (!project) notFound();

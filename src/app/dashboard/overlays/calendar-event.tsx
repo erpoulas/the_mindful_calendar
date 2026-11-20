@@ -6,11 +6,7 @@ import {
 } from "@/app/actions/calendar-events";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { getCurrentUserId } from "@/lib/auth";
-import { getCalendarEvent } from "@/lib/calendar-events";
-import { db } from "@/lib/db";
-import { listIntentions } from "@/lib/intentions";
-import { listProjects } from "@/lib/projects";
-import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { storedCalendarEvent, storedIntentions, storedProjects, storedTimezone } from "@/lib/stored-reads";
 import { convertWallClock } from "@/lib/wall-clock";
 import { EventForm } from "./event-form";
 
@@ -27,9 +23,9 @@ export async function NewEventView({
 }) {
   const userId = await getCurrentUserId();
   const [projects, intentions, mainTimeZone] = await Promise.all([
-    listProjects(db, userId),
-    listIntentions(db, userId),
-    getUserTimezoneWithFallback(db, userId),
+    storedProjects(userId),
+    storedIntentions(userId),
+    storedTimezone(userId),
   ]);
 
   // A date (from a post-it dropped on the month view) makes an all-day event.
@@ -67,10 +63,10 @@ export async function EditEventView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
   const [event, projects, intentions, mainTimeZone] = await Promise.all([
-    getCalendarEvent(db, { userId, eventId: id }),
-    listProjects(db, userId),
-    listIntentions(db, userId),
-    getUserTimezoneWithFallback(db, userId),
+    storedCalendarEvent(userId, id),
+    storedProjects(userId),
+    storedIntentions(userId),
+    storedTimezone(userId),
   ]);
 
   if (!event) notFound();

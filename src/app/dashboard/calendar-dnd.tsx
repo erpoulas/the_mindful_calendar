@@ -106,8 +106,8 @@ export function CalendarDndProvider({
 
       const reorderedVisible = arrayMove(panelKeys, oldIndex, newIndex);
       const fullOrder = [...reorderedVisible, ...hiddenPanels];
-      // The action's response already carries the updated page (it calls
-      // revalidatePath), so no router.refresh() is needed afterwards.
+      // The action's response already carries the updated page (it forgets
+      // the stored panel order), so no router.refresh() is needed afterwards.
       startTransition(async () => {
         showDropped({ panelOrder: reorderedVisible });
         await reorderPanelsAction(fullOrder);

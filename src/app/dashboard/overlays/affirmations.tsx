@@ -7,18 +7,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentUserId } from "@/lib/auth";
+import { storedAffirmations, storedTimezone } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
-import { getTodayAffirmation, listAffirmations } from "@/lib/affirmations";
-import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { getTodayAffirmation } from "@/lib/affirmations";
 
 export async function AffirmationsView() {
   const userId = await getCurrentUserId();
   // The list doesn't need the timezone, so it loads while the timezone does.
   const [today, affirmations] = await Promise.all([
-    getUserTimezoneWithFallback(db, userId).then((timeZone) =>
+    storedTimezone(userId).then((timeZone) =>
       getTodayAffirmation(db, userId, timeZone),
     ),
-    listAffirmations(db, userId),
+    storedAffirmations(userId),
   ]);
 
   return (

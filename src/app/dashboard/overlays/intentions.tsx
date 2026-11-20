@@ -8,17 +8,17 @@ import {
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
+import { storedIntentions, storedTimezone } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { findIntentionColor } from "@/lib/intention-colors";
-import { getIntentionDetail, listIntentions } from "@/lib/intentions";
-import { getUserTimezoneWithFallback } from "@/lib/user-settings";
+import { getIntentionDetail } from "@/lib/intentions";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { IntentionForm } from "./intention-form";
 
 export async function IntentionsListView() {
   const userId = await getCurrentUserId();
-  const intentions = await listIntentions(db, userId);
+  const intentions = await storedIntentions(userId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +60,7 @@ export async function IntentionsListView() {
 
 export async function IntentionDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
-  const timeZone = await getUserTimezoneWithFallback(db, userId);
+  const timeZone = await storedTimezone(userId);
 
   const detail = await getIntentionDetail(db, {
     userId,

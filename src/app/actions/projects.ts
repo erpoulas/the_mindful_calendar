@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { CreateProjectSchema } from "@/lib/project-schemas";
 import {
@@ -15,6 +14,7 @@ import {
   updateProject,
 } from "@/lib/projects";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
 export type ProjectFormState =
@@ -58,7 +58,7 @@ export async function createProjectAction(
     dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : undefined,
   });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }
 
 export async function updateProjectAction(
@@ -82,7 +82,7 @@ export async function updateProjectAction(
     dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : undefined,
   });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
   redirect("/dashboard");
 }
 
@@ -90,7 +90,7 @@ export async function deleteProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await deleteProject(db, { userId, projectId });
 
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects","events"]);
   redirect("/dashboard");
 }
 
@@ -100,29 +100,29 @@ export async function addProjectTaskAction(projectId: string, formData: FormData
 
   const userId = await getCurrentUserId();
   await addProjectTask(db, { userId, projectId, text });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }
 
 export async function toggleProjectTaskAction(taskId: string, projectId: string) {
   const userId = await getCurrentUserId();
   await toggleProjectTask(db, { userId, taskId });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }
 
 export async function pauseProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await pauseProject(db, { userId, projectId });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }
 
 export async function resumeProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await resumeProject(db, { userId, projectId });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }
 
 export async function completeProjectAction(projectId: string) {
   const userId = await getCurrentUserId();
   await completeProject(db, { userId, projectId });
-  revalidatePath("/dashboard", "layout");
+  forgetStoredAfterSave(userId, ["projects"]);
 }

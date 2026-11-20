@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getCurrentUserId } from "@/lib/auth";
+import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 import { revokeGoogleToken } from "@/lib/google-calendar";
 import { deleteGoogleConnection } from "@/lib/google-connections";
@@ -18,5 +18,8 @@ export async function disconnectGoogleCalendarAction() {
     );
   }
 
-  revalidatePath("/dashboard", "layout");
+  // Nothing stored holds the connection itself (it has sign-in tokens), but
+  // the events shown were synced through it, and forgetting them also makes
+  // this action send back a fresh page without the sync.
+  forgetStoredAfterSave(userId, ["events"]);
 }
