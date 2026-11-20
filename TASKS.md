@@ -87,7 +87,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Faster popups: count the weekly breakdown once and in one grouped query; then move each popup to its own /dashboard/<panel> route (parallel routes) so opening one renders only the popup, not the whole dashboard; update the AGENTS.md popup rule to match (done: bba38b2, d3797e5, ff0e882, 05d5f8c, 4d6c7c4, fa7126a, 199e302, f792fa5)
 - [x] Smoother navigation: instant popup frames, instant close that keeps the week, single-render drag-and-drop, non-blocking Google sync, fewer dashboard queries, prefetched week arrows (done: ddb890a, 59528e0, b4cc82a, 05f9990, bb3901e, afc33d1)
 - [x] Stored server results and preloaded popups: keep each feature's query results per user and throw away only that feature's copy when it changes, then preload every popup's first screen (done: 60dcf1a, df2bafb)
-- [ ] Instant clicks in popups: ticks, adds, deletes and project status changes show on screen at once and save in the background, undoing themselves if the save fails (claimed: perf session, 2026-11-20)
+- [x] Instant clicks in popups: ticks, adds, deletes and project status changes show on screen at once and save in the background, undoing themselves if the save fails; top loading bar removed (done: 1421f13, 33c4b4a)
 
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
