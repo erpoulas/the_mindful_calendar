@@ -265,10 +265,13 @@ export default async function DashboardPage({
             </div>
 
             <div className="relative z-10 flex shrink-0 items-center justify-between px-4 pb-3 text-sm">
-              <Link href={prevHref} className="underline">
+              {/* prefetch={true} renders the neighbouring week or month in the
+                  background (production only), so stepping through the
+                  calendar shows it at once instead of waiting on the server. */}
+              <Link href={prevHref} prefetch className="underline">
                 ← Previous {mode === "month" ? "month" : "week"}
               </Link>
-              <Link href={nextHref} className="underline">
+              <Link href={nextHref} prefetch className="underline">
                 Next {mode === "month" ? "month" : "week"} →
               </Link>
             </div>
