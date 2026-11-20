@@ -125,6 +125,10 @@ export function Sheet({
                 width={backgroundImage.width}
                 height={backgroundImage.height}
                 aria-hidden
+                // The art is the popup's shape, so load it the moment the
+                // popup opens instead of lazily, or it pops in afterwards.
+                loading="eager"
+                fetchPriority="high"
                 className={cn("pointer-events-none", IMAGE_CLASSES[size])}
               />
               <div
