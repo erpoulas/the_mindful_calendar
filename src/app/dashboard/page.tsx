@@ -8,14 +8,14 @@ import { getTodayAffirmation } from "@/lib/affirmations";
 import { listCalendarEvents } from "@/lib/calendar-events";
 import { getWeekRange } from "@/lib/calendar-week";
 import { getWeeklyReviewStats } from "@/lib/dashboard";
-import { getHiddenPanels, getPanelOrder, sortPanelKeys } from "@/lib/dashboard-preferences";
+import { getDashboardPreferences, sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
 import { listPostIts } from "@/lib/post-its";
 import { getMonthGrid } from "@/lib/calendar-month";
-import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
+import { getUserSettings } from "@/lib/user-settings";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { eventColor } from "@/lib/intention-colors";
 import { toWallClockDate } from "@/lib/wall-clock";
@@ -61,10 +61,23 @@ export default async function DashboardPage({
   const showPostIts = panelParam === "postits";
   const mode = modeParam === "month" ? "month" : "week";
 
+  // Started before waiting on the timezone below, since they don't need it,
+  // so the timezone lookup doesn't add a trip to the database in front of
+  // them. The empty catch only stops an early failure from counting as
+  // "unhandled" while the timezone loads; awaiting it below still throws.
+  const timezoneFreeQueries = Promise.all([
+    getDashboardPreferences(db, userId),
+    listPostIts(db, userId),
+    getGoogleConnection(db, userId),
+    cookies(),
+  ]);
+  timezoneFreeQueries.catch(() => {});
+
   // Events are stored as wall-clock times, so "today" must be today in the
   // user's saved timezone, not in UTC. With none saved yet, the browser's
   // zone is saved on first load (SaveBrowserTimezone) and the page re-renders.
-  const savedTimeZone = await getUserTimezone(db, userId);
+  // One read gives both the timezone and the calendar display settings.
+  const { timezone: savedTimeZone, ...displaySettings } = await getUserSettings(db, userId);
   const timeZone = savedTimeZone ?? "UTC";
   const referenceDate =
     typeof startParam === "string"
@@ -80,24 +93,14 @@ export default async function DashboardPage({
   const [
     affirmation,
     reviewStats,
-    hiddenPanels,
-    panelOrder,
-    postIts,
-    googleConnection,
-    cookieStore,
     events,
-    displaySettings,
+    [{ hiddenPanels, panelOrder }, postIts, googleConnection, cookieStore],
   ] = await Promise.all([
     getTodayAffirmation(db, userId, timeZone),
     // Also holds the intention breakdown, so it isn't fetched a second time.
     getWeeklyReviewStats(db, { userId, referenceDate }),
-    getHiddenPanels(db, userId),
-    getPanelOrder(db, userId),
-    listPostIts(db, userId),
-    getGoogleConnection(db, userId),
-    cookies(),
     listCalendarEvents(db, { userId, ...visibleRange }),
-    getCalendarDisplaySettings(db, userId),
+    timezoneFreeQueries,
   ]);
 
   // Changes whenever an event on screen is added, edited or deleted, which

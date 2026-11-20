@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
 import {
+  getDashboardPreferences,
   getHiddenPanels,
   getPanelOrder,
   reorderPanels,
@@ -190,5 +191,27 @@ describe("sortPanelKeys", () => {
   it("ignores stored keys that are no longer in the default set", () => {
     const result = sortPanelKeys(["affirmation", "breakdown"], ["season", "breakdown", "affirmation"]);
     expect(result).toEqual(["breakdown", "affirmation"]);
+  });
+});
+
+describe("getDashboardPreferences", () => {
+  it("gives empty lists to a user who never customized the dashboard", async () => {
+    await withRollback(async (tx) => {
+      const result = await getDashboardPreferences(tx, "test-user-1");
+
+      expect(result).toEqual({ hiddenPanels: [], panelOrder: [] });
+    });
+  });
+
+  it("returns the hidden panels and the panel order together", async () => {
+    await withRollback(async (tx) => {
+      await togglePanelVisibility(tx, { userId: "test-user-1", panelKey: "dopamine" });
+      await reorderPanels(tx, { userId: "test-user-1", orderedKeys: ["journal", "projects"] });
+      await togglePanelVisibility(tx, { userId: "test-user-2", panelKey: "review" });
+
+      const result = await getDashboardPreferences(tx, "test-user-1");
+
+      expect(result).toEqual({ hiddenPanels: ["dopamine"], panelOrder: ["journal", "projects"] });
+    });
   });
 });

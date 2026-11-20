@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
-import { getCalendarDisplaySettings, getUserTimezone } from "@/lib/user-settings";
+import { getUserSettings } from "@/lib/user-settings";
 import {
   CalendarDisplayForm,
   ChangeEmailForm,
@@ -17,9 +17,8 @@ export async function AccountSettingsView({ googleOutcome }: { googleOutcome?: s
   const userId = await getCurrentUserId();
   const supabase = await createClient();
 
-  const [timezone, calendarDisplay, { data }, googleConnection] = await Promise.all([
-    getUserTimezone(db, userId),
-    getCalendarDisplaySettings(db, userId),
+  const [{ timezone, ...calendarDisplay }, { data }, googleConnection] = await Promise.all([
+    getUserSettings(db, userId),
     supabase.auth.getUser(),
     getGoogleConnection(db, userId),
   ]);

@@ -3,6 +3,7 @@ import { withRollback } from "@/test/withRollback";
 import type { DbClient } from "@/lib/db";
 import {
   getCalendarDisplaySettings,
+  getUserSettings,
   getUserTimezone,
   setCalendarDisplaySettings,
   getUserTimezoneWithFallback,
@@ -190,6 +191,36 @@ describe("setCalendarDisplaySettings", () => {
 
       const theirs = await getCalendarDisplaySettings(tx, "test-user-2");
       expect(theirs).toEqual({ extraTimezones: ["Asia/Tokyo"], use24HourClock: true });
+    });
+  });
+});
+
+describe("getUserSettings", () => {
+  it("gives no timezone and the default display settings to a new user", async () => {
+    await withRollback(async (tx) => {
+      const result = await getUserSettings(tx, "test-user-1");
+
+      expect(result).toEqual({ timezone: null, extraTimezones: [], use24HourClock: false });
+    });
+  });
+
+  it("returns the timezone and display settings together", async () => {
+    await withRollback(async (tx) => {
+      await setUserTimezone(tx, { userId: "test-user-1", timezone: "America/Denver" });
+      await setCalendarDisplaySettings(tx, {
+        userId: "test-user-1",
+        extraTimezones: ["Europe/Paris"],
+        use24HourClock: true,
+      });
+      await setUserTimezone(tx, { userId: "test-user-2", timezone: "Asia/Tokyo" });
+
+      const result = await getUserSettings(tx, "test-user-1");
+
+      expect(result).toEqual({
+        timezone: "America/Denver",
+        extraTimezones: ["Europe/Paris"],
+        use24HourClock: true,
+      });
     });
   });
 });

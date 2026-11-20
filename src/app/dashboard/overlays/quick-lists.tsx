@@ -20,12 +20,18 @@ import { QuickListTabs } from "./quick-list-tabs";
 
 export async function QuickListsView({ activeId }: { activeId?: string }) {
   const userId = await getCurrentUserId();
-  const lists = await listQuickLists(db, userId);
-
-  const effectiveId = activeId ?? lists[0]?.id;
-  const list = effectiveId
-    ? await getQuickListDetail(db, { userId, quickListId: effectiveId })
-    : null;
+  // With a list picked in the URL, load it alongside the tabs. Otherwise the
+  // first list is shown, which needs the tabs first to know which it is.
+  const [lists, pickedList] = await Promise.all([
+    listQuickLists(db, userId),
+    activeId ? getQuickListDetail(db, { userId, quickListId: activeId }) : null,
+  ]);
+  const firstId = lists[0]?.id;
+  const list = activeId
+    ? pickedList
+    : firstId
+      ? await getQuickListDetail(db, { userId, quickListId: firstId })
+      : null;
 
   return (
     <div className="flex flex-col gap-6">

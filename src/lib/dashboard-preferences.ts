@@ -1,8 +1,16 @@
 import type { DbClient } from "./db";
 
-export async function getHiddenPanels(client: DbClient, userId: string): Promise<string[]> {
+/** The hidden panels and the panel order in one read; empty lists if never customized. */
+export async function getDashboardPreferences(
+  client: DbClient,
+  userId: string,
+): Promise<{ hiddenPanels: string[]; panelOrder: string[] }> {
   const prefs = await client.dashboardPreferences.findUnique({ where: { userId } });
-  return prefs?.hiddenPanels ?? [];
+  return { hiddenPanels: prefs?.hiddenPanels ?? [], panelOrder: prefs?.panelOrder ?? [] };
+}
+
+export async function getHiddenPanels(client: DbClient, userId: string): Promise<string[]> {
+  return (await getDashboardPreferences(client, userId)).hiddenPanels;
 }
 
 export async function togglePanelVisibility(
@@ -25,8 +33,7 @@ export async function togglePanelVisibility(
 }
 
 export async function getPanelOrder(client: DbClient, userId: string): Promise<string[]> {
-  const prefs = await client.dashboardPreferences.findUnique({ where: { userId } });
-  return prefs?.panelOrder ?? [];
+  return (await getDashboardPreferences(client, userId)).panelOrder;
 }
 
 export async function reorderPanels(

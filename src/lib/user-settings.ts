@@ -1,9 +1,32 @@
 import type { DbClient } from "./db";
 import { markGoogleEventsForReread } from "./google-sync";
 
-export async function getUserTimezone(client: DbClient, userId: string): Promise<string | null> {
+export type CalendarDisplaySettings = {
+  extraTimezones: string[];
+  use24HourClock: boolean;
+};
+
+export type UserSettings = CalendarDisplaySettings & {
+  /** null until the user (or their browser) has picked one. */
+  timezone: string | null;
+};
+
+/**
+ * All of a user's settings in one read, with defaults for anything never
+ * saved. Pages that need both the timezone and the display settings should
+ * use this instead of reading the same row twice.
+ */
+export async function getUserSettings(client: DbClient, userId: string): Promise<UserSettings> {
   const settings = await client.userSettings.findUnique({ where: { userId } });
-  return settings?.timezone ?? null;
+  return {
+    timezone: settings?.timezone ?? null,
+    extraTimezones: settings?.extraTimezones ?? [],
+    use24HourClock: settings?.use24HourClock ?? false,
+  };
+}
+
+export async function getUserTimezone(client: DbClient, userId: string): Promise<string | null> {
+  return (await getUserSettings(client, userId)).timezone;
 }
 
 /** The saved timezone, or UTC for users who haven't picked one yet. */
@@ -14,21 +37,13 @@ export async function getUserTimezoneWithFallback(
   return (await getUserTimezone(client, userId)) ?? "UTC";
 }
 
-export type CalendarDisplaySettings = {
-  extraTimezones: string[];
-  use24HourClock: boolean;
-};
-
 /** Extra time zones and clock style for the calendar; defaults for users who never saved them. */
 export async function getCalendarDisplaySettings(
   client: DbClient,
   userId: string,
 ): Promise<CalendarDisplaySettings> {
-  const settings = await client.userSettings.findUnique({ where: { userId } });
-  return {
-    extraTimezones: settings?.extraTimezones ?? [],
-    use24HourClock: settings?.use24HourClock ?? false,
-  };
+  const { extraTimezones, use24HourClock } = await getUserSettings(client, userId);
+  return { extraTimezones, use24HourClock };
 }
 
 export async function setCalendarDisplaySettings(

@@ -13,9 +13,11 @@ import { getUserTimezoneWithFallback } from "@/lib/user-settings";
 
 export async function AffirmationsView() {
   const userId = await getCurrentUserId();
-  const timeZone = await getUserTimezoneWithFallback(db, userId);
+  // The list doesn't need the timezone, so it loads while the timezone does.
   const [today, affirmations] = await Promise.all([
-    getTodayAffirmation(db, userId, timeZone),
+    getUserTimezoneWithFallback(db, userId).then((timeZone) =>
+      getTodayAffirmation(db, userId, timeZone),
+    ),
     listAffirmations(db, userId),
   ]);
 
