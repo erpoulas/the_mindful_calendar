@@ -43,6 +43,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-it overflow pop-out, ghost-card creation, drag-to-reorder (done: 0d522dd)
 - [x] Expand toggle for clipped post-its (done: bac28b9)
 - [x] Drag-to-reorder dashboard panels in customize mode (done: 14f9e51)
+- [ ] Easy back-and-forth inside popups: from a journal, project or intention detail, a "back to list" link plus a way to jump straight to another one (previous/next or a switcher, like Quick Lists' tabs) without closing the popup. Start with Journals, then Projects and Intentions. Build on the per-panel routes from the "Faster popups" task. Also add back and forward buttons in the popup header that step through the screens you've visited inside the popup (like a browser's back/forward), so you can retrace your steps without closing it.
 
 ## Dashboard and calendar polish (uncommitted work found 2026-11-18)
 - [x] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (done: 03f85a2)
@@ -51,6 +52,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Calendar "today" markers: current-time line, sticky day headers, today circle in month view (done: ec535f6)
 - [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
 - [x] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync) (done: adb5185, eb13238, 7b23dea)
+- [ ] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
@@ -78,7 +80,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 ## Calendar display options
 - [x] Account settings: show extra time zones beside the week view's hour labels (like Google Calendar), and pick 12-hour (am/pm) or 24-hour (military) time (done: 81fb82a)
 - [x] Week view: show each all-day event under the day it falls on, instead of one flat list (done: d943482)
-- [ ] Event form: pick the time zone an event's times are entered in (like Google Calendar); the event remembers it and shows in the right place on the calendar (done: ab69758)
+- [x] Event form: pick the time zone an event's times are entered in (like Google Calendar); the event remembers it and shows in the right place on the calendar (done: ab69758)
 
 ## Going live
 - [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
