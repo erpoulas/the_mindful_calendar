@@ -249,14 +249,17 @@ export default async function DashboardPage({
               </h1>
               <div className="flex gap-2">
                 <div className="flex overflow-hidden rounded border border-border text-sm">
+                  {/* prefetch: switching between week and month shows at once. */}
                   <Link
                     href={`/dashboard?start=${toDateParam(referenceDate)}`}
+                    prefetch
                     className={`px-3 py-1 ${mode === "week" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
                   >
                     Week
                   </Link>
                   <Link
                     href={`/dashboard?mode=month&start=${toDateParam(referenceDate)}`}
+                    prefetch
                     className={`px-3 py-1 ${mode === "month" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
                   >
                     Month
