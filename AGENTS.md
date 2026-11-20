@@ -35,7 +35,7 @@ Calendar event times are stored as **wall-clock times in UTC fields**: an event 
 - Timestamps that only record when something happened (`completedAt`, `doneAt`, `setAt`) are real moments and stay as plain `new Date()`.
 
 ### Google Calendar sync
-Events sync both ways with Google each time the dashboard loads (`syncGoogleCalendar` in `src/lib/google-sync.ts`). Google is optional: without the `GOOGLE_*` env vars, `isGoogleCalendarConfigured()` returns false and the connect options are hidden, so code touching Google must keep working when it isn't set up. Two rules keep sync working:
+Events sync both ways with Google each time the dashboard loads (`syncGoogleCalendar` in `src/lib/google-sync.ts`). The browser starts it after the page is showing, through the Route Handler `src/app/api/google-sync/route.ts`, not a server action: Next runs a tab's server actions one at a time, so a slow sync would hold up every save. Google is optional: without the `GOOGLE_*` env vars, `isGoogleCalendarConfigured()` returns false and the connect options are hidden, so code touching Google must keep working when it isn't set up. Two rules keep sync working:
 - Delete calendar events only through `deleteCalendarEvent` or `removeCalendarEventRow` (`src/lib/calendar-events.ts`). They leave a note so the next sync deletes the event in Google too. A raw `calendarEvent.delete` skips that note, so the sync brings the event straight back from Google.
 - Edit events with normal Prisma updates. The sync spots app edits because `updatedAt` moves past `lastSyncedAt`.
 

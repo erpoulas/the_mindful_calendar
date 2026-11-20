@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
-import { GoogleCalendarSync } from "@/app/dashboard/google-calendar-sync";
-import { syncGoogleCalendarAction } from "@/app/actions/google-calendar";
+import { GoogleCalendarSync, TAB_RETURN_SYNC_GAP_MS } from "@/app/dashboard/google-calendar-sync";
+import { requestGoogleSync } from "@/app/dashboard/request-google-sync";
 
 const { refresh, router } = vi.hoisted(() => {
   const refresh = vi.fn();
@@ -13,17 +13,18 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
-vi.mock("@/app/actions/google-calendar", () => ({
-  syncGoogleCalendarAction: vi.fn(async () => false),
+vi.mock("@/app/dashboard/request-google-sync", () => ({
+  requestGoogleSync: vi.fn(async () => false),
 }));
 
-const syncAction = vi.mocked(syncGoogleCalendarAction);
+const syncAction = vi.mocked(requestGoogleSync);
 
 const WEEK = { start: "2026-11-16T00:00:00.000Z", end: "2026-11-23T00:00:00.000Z" };
 const NEXT_WEEK = { start: "2026-11-23T00:00:00.000Z", end: "2026-11-30T00:00:00.000Z" };
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe("GoogleCalendarSync", () => {
@@ -68,15 +69,30 @@ describe("GoogleCalendarSync", () => {
     await waitFor(() => expect(syncAction).toHaveBeenCalledTimes(3));
   });
 
-  it("syncs again when the user comes back to the tab", async () => {
+  it("syncs again when the user comes back to the tab after a while", async () => {
     render(<GoogleCalendarSync {...WEEK} eventsVersion="v1" />);
     await waitFor(() => expect(syncAction).toHaveBeenCalledTimes(1));
 
+    const later = Date.now() + TAB_RETURN_SYNC_GAP_MS + 1;
+    vi.spyOn(Date, "now").mockReturnValue(later);
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
 
     await waitFor(() => expect(syncAction).toHaveBeenCalledTimes(2));
+  });
+
+  it("doesn't sync again when the user comes straight back to the tab", async () => {
+    render(<GoogleCalendarSync {...WEEK} eventsVersion="v1" />);
+    await waitFor(() => expect(syncAction).toHaveBeenCalledTimes(1));
+    // Let the first sync finish, so it records when it ended.
+    await act(async () => {});
+
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(syncAction).toHaveBeenCalledTimes(1);
   });
 
   it("never runs two syncs at once; a request made meanwhile runs after", async () => {
