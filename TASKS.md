@@ -52,7 +52,13 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Calendar "today" markers: current-time line, sticky day headers, today circle in month view (done: ec535f6)
 - [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
 - [x] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync) (done: adb5185, eb13238, 7b23dea)
-- [ ] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions
+- [x] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions (done: 8101d1f)
+- [ ] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too
+- [ ] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does
+- [ ] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features
+- [ ] Quick Lists: edit an item's text in place (click it, like post-its)
+- [ ] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links)
+- [ ] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
@@ -68,6 +74,12 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
 - [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
 - [x] Dashboard is capped at 72rem and centered, leaving empty bands on wide windows; let it fill the full width (done: e46dd9f)
+
+- [x] `npm test`: the GoogleCalendarSync and NavigationProgress component tests (12 tests) fail because their `vi.mock("next/navigation")` isn't applied, so the real router runs ("invariant expected app router to be mounted"). This blocks every commit, since the checks must pass. Cause: Vitest treats `c:` and `C:` as different paths on Windows (done: 9028e84)
+
+## Onboarding
+- [ ] Audit the in-app instructions and helper text, and cut or shorten them so screens stay uncluttered
+- [ ] First-run tutorial: after sign up, a short guided walk-through of setting up (first intention, project, event, post-it); replay it anytime from Account settings. Replaces most of the cut instructions
 
 ## Performance
 - [x] Faster dashboard clicks: run the Google sync in the background instead of before every render, check the login without a second network call, run the dashboard queries in parallel, show feedback while a click loads (done: 09c568d, 677e2e6, 4902f6c)
