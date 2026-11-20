@@ -74,7 +74,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
 - [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
 - [x] Dashboard is capped at 72rem and centered, leaving empty bands on wide windows; let it fill the full width (done: e46dd9f)
-- [ ] Month view: event titles are cut off and look broken. On busy days the chips are squashed into thin bars with only the top half of the text showing ("morning w", "csci 4273" sliced through), some days show empty slivers, and chip heights differ from day to day. Each visible event should be a full-height, single-line chip with "…" at the end, with the rest moved into "+N more"
+- [ ] Month view: event titles are cut off and look broken. On busy days the chips are squashed into thin bars with only the top half of the text showing ("morning w", "csci 4273" sliced through), some days show empty slivers, and chip heights differ from day to day. Each visible event should be a full-height, single-line chip with "…" at the end, with the rest moved into "+N more" (claimed: perf session, 2026-11-20)
 
 - [x] `npm test`: the GoogleCalendarSync and NavigationProgress component tests (12 tests) fail because their `vi.mock("next/navigation")` isn't applied, so the real router runs ("invariant expected app router to be mounted"). This blocks every commit, since the checks must pass. Cause: Vitest treats `c:` and `C:` as different paths on Windows (done: 9028e84)
 
@@ -99,7 +99,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Event form: pick the time zone an event's times are entered in (like Google Calendar); the event remembers it and shows in the right place on the calendar (done: ab69758)
 
 ## Going live
-- [ ] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (claimed: deploy session, 2026-11-18)
+- [x] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (done: 2fd87a4; env vars and redirect URLs set up on Vercel, Supabase and Google by the owner)
 
 ## Docs
 - [x] Bring README up to date with the current codebase (done: b2c9d3d)
