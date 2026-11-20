@@ -74,6 +74,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Post-its: dismissing (✕) gives no feedback until the whole dashboard reloads, and the ✕ is a tiny target; hide the note right away and enlarge the button (done: 113ca25)
 - [x] Post-its: click a note to edit its text in place (still draggable) (done: e1c18c1)
 - [x] Dashboard is capped at 72rem and centered, leaving empty bands on wide windows; let it fill the full width (done: e46dd9f)
+- [ ] Month view: event titles are cut off and look broken. On busy days the chips are squashed into thin bars with only the top half of the text showing ("morning w", "csci 4273" sliced through), some days show empty slivers, and chip heights differ from day to day. Each visible event should be a full-height, single-line chip with "…" at the end, with the rest moved into "+N more"
 
 - [x] `npm test`: the GoogleCalendarSync and NavigationProgress component tests (12 tests) fail because their `vi.mock("next/navigation")` isn't applied, so the real router runs ("invariant expected app router to be mounted"). This blocks every commit, since the checks must pass. Cause: Vitest treats `c:` and `C:` as different paths on Windows (done: 9028e84)
 
@@ -86,6 +87,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Faster popups: count the weekly breakdown once and in one grouped query; then move each popup to its own /dashboard/<panel> route (parallel routes) so opening one renders only the popup, not the whole dashboard; update the AGENTS.md popup rule to match (done: bba38b2, d3797e5, ff0e882, 05d5f8c, 4d6c7c4, fa7126a, 199e302, f792fa5)
 - [x] Smoother navigation: instant popup frames, instant close that keeps the week, single-render drag-and-drop, non-blocking Google sync, fewer dashboard queries, prefetched week arrows (done: ddb890a, 59528e0, b4cc82a, 05f9990, bb3901e, afc33d1)
 - [x] Stored server results and preloaded popups: keep each feature's query results per user and throw away only that feature's copy when it changes, then preload every popup's first screen (done: 60dcf1a, df2bafb)
+- [ ] Instant clicks in popups: ticks, adds, deletes and project status changes show on screen at once and save in the background, undoing themselves if the save fails (claimed: perf session, 2026-11-20)
 
 ## Sign-in polish
 - [x] Password preview: a show/hide (eye) toggle on password fields (done: 7cb694b)
