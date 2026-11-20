@@ -46,8 +46,6 @@ export function MonthGrid({
         </div>
       ))}
       {days.map(({ date, inMonth, events: dayEvents }) => {
-        const shown = dayEvents.slice(0, 3);
-        const overflow = dayEvents.length - shown.length;
         const weekStartParam = toDateParam(date);
 
         return (
@@ -57,8 +55,8 @@ export function MonthGrid({
             dayNumber={date.getUTCDate()}
             inMonth={inMonth}
             weekStartHref={`/dashboard?start=${weekStartParam}`}
-            events={shown}
-            overflow={overflow}
+            // All of them: each day measures how many fit (MonthDayCell).
+            events={dayEvents}
           />
         );
       })}

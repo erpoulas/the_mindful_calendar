@@ -21,3 +21,25 @@ export function getMonthGrid(referenceDate: Date) {
 
   return { monthStart, monthEnd, gridStart, gridEnd };
 }
+
+/**
+ * How many event lines a month-view day can show without cutting any off.
+ * Each line (an event, or the "+N more" link) takes `gap` space above it
+ * plus `lineHeight`. When some events don't fit, the last line that fits is
+ * kept for "+N more".
+ */
+export function fitEventCount({
+  availableHeight,
+  lineHeight,
+  gap,
+  eventCount,
+}: {
+  availableHeight: number;
+  lineHeight: number;
+  gap: number;
+  eventCount: number;
+}) {
+  const linesThatFit = Math.max(0, Math.floor(availableHeight / (lineHeight + gap)));
+  if (eventCount <= linesThatFit) return eventCount;
+  return Math.max(0, linesThatFit - 1);
+}
