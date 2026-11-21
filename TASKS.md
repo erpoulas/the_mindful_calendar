@@ -53,8 +53,8 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Demo mode: SKIP_LOGIN=true skips sign-in for local UI browsing (done: fdcf474)
 - [x] Color events by intention: intention colors limited to Google Calendar's 11 event colors (swatch picker), events drawn in their intention's color, the same color sent to Google, and changing an intention's color recolors all its events (in Google on the next sync) (done: adb5185, eb13238, 7b23dea)
 - [x] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions (done: 8101d1f)
-- [ ] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too (claimed: helper agent, 2026-11-20)
-- [ ] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does (claimed: helper agent, 2026-11-20)
+- [x] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too (done: 1a885e4)
+- [x] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does (done: bc0f512)
 - [ ] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features
 - [ ] Quick Lists: edit an item's text in place (click it, like post-its) (claimed: perf session, 2026-11-20)
 - [ ] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links) (claimed: perf session, 2026-11-20)
