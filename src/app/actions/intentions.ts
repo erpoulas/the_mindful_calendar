@@ -3,7 +3,13 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { CreateIntentionSchema } from "@/lib/intention-schemas";
-import { createIntention, deleteIntention, updateIntention } from "@/lib/intentions";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
+import {
+  createIntention,
+  deleteIntention,
+  setIntentionColor,
+  updateIntention,
+} from "@/lib/intentions";
 import { getCurrentUserId } from "@/lib/auth";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
@@ -65,5 +71,22 @@ export async function deleteIntentionAction(intentionId: string) {
   await deleteIntention(db, { userId, intentionId });
 
   forgetStoredAfterSave(userId, ["intentions","events","projects"]);
-  redirect("/dashboard");
+  // Back to the intentions list: deleting from the list keeps you there, and
+  // deleting from an intention's own screen returns to the list.
+  redirect(dashboardRoutes.intentions());
+}
+
+/**
+ * Recolors an intention from the color dot on the intentions list ("" for
+ * no color). Also allowed for the built-in Journal intention. Its events
+ * are drawn in the new color, so the stored events are forgotten too.
+ */
+export async function updateIntentionColorAction(intentionId: string, colorKey: string) {
+  const validated = CreateIntentionSchema.shape.color.safeParse(colorKey || undefined);
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  await setIntentionColor(db, { userId, intentionId, color: validated.data ?? null });
+
+  forgetStoredAfterSave(userId, ["intentions", "events"]);
 }

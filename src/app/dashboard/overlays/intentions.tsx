@@ -4,6 +4,7 @@ import {
   createIntentionAction,
   deleteIntentionAction,
   updateIntentionAction,
+  updateIntentionColorAction,
 } from "@/app/actions/intentions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,10 +12,10 @@ import { getCurrentUserId } from "@/lib/auth";
 import { storedIntentions, storedTimezone } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { findIntentionColor } from "@/lib/intention-colors";
 import { getIntentionDetail } from "@/lib/intentions";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { IntentionForm } from "./intention-form";
+import { IntentionRow } from "./intention-row";
 
 export async function IntentionsListView() {
   const userId = await getCurrentUserId();
@@ -26,28 +27,14 @@ export async function IntentionsListView() {
         {intentions.length === 0 && (
           <p className="text-sm text-muted-foreground">No intentions yet — add one below.</p>
         )}
-        {intentions.map((intention) => {
-          const color = findIntentionColor(intention.color);
-          return (
-            <li key={intention.id}>
-              {/* prefetch: loads each intention's screen while the list is open. */}
-              <Link
-                href={dashboardRoutes.intention(intention.id)}
-                prefetch
-                className="flex items-center gap-2 rounded border px-3 py-2 hover:bg-accent"
-              >
-                {color && (
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: color.hex }}
-                    title={color.name}
-                  />
-                )}
-                {intention.name}
-              </Link>
-            </li>
-          );
-        })}
+        {intentions.map(({ id, name, color, isSystem }) => (
+          <IntentionRow
+            key={id}
+            intention={{ id, name, color, isSystem }}
+            recolorAction={updateIntentionColorAction}
+            deleteAction={deleteIntentionAction}
+          />
+        ))}
       </ul>
 
       <IntentionForm

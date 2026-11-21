@@ -64,38 +64,48 @@ function ColorPicker({ defaultKey }: { defaultKey: string }) {
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="mb-1.5 text-sm font-medium">Color (optional)</legend>
-      <div className="flex flex-wrap gap-2">
-        <label title="None" className="cursor-pointer">
-          <input
-            type="radio"
-            name="color"
-            value=""
-            defaultChecked={defaultKey === ""}
-            className="peer sr-only"
-          />
-          <span className={`${SWATCH_CLASSES} bg-background text-xs text-muted-foreground`}>
-            <span aria-hidden>/</span>
-            <span className="sr-only">None</span>
-          </span>
-        </label>
-        {INTENTION_COLORS.map((color) => (
-          <label key={color.key} title={color.name} className="cursor-pointer">
-            <input
-              type="radio"
-              name="color"
-              value={color.key}
-              defaultChecked={defaultKey === color.key}
-              className="peer sr-only"
-            />
-            <span className={SWATCH_CLASSES} style={{ backgroundColor: color.hex }}>
-              <span className="sr-only">{color.name}</span>
-            </span>
-          </label>
-        ))}
-      </div>
+      <ColorSwatches defaultKey={defaultKey} />
       <p className="text-xs text-muted-foreground">
         Events with this intention show in this color, here and in Google Calendar.
       </p>
     </fieldset>
+  );
+}
+
+/**
+ * The round swatches themselves, as radio buttons named "color" ("" for
+ * none). Used by the form above and by the color dot on the intentions list.
+ */
+export function ColorSwatches({ defaultKey }: { defaultKey: string }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <label title="None" className="cursor-pointer">
+        <input
+          type="radio"
+          name="color"
+          value=""
+          defaultChecked={defaultKey === ""}
+          className="peer sr-only"
+        />
+        <span className={`${SWATCH_CLASSES} bg-background text-xs text-muted-foreground`}>
+          <span aria-hidden>/</span>
+          <span className="sr-only">None</span>
+        </span>
+      </label>
+      {INTENTION_COLORS.map((color) => (
+        <label key={color.key} title={color.name} className="cursor-pointer">
+          <input
+            type="radio"
+            name="color"
+            value={color.key}
+            defaultChecked={defaultKey === color.key}
+            className="peer sr-only"
+          />
+          <span className={SWATCH_CLASSES} style={{ backgroundColor: color.hex }}>
+            <span className="sr-only">{color.name}</span>
+          </span>
+        </label>
+      ))}
+    </div>
   );
 }

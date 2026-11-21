@@ -39,21 +39,49 @@ export async function updateIntention(
     data: { name: params.name, color },
   });
 
-  // Events take their color from the intention when drawn, so the app
-  // already shows the new color. Google holds its own copy, so mark the
-  // synced events as edited: the next sync sends them with the new color.
-  if (color !== intention.color) {
-    await client.calendarEvent.updateMany({
-      where: {
-        userId: params.userId,
-        googleEventId: { not: null },
-        intentions: { some: { intentionId: intention.id } },
-      },
-      data: { updatedAt: new Date() },
-    });
+  if (color !== intention.color) await resendEventsToGoogle(client, params.userId, intention.id);
+
+  return updated;
+}
+
+/**
+ * Changes only an intention's color (null for none). Unlike updateIntention,
+ * this also works on the automatic Journal intention: its name and existence
+ * are fixed, but its color is the user's choice.
+ */
+export async function setIntentionColor(
+  client: DbClient,
+  params: { userId: string; intentionId: string; color: string | null },
+) {
+  const intention = await client.intention.findFirst({
+    where: { id: params.intentionId, userId: params.userId },
+  });
+  if (!intention) return null;
+
+  const updated = await client.intention.update({
+    where: { id: intention.id },
+    data: { color: params.color },
+  });
+
+  if (params.color !== intention.color) {
+    await resendEventsToGoogle(client, params.userId, intention.id);
   }
 
   return updated;
+}
+
+// Events take their color from the intention when drawn, so the app already
+// shows a new color. Google holds its own copy, so mark the synced events as
+// edited: the next sync sends them with the new color.
+async function resendEventsToGoogle(client: DbClient, userId: string, intentionId: string) {
+  await client.calendarEvent.updateMany({
+    where: {
+      userId,
+      googleEventId: { not: null },
+      intentions: { some: { intentionId } },
+    },
+    data: { updatedAt: new Date() },
+  });
 }
 
 export async function deleteIntention(

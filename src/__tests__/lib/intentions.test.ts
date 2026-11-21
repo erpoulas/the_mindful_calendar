@@ -8,6 +8,7 @@ import {
   getIntentionDetail,
   getOrCreateJournalIntention,
   listIntentions,
+  setIntentionColor,
   updateIntention,
 } from "@/lib/intentions";
 
@@ -269,6 +270,83 @@ describe("updateIntention", () => {
         userId: "test-user-1",
         intentionId: intention.id,
         name: "Hijacked",
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+});
+
+describe("setIntentionColor", () => {
+  it("changes only the color, keeping the name", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
+
+      const updated = await setIntentionColor(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        color: "tomato",
+      });
+
+      expect(updated?.name).toBe("Health");
+      expect(updated?.color).toBe("tomato");
+    });
+  });
+
+  it("clears the color when given null", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
+
+      const updated = await setIntentionColor(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        color: null,
+      });
+
+      expect(updated?.color).toBeNull();
+    });
+  });
+
+  it("works on the automatic Journal intention, which can't be renamed or deleted", async () => {
+    await withRollback(async (tx) => {
+      const journal = await getOrCreateJournalIntention(tx, "test-user-1");
+
+      const updated = await setIntentionColor(tx, {
+        userId: "test-user-1",
+        intentionId: journal.id,
+        color: "grape",
+      });
+
+      expect(updated?.color).toBe("grape");
+      expect(updated?.name).toBe("Journal");
+    });
+  });
+
+  it("marks the intention's Google-synced events as edited, so the next sync sends the new color", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health", color: "sage" });
+      const lastSync = new Date("2026-11-01T00:00:00Z");
+      const event = await tagEvent(tx, { userId: "test-user-1", intentionId: intention.id });
+      await tx.calendarEvent.update({
+        where: { id: event.id },
+        data: { googleEventId: "google-1", lastSyncedAt: lastSync, updatedAt: lastSync },
+      });
+
+      await setIntentionColor(tx, { userId: "test-user-1", intentionId: intention.id, color: "tomato" });
+
+      const row = await tx.calendarEvent.findUniqueOrThrow({ where: { id: event.id } });
+      expect(row.updatedAt.getTime()).toBeGreaterThan(lastSync.getTime());
+    });
+  });
+
+  it("returns null when the intention doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+
+      const result = await setIntentionColor(tx, {
+        userId: "test-user-1",
+        intentionId: intention.id,
+        color: "tomato",
       });
 
       expect(result).toBeNull();
