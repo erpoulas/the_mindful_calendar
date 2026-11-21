@@ -25,6 +25,13 @@ describe("applyListChange", () => {
     expect(applyListChange(items, { type: "remove", id: "a" })).toEqual([items[1]]);
   });
 
+  it("changes the text of only the edited item", () => {
+    const changed = applyListChange(items, { type: "rename", id: "a", text: "Buy oat milk" });
+
+    expect(changed[0]).toEqual({ id: "a", text: "Buy oat milk", done: false });
+    expect(changed[1]).toBe(items[1]);
+  });
+
   it("leaves the list alone when the item isn't there", () => {
     expect(applyListChange(items, { type: "toggle", id: "missing" })).toEqual(items);
     expect(applyListChange(items, { type: "remove", id: "missing" })).toEqual(items);

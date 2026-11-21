@@ -10,6 +10,7 @@ import {
   deleteQuickList,
   toggleQuickListItem,
   updateQuickList,
+  updateQuickListItemText,
 } from "@/lib/quick-lists";
 import { getCurrentUserId } from "@/lib/auth";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
@@ -73,6 +74,17 @@ export async function addQuickListItemAction(quickListId: string, formData: Form
 export async function toggleQuickListItemAction(itemId: string, quickListId: string) {
   const userId = await getCurrentUserId();
   await toggleQuickListItem(db, { userId, itemId });
+
+  forgetStoredAfterSave(userId, ["quickLists"]);
+}
+
+// Edits use the same text rules as adding an item.
+export async function updateQuickListItemTextAction(itemId: string, formData: FormData) {
+  const validated = AddQuickListItemSchema.safeParse({ text: formData.get("text") });
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  await updateQuickListItemText(db, { userId, itemId, text: validated.data.text });
 
   forgetStoredAfterSave(userId, ["quickLists"]);
 }

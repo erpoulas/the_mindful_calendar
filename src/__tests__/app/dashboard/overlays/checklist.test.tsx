@@ -83,10 +83,47 @@ describe("Checklist", () => {
     const save = slowSave();
     renderChecklist({ promoteToPostItAction: save.action });
 
-    fireEvent.click(screen.getAllByRole("button", { name: "→ Post-it" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Move to post-its" })[0]);
 
     await waitFor(() => expect(screen.queryByText("Buy milk")).not.toBeInTheDocument());
     expect(save.action).toHaveBeenCalledWith("a");
     save.finish();
+  });
+
+  it("offers Schedule as a link that opens New event filled in with the item", () => {
+    renderChecklist({ scheduleProjectId: "project-9" });
+
+    const links = screen.getAllByRole("link", { name: "Schedule" });
+    expect(links[0]).toHaveAttribute(
+      "href",
+      "/dashboard/event?view=new&title=Buy+milk&projectId=project-9",
+    );
+  });
+
+  it("turns an item's text into a box on click and shows the edit at once", async () => {
+    const save = slowSave();
+    renderChecklist({ editTextAction: save.action });
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy milk" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "Buy oat milk" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+
+    expect(await screen.findByText("Buy oat milk")).toBeInTheDocument();
+    expect(save.action).toHaveBeenCalledWith("a", expect.any(FormData));
+    save.finish();
+  });
+
+  it("throws the edit away on Escape, without saving", async () => {
+    const save = slowSave();
+    renderChecklist({ editTextAction: save.action });
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy milk" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "Something else" } });
+    fireEvent.keyDown(box, { key: "Escape" });
+
+    expect(await screen.findByRole("button", { name: "Buy milk" })).toBeInTheDocument();
+    expect(save.action).not.toHaveBeenCalled();
   });
 });

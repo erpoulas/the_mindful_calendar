@@ -9,6 +9,7 @@ import {
   listQuickLists,
   toggleQuickListItem,
   updateQuickList,
+  updateQuickListItemText,
 } from "@/lib/quick-lists";
 
 describe("createQuickList", () => {
@@ -320,6 +321,50 @@ describe("countOpenQuickListItems", () => {
       const result = await countOpenQuickListItems(tx, "test-user-1");
 
       expect(result).toBe(1);
+    });
+  });
+});
+
+describe("updateQuickListItemText", () => {
+  it("changes an item's text and leaves whether it's done alone", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const item = await addQuickListItem(tx, {
+        userId: "test-user-1",
+        quickListId: list.id,
+        text: "Bnak",
+      });
+      await toggleQuickListItem(tx, { userId: "test-user-1", itemId: item!.id });
+
+      const updated = await updateQuickListItemText(tx, {
+        userId: "test-user-1",
+        itemId: item!.id,
+        text: "Bank",
+      });
+
+      expect(updated?.text).toBe("Bank");
+      expect(updated?.done).toBe(true);
+    });
+  });
+
+  it("refuses to edit another user's item", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const item = await addQuickListItem(tx, {
+        userId: "test-user-1",
+        quickListId: list.id,
+        text: "Bank",
+      });
+
+      const result = await updateQuickListItemText(tx, {
+        userId: "test-user-2",
+        itemId: item!.id,
+        text: "Hacked",
+      });
+
+      expect(result).toBeNull();
+      const detail = await getQuickListDetail(tx, { userId: "test-user-1", quickListId: list.id });
+      expect(detail?.items[0].text).toBe("Bank");
     });
   });
 });

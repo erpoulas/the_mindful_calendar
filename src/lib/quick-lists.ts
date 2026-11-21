@@ -81,6 +81,22 @@ export async function toggleQuickListItem(
   });
 }
 
+/** Fixes or rewords an item; returns null if it isn't this user's. */
+export async function updateQuickListItemText(
+  client: DbClient,
+  params: { userId: string; itemId: string; text: string },
+) {
+  const item = await client.quickListItem.findFirst({
+    where: { id: params.itemId, quickList: { userId: params.userId } },
+  });
+  if (!item) return null;
+
+  return client.quickListItem.update({
+    where: { id: item.id },
+    data: { text: params.text },
+  });
+}
+
 export async function countOpenQuickListItems(client: DbClient, userId: string) {
   return client.quickListItem.count({
     where: { done: false, quickList: { userId } },

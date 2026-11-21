@@ -6,6 +6,7 @@ import {
   deleteQuickListAction,
   toggleQuickListItemAction,
   updateQuickListAction,
+  updateQuickListItemTextAction,
 } from "@/app/actions/quick-lists";
 import { promoteQuickListItemToPostItAction } from "@/app/actions/post-its";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -71,6 +72,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
             toggleAction={toggleQuickListItemAction}
             addAction={addQuickListItemAction}
             promoteToPostItAction={promoteQuickListItemToPostItAction}
+            editTextAction={updateQuickListItemTextAction}
             listClassName="flex flex-col gap-2"
             formClassName="flex gap-2"
           />

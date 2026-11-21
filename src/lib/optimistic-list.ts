@@ -6,9 +6,10 @@
 export type ListChange<Item> =
   | { type: "toggle"; id: string }
   | { type: "add"; item: Item }
-  | { type: "remove"; id: string };
+  | { type: "remove"; id: string }
+  | { type: "rename"; id: string; text: string };
 
-export function applyListChange<Item extends { id: string; done?: boolean }>(
+export function applyListChange<Item extends { id: string; done?: boolean; text?: string }>(
   items: Item[],
   change: ListChange<Item>,
 ): Item[] {
@@ -19,6 +20,8 @@ export function applyListChange<Item extends { id: string; done?: boolean }>(
       return [...items, change.item];
     case "remove":
       return items.filter((item) => item.id !== change.id);
+    case "rename":
+      return items.map((item) => (item.id === change.id ? { ...item, text: change.text } : item));
   }
 }
 
