@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CalendarPlus, Check, StickyNote } from "lucide-react";
+import { CalendarPlus, Check, Play, StickyNote } from "lucide-react";
 import { saveInBackground } from "./use-optimistic-list";
 
 // The small icon buttons at the end of a list row (quick-list items,
@@ -41,9 +41,50 @@ export function PostItIconButton({ label }: { label: string }) {
 }
 
 /**
+ * An icon button whose save leaves the row as it is, so the icon turns into
+ * a check mark for a moment once the save works (and not if it fails).
+ */
+function IconButtonWithCheck({
+  icon,
+  label,
+  doneLabel,
+  save,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  doneLabel: string;
+  save: () => Promise<unknown>;
+}) {
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!done) return;
+    const timer = setTimeout(() => setDone(false), 2000);
+    return () => clearTimeout(timer);
+  }, [done]);
+
+  return (
+    <form
+      action={async () => {
+        if (await saveInBackground(save)) setDone(true);
+      }}
+    >
+      {done ? (
+        <span role="status" aria-label={doneLabel} title={doneLabel} className={iconButtonClass}>
+          <Check className="size-4" aria-hidden />
+        </span>
+      ) : (
+        <button type="submit" aria-label={label} title={label} className={iconButtonClass}>
+          {icon}
+        </button>
+      )}
+    </form>
+  );
+}
+
+/**
  * Makes a post-it from `text` but keeps the row (dopamine-menu items are
- * meant to be reused). The row doesn't change, so the icon turns into a
- * check mark for a moment once the post-it is saved.
+ * meant to be reused).
  */
 export function CopyToPostItButton({
   text,
@@ -52,33 +93,34 @@ export function CopyToPostItButton({
   text: string;
   createPostItAction: (formData: FormData) => Promise<void>;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(timer);
-  }, [copied]);
-
   return (
-    <form
-      action={async (formData) => {
-        if (await saveInBackground(() => createPostItAction(formData))) setCopied(true);
+    <IconButtonWithCheck
+      icon={<StickyNote className="size-4" aria-hidden />}
+      label="Make a post-it"
+      doneLabel="Added to post-its"
+      save={() => {
+        const formData = new FormData();
+        formData.set("text", text);
+        return createPostItAction(formData);
       }}
-    >
-      <input type="hidden" name="text" value={text} />
-      {copied ? (
-        <span
-          role="status"
-          aria-label="Added to post-its"
-          title="Added to post-its"
-          className={iconButtonClass}
-        >
-          <Check className="size-4" aria-hidden />
-        </span>
-      ) : (
-        <PostItIconButton label="Make a post-it" />
-      )}
-    </form>
+    />
+  );
+}
+
+/** "Start now": adds a 1-hour event, starting this minute, from the row. */
+export function StartNowButton({
+  itemId,
+  startNowAction,
+}: {
+  itemId: string;
+  startNowAction: (itemId: string) => Promise<void>;
+}) {
+  return (
+    <IconButtonWithCheck
+      icon={<Play className="size-4" aria-hidden />}
+      label="Start now (adds a 1-hour event)"
+      doneLabel="Added to your calendar"
+      save={() => startNowAction(itemId)}
+    />
   );
 }

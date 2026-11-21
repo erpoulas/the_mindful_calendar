@@ -89,4 +89,26 @@ describe("RemovableList", () => {
     await waitFor(() => expect(createPostIt).toHaveBeenCalled());
     expect(screen.queryByRole("status", { name: "Added to post-its" })).not.toBeInTheDocument();
   });
+
+  it("starts a menu item now with one click", async () => {
+    const startNow = vi.fn<(itemId: string) => Promise<void>>(async () => {});
+    render(
+      <RemovableList
+        items={[{ id: "a", text: "Take a walk" }]}
+        emptyText=""
+        addPlaceholder=""
+        addLabel="Add"
+        removeAction={vi.fn(never)}
+        addAction={vi.fn(never)}
+        listClassName=""
+        createPostItAction={vi.fn(never)}
+        startNowAction={startNow}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Start now (adds a 1-hour event)" }));
+
+    expect(await screen.findByRole("status", { name: "Added to your calendar" })).toBeInTheDocument();
+    expect(startNow).toHaveBeenCalledWith("a");
+  });
 });

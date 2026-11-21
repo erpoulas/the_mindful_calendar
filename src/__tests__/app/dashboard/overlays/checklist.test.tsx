@@ -126,4 +126,20 @@ describe("Checklist", () => {
     expect(await screen.findByRole("button", { name: "Buy milk" })).toBeInTheDocument();
     expect(save.action).not.toHaveBeenCalled();
   });
+
+  it("starts an item now with one click and confirms with a check", async () => {
+    const startNow = vi.fn<(itemId: string) => Promise<void>>(async () => {});
+    renderChecklist({ startNowAction: startNow });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Start now (adds a 1-hour event)" })[0]);
+
+    expect(await screen.findByRole("status", { name: "Added to your calendar" })).toBeInTheDocument();
+    expect(startNow).toHaveBeenCalledWith("a");
+  });
+
+  it("has no Start now button unless asked for", () => {
+    renderChecklist();
+
+    expect(screen.queryByRole("button", { name: /Start now/ })).not.toBeInTheDocument();
+  });
 });

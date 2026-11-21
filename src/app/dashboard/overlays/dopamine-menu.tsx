@@ -5,13 +5,14 @@ import {
   pickDopamineMenuItemAction,
 } from "@/app/actions/dopamine-menu";
 import { createPostItAction } from "@/app/actions/post-its";
+import { scheduleDopamineItemNowAction } from "@/app/actions/schedule-now";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { storedDopamineMenuItems } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { getRandomDopamineMenuItem } from "@/lib/dopamine-menu";
-import { CopyToPostItButton, ScheduleIconLink } from "./item-actions";
+import { CopyToPostItButton, ScheduleIconLink, StartNowButton } from "./item-actions";
 import { RemovableList } from "./removable-list";
 
 export async function DopamineMenuView() {
@@ -47,6 +48,7 @@ export async function DopamineMenuView() {
             {pick && (
               <>
                 <ScheduleIconLink href={dashboardRoutes.newEvent({ title: pick.text })} />
+                <StartNowButton itemId={pick.id} startNowAction={scheduleDopamineItemNowAction} />
                 <CopyToPostItButton text={pick.text} createPostItAction={createPostItAction} />
               </>
             )}
@@ -65,6 +67,7 @@ export async function DopamineMenuView() {
           addAction={addDopamineMenuItemAction}
           listClassName="mt-2 flex flex-col gap-2"
           createPostItAction={createPostItAction}
+          startNowAction={scheduleDopamineItemNowAction}
         />
       </div>
     </div>

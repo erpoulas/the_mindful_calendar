@@ -10,6 +10,7 @@ import {
   toggleProjectTaskAction,
   updateProjectAction,
 } from "@/app/actions/projects";
+import { scheduleProjectTaskNowAction } from "@/app/actions/schedule-now";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedIntentions, storedProjectDetail, storedProjects } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
@@ -101,6 +102,7 @@ export async function ProjectDetailView({ id }: { id: string }) {
           toggleAction={toggleProjectTaskAction}
           addAction={addProjectTaskAction}
           scheduleProjectId={project.id}
+          startNowAction={scheduleProjectTaskNowAction}
           listClassName="mt-2 flex flex-col gap-2"
           formClassName="mt-3 flex gap-2"
         />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { isPendingItem, pendingItemId } from "@/lib/optimistic-list";
-import { PostItIconButton, RowActions, ScheduleIconLink } from "./item-actions";
+import { PostItIconButton, RowActions, ScheduleIconLink, StartNowButton } from "./item-actions";
 import { saveInBackground, useOptimisticList } from "./use-optimistic-list";
 
 type ChecklistItem = { id: string; text: string; done: boolean };
@@ -26,6 +26,7 @@ export function Checklist({
   addAction,
   promoteToPostItAction,
   editTextAction,
+  startNowAction,
   scheduleProjectId,
   listClassName,
   formClassName,
@@ -38,6 +39,8 @@ export function Checklist({
   addAction: (listId: string, formData: FormData) => Promise<void>;
   /** Quick lists only: turns an item into a post-it, taking it off the list. */
   promoteToPostItAction?: (itemId: string) => Promise<void>;
+  /** Makes a 1-hour event from the item, starting now. */
+  startNowAction?: (itemId: string) => Promise<void>;
   /** Quick lists only: saves an item's edited text. */
   editTextAction?: (itemId: string, formData: FormData) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
@@ -141,6 +144,9 @@ export function Checklist({
                 <ScheduleIconLink
                   href={dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })}
                 />
+                {startNowAction && saved && (
+                  <StartNowButton itemId={item.id} startNowAction={startNowAction} />
+                )}
                 {promoteToPostItAction && saved && (
                   <form
                     action={async () => {

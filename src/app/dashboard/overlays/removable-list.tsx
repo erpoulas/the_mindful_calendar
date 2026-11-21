@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { isPendingItem, pendingItemId } from "@/lib/optimistic-list";
-import { CopyToPostItButton, RowActions, ScheduleIconLink } from "./item-actions";
+import { CopyToPostItButton, RowActions, ScheduleIconLink, StartNowButton } from "./item-actions";
 import { saveInBackground, useOptimisticList } from "./use-optimistic-list";
 
 type TextItem = { id: string; text: string };
@@ -25,6 +25,7 @@ export function RemovableList({
   addAction,
   listClassName,
   createPostItAction,
+  startNowAction,
 }: {
   items: TextItem[];
   emptyText: string;
@@ -35,6 +36,8 @@ export function RemovableList({
   listClassName: string;
   /** Dopamine menu only: lets a row become an event or a post-it. */
   createPostItAction?: (formData: FormData) => Promise<void>;
+  /** Dopamine menu only: makes a 1-hour event from the row, starting now. */
+  startNowAction?: (itemId: string) => Promise<void>;
 }) {
   const [shownItems, changeList] = useOptimisticList(items);
   const addFormRef = useRef<HTMLFormElement>(null);
@@ -57,6 +60,9 @@ export function RemovableList({
             {createPostItAction && (
               <RowActions>
                 <ScheduleIconLink href={dashboardRoutes.newEvent({ title: item.text })} />
+                {startNowAction && !isPendingItem(item.id) && (
+                  <StartNowButton itemId={item.id} startNowAction={startNowAction} />
+                )}
                 <CopyToPostItButton text={item.text} createPostItAction={createPostItAction} />
               </RowActions>
             )}
