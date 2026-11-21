@@ -4,12 +4,15 @@ import {
   deleteDopamineMenuItemAction,
   pickDopamineMenuItemAction,
 } from "@/app/actions/dopamine-menu";
+import { createPostItAction } from "@/app/actions/post-its";
 import { Button } from "@/components/ui/button";
-import { RemovableList } from "./removable-list";
 import { getCurrentUserId } from "@/lib/auth";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { storedDopamineMenuItems } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { getRandomDopamineMenuItem } from "@/lib/dopamine-menu";
+import { CopyToPostItButton, ScheduleIconLink } from "./item-actions";
+import { RemovableList } from "./removable-list";
 
 export async function DopamineMenuView() {
   const userId = await getCurrentUserId();
@@ -34,11 +37,20 @@ export async function DopamineMenuView() {
           {pick ? pick.text : "Add something to your menu to get a pick."}
         </p>
         {items.length > 0 && (
-          <form action={pickDopamineMenuItemAction} className="mt-3">
-            <Button type="submit" variant="outline">
-              Pick something else
-            </Button>
-          </form>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <form action={pickDopamineMenuItemAction}>
+              <Button type="submit" variant="outline">
+                Pick something else
+              </Button>
+            </form>
+            {/* Put the pick on the calendar or the post-its in one click. */}
+            {pick && (
+              <>
+                <ScheduleIconLink href={dashboardRoutes.newEvent({ title: pick.text })} />
+                <CopyToPostItButton text={pick.text} createPostItAction={createPostItAction} />
+              </>
+            )}
+          </div>
         )}
       </div>
 
@@ -52,6 +64,7 @@ export async function DopamineMenuView() {
           removeAction={deleteDopamineMenuItemAction}
           addAction={addDopamineMenuItemAction}
           listClassName="mt-2 flex flex-col gap-2"
+          createPostItAction={createPostItAction}
         />
       </div>
     </div>
