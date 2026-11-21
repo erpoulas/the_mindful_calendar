@@ -56,9 +56,9 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too (done: 1a885e4)
 - [x] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does (done: bc0f512)
 - [ ] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features
-- [ ] Quick Lists: edit an item's text in place (click it, like post-its) (claimed: perf session, 2026-11-20)
-- [ ] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links) (claimed: perf session, 2026-11-20)
-- [ ] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items (claimed: perf session, 2026-11-20)
+- [x] Quick Lists: edit an item's text in place (click it, like post-its) (done: 2932a78)
+- [x] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links) (done: 2932a78)
+- [x] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items (done: 3e959b6)
 - [ ] Calendar header: a "Today" button that jumps straight back to the current week (or the current month in month view) from wherever you have scrolled to, like Google Calendar's Today button
 - [ ] Journals popup: make entries easier to view. Today the entry list sits at the bottom of a journal, under the new-entry form and the prompt pool, shows only the first 120 characters, and clicking an entry jumps straight into an edit form. Let entries be read in full (a reading view, with editing as a separate step) and put the entries where they are easy to reach
 - [ ] Journals popup: make the UI cuter, with softer cards for entries, friendlier headings and empty states, and the panel art and fonts from the Canva mockup (1cf71a6)
