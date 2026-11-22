@@ -19,7 +19,9 @@ import { storedJournalDetail, storedJournals } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getRandomJournalPrompt } from "@/lib/journals";
+import { findListNeighbors } from "@/lib/list-neighbors";
 import { JournalForm } from "./journal-form";
+import { PopupListNavigation } from "./popup-list-navigation";
 import { RemovableList } from "./removable-list";
 
 const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
@@ -73,14 +75,21 @@ export function JournalCreateView() {
 export async function JournalDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
-  const [journal, suggestedPrompt] = await Promise.all([
+  const [journal, journals, suggestedPrompt] = await Promise.all([
     storedJournalDetail(userId, id),
+    storedJournals(userId),
     getRandomJournalPrompt(db, { userId, journalId: id }),
   ]);
   if (!journal) notFound();
+  const { previous, next } = findListNeighbors(journals, journal.id);
 
   return (
     <div className="flex flex-col gap-6">
+      <PopupListNavigation
+        back={{ href: dashboardRoutes.journals(), label: "All journals" }}
+        previous={previous && { href: dashboardRoutes.journal(previous.id), label: previous.name }}
+        next={next && { href: dashboardRoutes.journal(next.id), label: next.name }}
+      />
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{journal.name}</h2>
         <div className="flex gap-2">
@@ -231,9 +240,16 @@ export async function JournalEntryEditView({
 
   const entry = journal.entries.find((e) => e.id === entryId);
   if (!entry) notFound();
+  // Entries are listed newest first, so the one before is newer.
+  const { previous: newer, next: older } = findListNeighbors(journal.entries, entry.id);
 
   return (
     <div className="flex flex-col gap-3">
+      <PopupListNavigation
+        back={{ href: dashboardRoutes.journal(id), label: journal.name }}
+        previous={newer && { href: dashboardRoutes.editJournalEntry(id, newer.id), label: "Newer" }}
+        next={older && { href: dashboardRoutes.editJournalEntry(id, older.id), label: "Older" }}
+      />
       <h2 className="text-lg font-medium">{entry.promptText ?? "Entry"}</h2>
       <p className="text-xs text-muted-foreground">
         {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
