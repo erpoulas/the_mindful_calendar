@@ -14,7 +14,9 @@ import { scheduleProjectTaskNowAction } from "@/app/actions/schedule-now";
 import { getCurrentUserId } from "@/lib/auth";
 import { storedIntentions, storedProjectDetail, storedProjects } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { findListNeighbors } from "@/lib/list-neighbors";
 import { Checklist } from "./checklist";
+import { PopupListNavigation } from "./popup-list-navigation";
 import { ProjectForm } from "./project-form";
 import { ProjectOverview } from "./project-overview";
 
@@ -74,11 +76,20 @@ export async function ProjectCreateView() {
 export async function ProjectDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
 
-  const project = await storedProjectDetail(userId, id);
+  const [project, projects] = await Promise.all([
+    storedProjectDetail(userId, id),
+    storedProjects(userId),
+  ]);
   if (!project) notFound();
+  const { previous, next } = findListNeighbors(projects, project.id);
 
   return (
     <div className="flex flex-col gap-6">
+      <PopupListNavigation
+        back={{ href: dashboardRoutes.projects(), label: "All projects" }}
+        previous={previous && { href: dashboardRoutes.project(previous.id), label: previous.title }}
+        next={next && { href: dashboardRoutes.project(next.id), label: next.title }}
+      />
       <ProjectOverview
         projectId={project.id}
         title={project.title}
