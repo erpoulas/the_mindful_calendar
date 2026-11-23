@@ -1,13 +1,12 @@
+import type { PanelArt } from "@/components/ui/sheet";
 import { PanelSheet } from "../../panel-sheet";
 
-const QUICK_NOTES_ART = {
+const QUICK_NOTES_ART: PanelArt = {
   src: "/panel-art/quick-notes-pop-up.png",
   width: 614,
   height: 996,
-  // This photo has a clip along the top edge and punch holes down the
-  // left, instead of a plain left-edge binding like the journal/project
-  // photos, so it needs clearance on both sides.
-  contentInsetClassName: "pt-[20%] pl-[16%]",
+  // The ruled sheet, below the clip and right of the punch holes.
+  paperArea: { top: 16, right: 0.8, bottom: 0.4, left: 10 },
 };
 
 // The popup's frame. It stays on screen while you move between its

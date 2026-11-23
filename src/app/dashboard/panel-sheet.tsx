@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sheet } from "@/components/ui/sheet";
+import { Sheet, type PanelArt } from "@/components/ui/sheet";
 import { getCalendarReturnUrl } from "./calendar-location";
 import { PopupHistoryButtons } from "./popup-history";
 
@@ -28,12 +28,7 @@ export function PanelSheet({
   titlesByView?: Record<string, string>;
   hideVisibleTitle?: boolean;
   size?: "side" | "wide" | "center";
-  backgroundImage?: {
-    src: string;
-    width: number;
-    height: number;
-    contentInsetClassName?: string;
-  };
+  backgroundImage?: PanelArt;
   children: React.ReactNode;
 }) {
   const router = useRouter();

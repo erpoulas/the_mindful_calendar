@@ -34,10 +34,18 @@ const IMAGE_CLASSES = {
   center: "block h-auto max-h-[80vh] w-auto max-w-[85vw] select-none",
 };
 
-// Default clearance keeps content off a spiral/binding running down the
-// photo's left edge. Individual photos with art elsewhere (e.g. a clip
-// along the top) override this via backgroundImage.contentInsetClassName.
-const DEFAULT_CONTENT_INSET = "pl-[18%]";
+/**
+ * A photo used as a popup's background. `paperArea` says where its writable
+ * paper sits, as percentages of the photo's size measured in from each
+ * edge, leaving out see-through margins, shadows, the binding and clips.
+ * The popup's scrolling content and scrollbar are kept inside that area.
+ */
+export type PanelArt = {
+  src: string;
+  width: number;
+  height: number;
+  paperArea: { top: number; right: number; bottom: number; left: number };
+};
 
 export function Sheet({
   open,
@@ -54,12 +62,7 @@ export function Sheet({
   title: string;
   hideVisibleTitle?: boolean;
   size?: "side" | "wide" | "center";
-  backgroundImage?: {
-    src: string;
-    width: number;
-    height: number;
-    contentInsetClassName?: string;
-  };
+  backgroundImage?: PanelArt;
   /** Shown at the left of the header, before the title (e.g. back/forward buttons). */
   headerStart?: React.ReactNode;
   children: React.ReactNode;
@@ -131,11 +134,16 @@ export function Sheet({
                 fetchPriority="high"
                 className={cn("pointer-events-none", IMAGE_CLASSES[size])}
               />
+              {/* The popup is exactly the photo's size, so percentages
+                  here line up with the photo's pixels at any screen size. */}
               <div
-                className={cn(
-                  "absolute inset-0 z-10 flex flex-col gap-4 overflow-y-auto p-6 text-popover-foreground",
-                  backgroundImage.contentInsetClassName ?? DEFAULT_CONTENT_INSET,
-                )}
+                className="absolute z-10 flex flex-col gap-4 overflow-y-auto p-6 text-popover-foreground"
+                style={{
+                  top: `${backgroundImage.paperArea.top}%`,
+                  right: `${backgroundImage.paperArea.right}%`,
+                  bottom: `${backgroundImage.paperArea.bottom}%`,
+                  left: `${backgroundImage.paperArea.left}%`,
+                }}
               >
                 {titleRow}
                 <div className="mx-auto flex w-full max-w-[75%] flex-1 flex-col justify-center">
