@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TITLE_MAX_LENGTH } from "@/lib/calendar-event-schemas";
 import { findIntentionColor } from "@/lib/intention-colors";
+import { LocationSearch } from "./location-search";
 
 export function EventForm({
   action,
@@ -18,6 +19,7 @@ export function EventForm({
   initialValues,
   postItId,
   mainTimeZone,
+  suggestPlaces,
 }: {
   action: (
     state: CalendarEventFormState,
@@ -43,6 +45,8 @@ export function EventForm({
   postItId?: string;
   /** The user's timezone from Account settings, the default for new events. */
   mainTimeZone: string;
+  /** Whether the Location field suggests real places (place search is set up). */
+  suggestPlaces: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const selectedIntentionIds = new Set(initialValues?.intentionIds ?? []);
@@ -127,10 +131,11 @@ export function EventForm({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="location">Location (optional)</Label>
-        <Input
+        <LocationSearch
           id="location"
           name="location"
           defaultValue={initialValues?.location ?? undefined}
+          suggestPlaces={suggestPlaces}
         />
       </div>
 

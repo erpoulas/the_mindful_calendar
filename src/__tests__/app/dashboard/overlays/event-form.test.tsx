@@ -16,6 +16,7 @@ describe("EventForm intentions", () => {
           { id: "i2", name: "Family", color: null },
         ]}
         mainTimeZone="America/Denver"
+        suggestPlaces={false}
       />,
     );
 

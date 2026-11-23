@@ -6,6 +6,7 @@ import {
 } from "@/app/actions/calendar-events";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { getCurrentUserId } from "@/lib/auth";
+import { isPlaceSearchConfigured } from "@/lib/place-search";
 import { storedCalendarEvent, storedIntentions, storedProjects, storedTimezone } from "@/lib/stored-reads";
 import { convertWallClock } from "@/lib/wall-clock";
 import { EventForm } from "./event-form";
@@ -55,6 +56,7 @@ export async function NewEventView({
       initialValues={initialValues}
       postItId={postItId}
       mainTimeZone={mainTimeZone}
+      suggestPlaces={isPlaceSearchConfigured()}
     />
   );
 }
@@ -98,6 +100,7 @@ export async function EditEventView({ id }: { id: string }) {
           timeZone: event.isAllDay ? null : event.timeZone,
         }}
         mainTimeZone={mainTimeZone}
+        suggestPlaces={isPlaceSearchConfigured()}
       />
 
       <form action={deleteCalendarEventAction.bind(null, id)}>

@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { searchTimezonesAction } from "@/app/actions/user-settings";
 import type { TimezoneMatch } from "@/lib/timezone-search";
 import { Input } from "@/components/ui/input";
-
-// Wait for a pause in typing before asking the server.
-const TYPING_PAUSE_MS = 200;
+import { useSearchResults } from "./use-search-results";
 
 /** Type a city or zone name, then click a result to pick its time zone. */
 export function TimezoneSearch({
@@ -21,20 +19,7 @@ export function TimezoneSearch({
   placeholder?: string;
 }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<TimezoneMatch[]>([]);
-
-  useEffect(() => {
-    // Skips answers to older searches that arrive after a newer one.
-    let stale = false;
-    const timer = setTimeout(async () => {
-      const matches = query.trim() ? await searchTimezonesAction(query) : [];
-      if (!stale) setResults(matches);
-    }, TYPING_PAUSE_MS);
-    return () => {
-      stale = true;
-      clearTimeout(timer);
-    };
-  }, [query]);
+  const results = useSearchResults(query, searchTimezonesAction);
 
   function pick(match: TimezoneMatch) {
     onPick(match);

@@ -60,6 +60,7 @@ cp .env.example .env
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
 | `NEXT_PUBLIC_SITE_URL` | This app's own URL, used to build password-reset links (`http://localhost:3000` locally) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Optional. Google OAuth client for Calendar sync (see below) |
+| `GOOGLE_PLACES_API_KEY` | Optional. Suggests real places in the event form's Location field (see below) |
 
 `.env` is gitignored. Never commit it.
 
@@ -89,6 +90,14 @@ Open [http://localhost:3000](http://localhost:3000). You'll be sent to the login
 4. In the app, open **Account settings** and connect your Google account.
 
 Without these variables the app works normally; Google sync is simply unavailable.
+
+### Optional: place suggestions for event locations
+
+1. In Google Cloud Console, enable **Places API (New)** (billing must be on; Google gives a monthly free allowance).
+2. Create an API key (**APIs & Services > Credentials > Create credentials > API key**) and restrict it to Places API (New).
+3. Put it in `.env` as `GOOGLE_PLACES_API_KEY`. It is only used on the server, never sent to the browser.
+
+The Location field then suggests places as you type. Picking one saves "Name, full address", the same text Google Calendar's own picker saves, so after sync Google shows the place with a map link. Without the key the field is plain text.
 
 ## Scripts
 
