@@ -9,6 +9,8 @@
 
 type Query = Record<string, string | undefined>;
 
+export type JournalTab = "read" | "write";
+
 function withQuery(path: string, query: Query) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
@@ -30,8 +32,14 @@ export const dashboardRoutes = {
 
   journals: () => "/dashboard/journals",
   newJournal: () => withQuery("/dashboard/journals", { view: "create" }),
-  journal: (id: string) => withQuery("/dashboard/journals", { view: "detail", id }),
+  // tab picks the Read tab (the entries) or the Write tab (new entry form and
+  // prompts). Left out, the journal picks for itself: Write when it's empty.
+  journal: (id: string, tab?: JournalTab) =>
+    withQuery("/dashboard/journals", { view: "detail", id, tab }),
   editJournal: (id: string) => withQuery("/dashboard/journals", { view: "edit", id }),
+  // Reading one entry in full; editing it is a separate step.
+  journalEntry: (id: string, entryId: string) =>
+    withQuery("/dashboard/journals", { view: "entry", id, entryId }),
   editJournalEntry: (id: string, entryId: string) =>
     withQuery("/dashboard/journals", { view: "entry-edit", id, entryId }),
 

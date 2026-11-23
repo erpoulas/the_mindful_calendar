@@ -107,7 +107,8 @@ export async function createJournalEntryAction(journalId: string, formData: Form
   });
 
   forgetStoredAfterSave(userId, ["journals","events","intentions"]);
-  redirect(dashboardRoutes.journal(journalId));
+  // Back to the Read tab, where the new entry now sits at the top.
+  redirect(dashboardRoutes.journal(journalId, "read"));
 }
 
 export async function updateJournalEntryAction(
@@ -124,7 +125,7 @@ export async function updateJournalEntryAction(
   await updateJournalEntry(db, { userId, entryId, content: validated.data.content });
 
   forgetStoredAfterSave(userId, ["journals"]);
-  redirect(dashboardRoutes.journal(journalId));
+  redirect(dashboardRoutes.journalEntry(journalId, entryId));
 }
 
 export async function deleteJournalEntryAction(entryId: string, journalId: string) {

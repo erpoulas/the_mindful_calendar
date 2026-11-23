@@ -14,7 +14,7 @@ const JOURNAL_ART: PanelArt = {
 export default function JournalsLayout({ children }: { children: React.ReactNode }) {
   return (
     <PanelSheet open title="Journals"
-      titlesByView={{ "entry-edit": "Entry", edit: "Edit journal", detail: "Journal", create: "New journal" }}
+      titlesByView={{ entry: "Entry", "entry-edit": "Edit entry", edit: "Edit journal", detail: "Journal", create: "New journal" }}
       backgroundImage={JOURNAL_ART}>
       {children}
     </PanelSheet>
