@@ -55,7 +55,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Schedule project tasks: a "Schedule" link on each task in a project's detail, like the one on Quick List items, that opens the New Event form with the task's text as the title and the project already picked, so the event counts toward the project's intentions (done: 8101d1f)
 - [x] Intentions: make edit, delete and color change easy to find. They already exist (8db72cc, adb5185) but only behind an intention's detail screen, and built-in intentions hide them; add them to the intentions list too (done: 1a885e4)
 - [x] Event form: show each intention's color dot next to its name in the Intentions checkboxes, like the intentions list does (done: bc0f512)
-- [ ] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features (claimed: location-agent, 2026-11-22)
+- [x] Event form: a location field like Google Calendar's, suggesting real places as you type, so the place (and its map link) shows up properly in Google Calendar after sync. Needs a place-search service (e.g. Google Places), which is optional like the other Google features (done: 5d55fd8)
 - [x] Quick Lists: edit an item's text in place (click it, like post-its) (done: 2932a78)
 - [x] Quick Lists popup: declutter the layout (each item row currently carries a checkbox plus "Schedule" and "→ Post-it" links) (done: 2932a78)
 - [x] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items (done: 3e959b6)
