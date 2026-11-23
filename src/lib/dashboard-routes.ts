@@ -33,7 +33,7 @@ export const dashboardRoutes = {
   journals: () => "/dashboard/journals",
   newJournal: () => withQuery("/dashboard/journals", { view: "create" }),
   // tab picks the Read tab (the entries) or the Write tab (new entry form and
-  // prompts). Left out, the journal picks for itself: Write when it's empty.
+  // prompts). Left out, it opens on Write.
   journal: (id: string, tab?: JournalTab) =>
     withQuery("/dashboard/journals", { view: "detail", id, tab }),
   editJournal: (id: string) => withQuery("/dashboard/journals", { view: "edit", id }),

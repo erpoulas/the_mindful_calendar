@@ -31,8 +31,11 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: "UTC",
 };
 
+// The writing box: tall from the start (about half a page of the notebook)
+// and growing with what you type (field-sizing-content), so you never write
+// into a tiny scrolling box. Same text size as the reading screen.
 const TEXTAREA_CLASSES =
-  "w-full rounded-xl border border-input bg-white/60 px-3 py-2 text-base leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
+  "field-sizing-content min-h-80 w-full resize-y rounded-xl border border-input bg-white/60 px-4 py-3 text-[15px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // The journal's look: soft, slightly lifted paper cards on the notebook art,
 // big League Gothic page headings and Finger Paint for prompts.
@@ -120,8 +123,8 @@ export function JournalCreateView() {
 // so switching is instant.
 function JournalTabs({ journalId, activeTab }: { journalId: string; activeTab: JournalTab }) {
   const tabs = [
-    { tab: "read", label: "Read", Icon: BookOpen },
     { tab: "write", label: "Write", Icon: PenLine },
+    { tab: "read", label: "Read", Icon: BookOpen },
   ] as const;
   return (
     <nav
@@ -158,8 +161,8 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
   ]);
   if (!journal) notFound();
   const { previous, next } = findListNeighbors(journals, journal.id);
-  // A new, empty journal opens on Write: there's nothing to read yet.
-  const activeTab = tab ?? (journal.entries.length === 0 ? "write" : "read");
+  // A journal opens on Write, ready for a new entry.
+  const activeTab = tab ?? "write";
 
   return (
     <div className="flex flex-col gap-5">
@@ -270,7 +273,6 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
                 <textarea
                   id="content"
                   name="content"
-                  rows={8}
                   placeholder="Write now, or leave blank and fill it in later"
                   className={TEXTAREA_CLASSES}
                 />
@@ -399,7 +401,6 @@ export async function JournalEntryEditView({ id, entryId }: { id: string; entryI
       >
         <textarea
           name="content"
-          rows={14}
           defaultValue={entry.content ?? undefined}
           placeholder="Dear journal..."
           aria-label="Entry"
