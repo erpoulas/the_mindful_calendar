@@ -13,9 +13,11 @@ import { storedIntentions, storedTimezone } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getIntentionDetail } from "@/lib/intentions";
+import { findListNeighbors } from "@/lib/list-neighbors";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { IntentionForm } from "./intention-form";
 import { IntentionRow } from "./intention-row";
+import { PopupListNavigation } from "./popup-list-navigation";
 
 export async function IntentionsListView() {
   const userId = await getCurrentUserId();
@@ -49,7 +51,10 @@ export async function IntentionsListView() {
 
 export async function IntentionDetailView({ id }: { id: string }) {
   const userId = await getCurrentUserId();
-  const timeZone = await storedTimezone(userId);
+  const [timeZone, intentions] = await Promise.all([
+    storedTimezone(userId),
+    storedIntentions(userId),
+  ]);
 
   const detail = await getIntentionDetail(db, {
     userId,
@@ -60,9 +65,15 @@ export async function IntentionDetailView({ id }: { id: string }) {
   if (!detail) notFound();
 
   const maxCount = Math.max(1, ...detail.weeklyStreak);
+  const { previous, next } = findListNeighbors(intentions, detail.intention.id);
 
   return (
     <div className="flex flex-col gap-6">
+      <PopupListNavigation
+        back={{ href: dashboardRoutes.intentions(), label: "All intentions" }}
+        previous={previous && { href: dashboardRoutes.intention(previous.id), label: previous.name }}
+        next={next && { href: dashboardRoutes.intention(next.id), label: next.name }}
+      />
       <h2 className="text-lg font-semibold">{detail.intention.name}</h2>
 
       {!detail.intention.isSystem && (
