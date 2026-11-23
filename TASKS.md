@@ -62,8 +62,8 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Dopamine menu: quick-add an item as a post-it or a calendar event, with the same "Schedule" and "→ Post-it" actions as Quick List items (done: 3e959b6)
 - [x] "Start now" button on quick-list items, project tasks and dopamine-menu items (next to Schedule): instantly creates a 1-hour event starting at the moment it's clicked, titled with the item and noting where it came from ("From quick list: Groceries", "Task in project: Garden"); project tasks link the event to their project (done: 6cc02eb)
 - [x] Calendar header: a "Today" button that jumps straight back to the current week (or the current month in month view) from wherever you have scrolled to, like Google Calendar's Today button (done: c4ccbfa)
-- [ ] Journals popup: make entries easier to view. Today the entry list sits at the bottom of a journal, under the new-entry form and the prompt pool, shows only the first 120 characters, and clicking an entry jumps straight into an edit form. Let entries be read in full (a reading view, with editing as a separate step) and put the entries where they are easy to reach
-- [ ] Journals popup: make the UI cuter, with softer cards for entries, friendlier headings and empty states, and the panel art and fonts from the Canva mockup (1cf71a6)
+- [ ] Journals popup: make entries easier to view. Today the entry list sits at the bottom of a journal, under the new-entry form and the prompt pool, shows only the first 120 characters, and clicking an entry jumps straight into an edit form. Let entries be read in full (a reading view, with editing as a separate step) and put the entries where they are easy to reach (claimed: journals-agent, 2026-11-22)
+- [ ] Journals popup: make the UI cuter, with softer cards for entries, friendlier headings and empty states, and the panel art and fonts from the Canva mockup (1cf71a6) (claimed: journals-agent, 2026-11-22)
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
