@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { BookHeart, BookOpen, Feather, Pencil, PenLine, Plus, Sparkles } from "lucide-react";
 import {
   addJournalPromptAction,
   createJournalAction,
@@ -32,35 +32,75 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
 };
 
 const TEXTAREA_CLASSES =
-  "w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
+  "w-full rounded-xl border border-input bg-white/60 px-3 py-2 text-base leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
+
+// The journal's look: soft, slightly lifted paper cards on the notebook art,
+// big League Gothic page headings and Finger Paint for prompts.
+const SOFT_CARD = "rounded-2xl border border-amber-900/10 bg-white/70 shadow-sm";
+const SOFT_CARD_LINK = `${SOFT_CARD} block transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md`;
+const PAGE_HEADING = "font-heading text-3xl tracking-wide uppercase";
+
+// A friendly "nothing here yet" note, with an optional next step.
+function JournalEmptyState({
+  message,
+  action,
+}: {
+  message: string;
+  action?: { href: string; label: string };
+}) {
+  return (
+    <div className={`${SOFT_CARD} flex flex-col items-center gap-3 px-4 py-8 text-center`}>
+      <Feather className="size-7 text-amber-700/60" aria-hidden />
+      <p className="font-handwritten text-base">{message}</p>
+      {action && (
+        <Link href={action.href} prefetch className={buttonVariants({ size: "sm" })}>
+          <PenLine aria-hidden />
+          {action.label}
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export async function JournalsListView() {
   const userId = await getCurrentUserId();
   const journals = await storedJournals(userId);
 
   return (
-    <div className="flex flex-col gap-6">
-      <ul className="flex flex-col gap-2">
-        {journals.length === 0 && (
-          <p className="text-sm text-muted-foreground">No journals yet — add one below.</p>
-        )}
-        {journals.map((journal) => (
-          <li key={journal.id}>
-            {/* prefetch: loads each journal's screen while the list is open. */}
-            <Link
-              href={dashboardRoutes.journal(journal.id)}
-              prefetch
-              className="flex items-center px-1 py-1 hover:underline"
-            >
-              {journal.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col gap-5">
+      <h2 className={PAGE_HEADING}>My journals</h2>
+      {journals.length === 0 ? (
+        <JournalEmptyState
+          message="No journals yet. Start one for anything you'd like to reflect on."
+          action={{ href: dashboardRoutes.newJournal(), label: "Start a journal" }}
+        />
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {journals.map((journal) => (
+            <li key={journal.id}>
+              {/* prefetch: loads each journal's screen while the list is open. */}
+              <Link
+                href={dashboardRoutes.journal(journal.id)}
+                prefetch
+                className={`${SOFT_CARD_LINK} flex items-center gap-3 px-4 py-3`}
+              >
+                <BookHeart className="size-5 shrink-0 text-amber-700/70" aria-hidden />
+                <span className="font-medium">{journal.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <Link href={dashboardRoutes.newJournal()} className="text-sm hover:underline">
-        + Create new journal
-      </Link>
+      {journals.length > 0 && (
+        <Link
+          href={dashboardRoutes.newJournal()}
+          className={`${buttonVariants({ variant: "outline", size: "sm" })} self-start rounded-full`}
+        >
+          <Plus aria-hidden />
+          New journal
+        </Link>
+      )}
     </div>
   );
 }
@@ -79,24 +119,28 @@ export function JournalCreateView() {
 // The Read / Write switch on a journal's screen. Both tabs are prefetched,
 // so switching is instant.
 function JournalTabs({ journalId, activeTab }: { journalId: string; activeTab: JournalTab }) {
-  const tabs: { tab: JournalTab; label: string }[] = [
-    { tab: "read", label: "Read" },
-    { tab: "write", label: "Write" },
-  ];
+  const tabs = [
+    { tab: "read", label: "Read", Icon: BookOpen },
+    { tab: "write", label: "Write", Icon: PenLine },
+  ] as const;
   return (
-    <nav aria-label="Journal tabs" className="flex gap-2 border-b pb-2">
-      {tabs.map(({ tab, label }) => (
+    <nav
+      aria-label="Journal tabs"
+      className="flex gap-1 self-start rounded-full border border-amber-900/10 bg-white/60 p-1"
+    >
+      {tabs.map(({ tab, label, Icon }) => (
         <Link
           key={tab}
           href={dashboardRoutes.journal(journalId, tab)}
           prefetch
           aria-current={tab === activeTab ? "page" : undefined}
-          className={`rounded px-3 py-1 text-sm ${
+          className={`flex items-center gap-1.5 rounded-full px-4 py-1 text-sm transition ${
             tab === activeTab
-              ? "bg-primary text-primary-foreground"
-              : "bg-accent text-foreground hover:bg-secondary"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-white hover:text-foreground"
           }`}
         >
+          <Icon className="size-4" aria-hidden />
           {label}
         </Link>
       ))}
@@ -118,23 +162,29 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
   const activeTab = tab ?? (journal.entries.length === 0 ? "write" : "read");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <PopupListNavigation
         back={{ href: dashboardRoutes.journals(), label: "All journals" }}
         previous={previous && { href: dashboardRoutes.journal(previous.id), label: previous.name }}
         next={next && { href: dashboardRoutes.journal(next.id), label: next.name }}
       />
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{journal.name}</h2>
-        <div className="flex gap-2">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className={PAGE_HEADING}>{journal.name}</h2>
+        {/* Quiet buttons: renaming or deleting a journal is rare. */}
+        <div className="flex shrink-0 gap-1">
           <Link
             href={dashboardRoutes.editJournal(journal.id)}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
           >
-            Edit
+            Rename
           </Link>
           <form action={deleteJournalAction.bind(null, journal.id)}>
-            <ConfirmSubmitButton confirmMessage="Delete this journal and all its entries? This can't be undone.">
+            <ConfirmSubmitButton
+              variant="ghost"
+              size="sm"
+              className="text-destructive"
+              confirmMessage="Delete this journal and all its entries? This can't be undone."
+            >
               Delete
             </ConfirmSubmitButton>
           </form>
@@ -144,41 +194,46 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
       <JournalTabs journalId={journal.id} activeTab={activeTab} />
 
       {activeTab === "read" ? (
-        <ul className="flex flex-col gap-3">
-          {journal.entries.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No entries yet.{" "}
-              <Link href={dashboardRoutes.journal(journal.id, "write")} className="underline">
-                Write the first one
-              </Link>
-            </p>
-          )}
-          {journal.entries.map((entry) => (
-            <li key={entry.id}>
-              <Link
-                href={dashboardRoutes.journalEntry(journal.id, entry.id)}
-                prefetch
-                className="block rounded border px-3 py-2 hover:bg-accent"
-              >
-                <p className="text-xs text-muted-foreground">
-                  {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-                </p>
-                {entry.promptText && (
-                  <p className="text-sm font-medium">{entry.promptText}</p>
-                )}
-                <p className="line-clamp-3 text-sm whitespace-pre-line text-muted-foreground">
-                  {entry.content || "Not written yet"}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        journal.entries.length === 0 ? (
+          <JournalEmptyState
+            message="This page is still blank."
+            action={{ href: dashboardRoutes.journal(journal.id, "write"), label: "Write the first entry" }}
+          />
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {journal.entries.map((entry) => (
+              <li key={entry.id}>
+                <Link
+                  href={dashboardRoutes.journalEntry(journal.id, entry.id)}
+                  prefetch
+                  className={`${SOFT_CARD_LINK} flex flex-col gap-1 px-4 py-3`}
+                >
+                  <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                    {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
+                  </p>
+                  {entry.promptText && (
+                    <p className="font-handwritten text-sm">{entry.promptText}</p>
+                  )}
+                  <p className="line-clamp-3 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                    {entry.content || "Not written yet. Tap to fill it in."}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )
       ) : (
         <>
           <div className="flex flex-col gap-3">
             {suggestedPrompt && (
-              <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-                <span>Try: &ldquo;{suggestedPrompt.text}&rdquo;</span>
+              <div className="flex items-start gap-3 rounded-2xl bg-amber-100/70 px-4 py-3">
+                <Sparkles className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden />
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-xs tracking-wide text-amber-900/70 uppercase">
+                    Need a nudge?
+                  </span>
+                  <span className="font-handwritten text-sm">{suggestedPrompt.text}</span>
+                </div>
                 <form action={pickJournalPromptAction}>
                   <Button type="submit" variant="ghost" size="sm">
                     Another
@@ -189,7 +244,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
 
             <form
               action={createJournalEntryAction.bind(null, journal.id)}
-              className="flex flex-col gap-3"
+              className={`${SOFT_CARD} flex flex-col gap-3 p-4`}
             >
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="promptText" className="text-sm font-medium">
@@ -210,7 +265,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="content" className="text-sm font-medium">
-                  Entry
+                  Dear journal...
                 </label>
                 <textarea
                   id="content"
@@ -228,14 +283,16 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
                 <Input id="startAt" name="startAt" type="datetime-local" />
               </div>
 
-              <Button type="submit">Save entry</Button>
+              <Button type="submit" className="self-end rounded-full px-5">
+                Save entry
+              </Button>
             </form>
           </div>
 
           {/* Folded away: it's set up once and rarely touched afterwards. */}
-          <details>
+          <details className={`${SOFT_CARD} px-4 py-3`}>
             <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-              Prompt pool ({journal.prompts.length})
+              My saved prompts ({journal.prompts.length})
             </summary>
             <RemovableList
               items={journal.prompts.map(({ id, text }) => ({ id, text }))}
@@ -282,6 +339,18 @@ async function findJournalEntry(id: string, entryId: string) {
   return { journal, entry };
 }
 
+// An entry's date and prompt, the same on its reading and editing screens.
+function JournalEntryHeader({ title, createdAt }: { title: string; createdAt: Date }) {
+  return (
+    <header className="flex flex-col gap-1.5">
+      <p className="text-xs tracking-wide text-muted-foreground uppercase">
+        {createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
+      </p>
+      <h2 className="font-handwritten text-xl leading-snug">{title}</h2>
+    </header>
+  );
+}
+
 // Reading one entry in full. Editing is a separate step behind the Edit
 // button, so you can't change an entry by accident while reading it.
 export async function JournalEntryView({ id, entryId }: { id: string; entryId: string }) {
@@ -290,28 +359,23 @@ export async function JournalEntryView({ id, entryId }: { id: string; entryId: s
   const { previous: newer, next: older } = findListNeighbors(journal.entries, entry.id);
 
   return (
-    <article className="flex flex-col gap-4">
+    <article className="flex flex-col gap-5">
       <PopupListNavigation
         back={{ href: dashboardRoutes.journal(id, "read"), label: journal.name }}
         previous={newer && { href: dashboardRoutes.journalEntry(id, newer.id), label: "Newer" }}
         next={older && { href: dashboardRoutes.journalEntry(id, older.id), label: "Older" }}
       />
-      <header className="flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">
-          {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-        </p>
-        <h2 className="text-lg font-medium">{entry.promptText ?? journal.name}</h2>
-      </header>
+      <JournalEntryHeader title={entry.promptText ?? journal.name} createdAt={entry.createdAt} />
 
       {entry.content ? (
-        <p className="leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{entry.content}</p>
       ) : (
-        <p className="text-sm text-muted-foreground">Not written yet.</p>
+        <JournalEmptyState message="Not written yet." />
       )}
 
       <Link
         href={dashboardRoutes.editJournalEntry(id, entry.id)}
-        className={`${buttonVariants({ variant: "outline", size: "sm" })} self-end`}
+        className={`${buttonVariants({ variant: "outline", size: "sm" })} self-end rounded-full`}
       >
         <Pencil aria-hidden />
         {entry.content ? "Edit" : "Write it now"}
@@ -325,12 +389,9 @@ export async function JournalEntryEditView({ id, entryId }: { id: string; entryI
   const entryHref = dashboardRoutes.journalEntry(id, entry.id);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <PopupListNavigation back={{ href: entryHref, label: "Back to entry" }} />
-      <h2 className="text-lg font-medium">{entry.promptText ?? journal.name}</h2>
-      <p className="text-xs text-muted-foreground">
-        {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-      </p>
+      <JournalEntryHeader title={entry.promptText ?? journal.name} createdAt={entry.createdAt} />
 
       <form
         action={updateJournalEntryAction.bind(null, entry.id, id)}
@@ -340,19 +401,27 @@ export async function JournalEntryEditView({ id, entryId }: { id: string; entryI
           name="content"
           rows={14}
           defaultValue={entry.content ?? undefined}
-          placeholder="Write your entry..."
+          placeholder="Dear journal..."
+          aria-label="Entry"
           className={TEXTAREA_CLASSES}
         />
         <div className="flex justify-end gap-2">
           <Link href={entryHref} className={buttonVariants({ variant: "ghost" })}>
             Cancel
           </Link>
-          <Button type="submit">Save</Button>
+          <Button type="submit" className="rounded-full px-5">
+            Save
+          </Button>
         </div>
       </form>
 
-      <form action={deleteJournalEntryAction.bind(null, entry.id, id)}>
-        <ConfirmSubmitButton confirmMessage="Delete this entry? This can't be undone.">
+      <form action={deleteJournalEntryAction.bind(null, entry.id, id)} className="self-start">
+        <ConfirmSubmitButton
+          variant="ghost"
+          size="sm"
+          className="text-destructive"
+          confirmMessage="Delete this entry? This can't be undone."
+        >
           Delete entry
         </ConfirmSubmitButton>
       </form>
