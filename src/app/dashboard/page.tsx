@@ -278,6 +278,15 @@ export default async function DashboardPage({
               <Link href={prevHref} prefetch className="underline">
                 ← Previous {mode === "month" ? "month" : "week"}
               </Link>
+              {/* No start= in the link: without it the page shows the week or
+                  month holding today in the user's saved time zone. */}
+              <Link
+                href={mode === "month" ? "/dashboard?mode=month" : dashboardRoutes.calendar()}
+                prefetch
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Today
+              </Link>
               <Link href={nextHref} prefetch className="underline">
                 Next {mode === "month" ? "month" : "week"} →
               </Link>
