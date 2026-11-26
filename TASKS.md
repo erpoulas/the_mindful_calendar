@@ -131,7 +131,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Bring README up to date with the current codebase (done: b2c9d3d)
 - [x] Bring AGENTS.md up to date with the current codebase (done: 6c5d1da)
 - [x] AGENTS.md: commit rule so one agent's `git commit` can't sweep in another agent's staged files (done: ca017a6)
-- [ ] Run each agent in its own git worktree: rewrite the AGENTS.md multi-agent rules for it (claims pushed to main, push with `git push origin HEAD:main`), add a setup script, and add rules for schema migrations, hot-spot files, stale claims, fast test runs and building in PowerShell (requested 2026-11-26) (claimed: worktree-setup, 2026-11-26)
+- [x] Run each agent in its own git worktree: rewrite the AGENTS.md multi-agent rules for it (claims pushed to main, push with `git push origin HEAD:main`), add a setup script, and add rules for schema migrations, hot-spot files, stale claims, fast test runs and building in PowerShell (requested 2026-11-26) (done: f699dd3)
 
 ## V4 — Big scope items
 - [ ] Workout Library (YouTube clips, routines, drag onto the calendar)
