@@ -74,62 +74,72 @@ export function TimeGrid({
     return { date, key: toDayKey(date) };
   });
 
-  return (
-    <div
-      className="grid"
-      style={{
-        gridTemplateColumns: `repeat(${hourLabelColumns.length}, 3.25rem) repeat(7, minmax(0, 1fr))`,
-      }}
-    >
-      {hourLabelColumns.map((column, index) => (
-        <div
-          key={index}
-          className="sticky -top-px z-30 flex items-end justify-end bg-background px-1 pt-2 pb-1 text-[10px] text-muted-foreground"
-        >
-          {column.heading}
-        </div>
-      ))}
-      {days.map(({ date, key }) => (
-        <div
-          key={key}
-          className="sticky -top-px z-30 flex flex-col items-center border-b bg-background px-1 pt-2 pb-1 text-center text-xs font-medium text-foreground"
-        >
-          <span>
-            {date.toLocaleDateString(undefined, {
-              weekday: "short",
-              timeZone: "UTC",
-            })}
-          </span>
-          <span>
-            {date.getUTCMonth() + 1}/{date.getUTCDate()}
-          </span>
-          <AllDayList events={allDayEvents.filter((event) => coversDay(event, key))} />
-        </div>
-      ))}
+  const columns: CSSProperties = {
+    gridTemplateColumns: `repeat(${hourLabelColumns.length}, 3.25rem) repeat(7, minmax(0, 1fr))`,
+  };
 
-      {hourLabelColumns.map((column, index) => (
-        <div key={index} className="relative" style={{ height: HOUR_HEIGHT * 24 }}>
-          {column.labels.map((label, hour) => (
-            <div
-              key={hour}
-              className="absolute right-1 -translate-y-2 text-[10px] whitespace-nowrap text-muted-foreground"
-              style={{ top: hour * HOUR_HEIGHT }}
-            >
-              {hour === 0 ? "" : label}
+  // The day headers sit above the scroll box instead of sticking inside it,
+  // so they can stay see-through (the wash behind the calendar shows through
+  // them) while scrolled events slide under the scroll box's top edge rather
+  // than under the headers. Both rows reserve the scrollbar's width
+  // (scrollbar-gutter), so their columns line up.
+  return (
+    <>
+      <div className="grid shrink-0 overflow-hidden px-2 [scrollbar-gutter:stable]" style={columns}>
+        {hourLabelColumns.map((column, index) => (
+          <div
+            key={index}
+            className="flex items-end justify-end px-1 pt-2 pb-1 text-[10px] text-muted-foreground"
+          >
+            {column.heading}
+          </div>
+        ))}
+        {days.map(({ date, key }) => (
+          <div
+            key={key}
+            className="flex flex-col items-center border-b px-1 pt-2 pb-1 text-center text-xs font-medium text-foreground"
+          >
+            <span>
+              {date.toLocaleDateString(undefined, {
+                weekday: "short",
+                timeZone: "UTC",
+              })}
+            </span>
+            <span>
+              {date.getUTCMonth() + 1}/{date.getUTCDate()}
+            </span>
+            <AllDayList events={allDayEvents.filter((event) => coversDay(event, key))} />
+          </div>
+        ))}
+      </div>
+
+      <div data-calendar-scroll className="min-h-0 flex-1 overflow-auto px-2 pb-2 [scrollbar-gutter:stable]">
+        <div className="grid" style={columns}>
+          {hourLabelColumns.map((column, index) => (
+            <div key={index} className="relative" style={{ height: HOUR_HEIGHT * 24 }}>
+              {column.labels.map((label, hour) => (
+                <div
+                  key={hour}
+                  className="absolute right-1 -translate-y-2 text-[10px] whitespace-nowrap text-muted-foreground"
+                  style={{ top: hour * HOUR_HEIGHT }}
+                >
+                  {hour === 0 ? "" : label}
+                </div>
+              ))}
             </div>
           ))}
-        </div>
-      ))}
 
-      {days.map(({ key }) => (
-        <DayColumn
-          key={key}
-          dayKey={key}
-          now={key === todayKey ? now : null}
-          events={events.filter((ev) => toDayKey(ev.startAt) === key)}
-        />
-      ))}
-    </div>
+          {days.map(({ key }) => (
+            <DayColumn
+              key={key}
+              dayKey={key}
+              now={key === todayKey ? now : null}
+              events={events.filter((ev) => toDayKey(ev.startAt) === key)}
+            />
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 

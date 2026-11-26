@@ -138,7 +138,8 @@ export default async function DashboardPage({
   let prevHref: string;
   let nextHref: string;
   let calendarBody: React.ReactNode;
-  let calendarBodyPadded = false;
+  // The week grid scrolls inside itself, below its day headers (see TimeGrid).
+  let calendarScrollsItself = false;
   let dndEvents: TimeGridEvent[] = [];
 
   if (mode === "month") {
@@ -198,7 +199,7 @@ export default async function DashboardPage({
     prevHref = `/dashboard?start=${toDateParam(prevWeekStart)}`;
     nextHref = `/dashboard?start=${toDateParam(nextWeekStart)}`;
     dndEvents = timedEvents;
-    calendarBodyPadded = true;
+    calendarScrollsItself = true;
     const { extraTimezones, use24HourClock } = displaySettings;
     const hourLabelColumns = buildHourLabelColumns({
       day: start,
@@ -281,7 +282,7 @@ export default async function DashboardPage({
               priority
               aria-hidden
               sizes="40rem"
-              className="pointer-events-none z-0 translate-y-[7%] object-cover object-center opacity-70 [mask-image:radial-gradient(circle_at_50%_50%,black_0%,transparent_85%)]"
+              className="pointer-events-none z-0 object-cover object-center opacity-70 [mask-image:radial-gradient(ellipse_at_50%_60%,black_35%,transparent_95%)]"
             />
 
             <div className="relative z-10 flex shrink-0 items-center justify-between p-4 pb-2">
@@ -336,8 +337,7 @@ export default async function DashboardPage({
             </div>
 
             <div
-              data-calendar-scroll
-              className={`relative z-10 mx-4 mb-2 min-h-0 flex-1 overflow-auto rounded border border-border ${calendarBodyPadded ? "px-2 pb-2" : ""}`}
+              className={`relative z-10 mx-4 mb-2 min-h-0 flex-1 rounded border border-border ${calendarScrollsItself ? "flex flex-col overflow-hidden" : "overflow-auto"}`}
             >
               {calendarBody}
             </div>
