@@ -11,7 +11,7 @@ import { saveInBackground } from "./use-optimistic-list";
 // to them, so a plain list reads like a checklist. Touch screens can't
 // hover, so there they always show, but faint.
 
-const iconButtonClass =
+export const iconButtonClass =
   "inline-flex rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground";
 
 export function RowActions({

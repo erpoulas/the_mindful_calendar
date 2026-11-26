@@ -60,3 +60,19 @@ export async function setDopamineMenuItemIntention(
     data: { intentionId: params.intentionId },
   });
 }
+
+/** Changes an item's text. Returns null, changing nothing, unless it's this user's. */
+export async function updateDopamineMenuItemText(
+  client: DbClient,
+  params: { userId: string; itemId: string; text: string },
+) {
+  const item = await client.dopamineMenuItem.findFirst({
+    where: { id: params.itemId, userId: params.userId },
+  });
+  if (!item) return null;
+
+  return client.dopamineMenuItem.update({
+    where: { id: item.id },
+    data: { text: params.text },
+  });
+}

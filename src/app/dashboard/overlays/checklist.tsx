@@ -7,7 +7,7 @@ import { isPendingItem, pendingItemId } from "@/lib/optimistic-list";
 import { PostItIconButton, RowActions, ScheduleIconLink, StartNowButton } from "./item-actions";
 import { saveInBackground, useOptimisticList } from "./use-optimistic-list";
 
-type ChecklistItem = { id: string; text: string; done: boolean };
+export type ChecklistItem = { id: string; text: string; done: boolean };
 
 // One row per ruled line. A popup whose paper art has ruled lines sets
 // --paper-line to their spacing (see PanelArt's ruledLines), so each line of
@@ -28,8 +28,10 @@ const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-c
  * into a text box that grows with what you type; with `deleteAction`,
  * backspacing all its text away deletes the item and moves up to the end of
  * the one above, so holding Backspace can clear the whole list, like Notes.
+ * Without `toggleAction` (the dopamine menu), items can't be ticked off, and
+ * `renderBullet` draws what sits in the circle's place instead.
  */
-export function Checklist({
+export function Checklist<Item extends ChecklistItem>({
   listId,
   items,
   addPlaceholder,
@@ -40,13 +42,17 @@ export function Checklist({
   deleteAction,
   startNowAction,
   scheduleProjectId,
+  scheduleHref,
+  renderBullet,
+  renderExtraActions,
   focusNewItem = false,
 }: {
   listId: string;
-  items: ChecklistItem[];
+  items: Item[];
   /** The blank line's hint and label, e.g. "New item". */
   addPlaceholder: string;
-  toggleAction: (itemId: string, listId: string) => Promise<void>;
+  /** Ticks an item off or back on; without it, items have no tick circle. */
+  toggleAction?: (itemId: string, listId: string) => Promise<void>;
   addAction: (listId: string, formData: FormData) => Promise<void>;
   /** Quick lists only: turns an item into a post-it, taking it off the list. */
   promoteToPostItAction?: (itemId: string) => Promise<void>;
@@ -58,6 +64,12 @@ export function Checklist({
   deleteAction?: (itemId: string) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
   scheduleProjectId?: string;
+  /** Where an item's Schedule icon goes, if not the plain New event form. */
+  scheduleHref?: (item: Item) => string;
+  /** Drawn in the tick circle's place when there's no `toggleAction`. */
+  renderBullet?: (item: Item) => React.ReactNode;
+  /** More icons at the end of a saved item's hover icons. */
+  renderExtraActions?: (item: Item) => React.ReactNode;
   /** Puts the cursor on the blank line, e.g. in a list that was just made. */
   focusNewItem?: boolean;
 }) {
@@ -82,7 +94,7 @@ export function Checklist({
     return shownItems.slice(0, index).findLast((item) => !isPendingItem(item.id));
   }
 
-  function deleteItem(item: ChecklistItem) {
+  function deleteItem(item: Item) {
     if (!deleteAction) return;
     startTransition(async () => {
       changeList({ type: "remove", id: item.id });
@@ -90,13 +102,13 @@ export function Checklist({
     });
   }
 
-  function backspaceAway(item: ChecklistItem, index: number) {
+  function backspaceAway(item: Item, index: number) {
     deletedByBackspaceRef.current = item.id;
     deleteItem(item);
     startEditing(savedItemAbove(index)?.id ?? null, { cursorAtEnd: true });
   }
 
-  function saveText(item: ChecklistItem, formData: FormData) {
+  function saveText(item: Item, formData: FormData) {
     if (deletedByBackspaceRef.current === item.id) return;
     setEditingId(null);
     const text = String(formData.get("text") ?? "").trim();
@@ -116,7 +128,8 @@ export function Checklist({
   async function add(formData: FormData) {
     const text = String(formData.get("text") ?? "").trim();
     if (!text) return;
-    changeList({ type: "add", item: { id: pendingItemId(), text, done: false } });
+    // Only the fields every item has; the server's fresh list fills in the rest.
+    changeList({ type: "add", item: { id: pendingItemId(), text, done: false } as Item });
     addFormRef.current?.reset();
     await saveInBackground(() => addAction(listId, formData));
   }
@@ -131,26 +144,30 @@ export function Checklist({
           const saved = !isPendingItem(item.id);
           return (
             <li key={item.id} className="group relative flex items-start gap-3">
-              <form
-                className={CIRCLE_SLOT_CLASSES}
-                action={async () => {
-                  changeList({ type: "toggle", id: item.id });
-                  await saveInBackground(() => toggleAction(item.id, listId));
-                }}
-              >
-                <button
-                  type="submit"
-                  disabled={!saved}
-                  aria-label={item.done ? "Mark not done" : "Mark done"}
-                  className={`flex size-5 items-center justify-center rounded-full border-2 transition ${
-                    item.done
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-muted-foreground/40 hover:border-primary"
-                  }`}
+              {toggleAction ? (
+                <form
+                  className={CIRCLE_SLOT_CLASSES}
+                  action={async () => {
+                    changeList({ type: "toggle", id: item.id });
+                    await saveInBackground(() => toggleAction(item.id, listId));
+                  }}
                 >
-                  {item.done && <Check className="size-3" strokeWidth={3} aria-hidden />}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={!saved}
+                    aria-label={item.done ? "Mark not done" : "Mark done"}
+                    className={`flex size-5 items-center justify-center rounded-full border-2 transition ${
+                      item.done
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-muted-foreground/40 hover:border-primary"
+                    }`}
+                  >
+                    {item.done && <Check className="size-3" strokeWidth={3} aria-hidden />}
+                  </button>
+                </form>
+              ) : (
+                <span className={CIRCLE_SLOT_CLASSES}>{renderBullet?.(item)}</span>
+              )}
               {editingId === item.id ? (
                 <form
                   onSubmit={(event) => {
@@ -216,7 +233,10 @@ export function Checklist({
               {editingId !== item.id && (
                 <RowActions className="absolute top-[calc((var(--paper-line,2.25rem)-1.75rem)/2)] right-0 rounded-lg bg-white/95 px-0.5 shadow-sm [@media(hover:none)]:static [@media(hover:none)]:bg-transparent [@media(hover:none)]:shadow-none">
                   <ScheduleIconLink
-                    href={dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })}
+                    href={
+                      scheduleHref?.(item) ??
+                      dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })
+                    }
                   />
                   {startNowAction && saved && (
                     <StartNowButton itemId={item.id} startNowAction={startNowAction} />
@@ -231,6 +251,7 @@ export function Checklist({
                       <PostItIconButton label="Move to post-its" />
                     </form>
                   )}
+                  {saved && renderExtraActions?.(item)}
                 </RowActions>
               )}
             </li>

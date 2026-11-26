@@ -6,6 +6,7 @@ import {
   getRandomDopamineMenuItem,
   listDopamineMenuItems,
   setDopamineMenuItemIntention,
+  updateDopamineMenuItemText,
 } from "@/lib/dopamine-menu";
 import { createIntention, deleteIntention } from "@/lib/intentions";
 
@@ -159,6 +160,38 @@ describe("setDopamineMenuItemIntention", () => {
 
       const [kept] = await listDopamineMenuItems(tx, "test-user-1");
       expect(kept).toMatchObject({ id: item.id, intentionId: null });
+    });
+  });
+});
+
+describe("updateDopamineMenuItemText", () => {
+  it("changes the item's text", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Walk" });
+
+      const updated = await updateDopamineMenuItemText(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        text: "Walk by the river",
+      });
+
+      expect(updated?.text).toBe("Walk by the river");
+      expect((await listDopamineMenuItems(tx, "test-user-1"))[0].text).toBe("Walk by the river");
+    });
+  });
+
+  it("returns null and changes nothing for another user's item", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-2", text: "Theirs" });
+
+      const result = await updateDopamineMenuItemText(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        text: "Mine now",
+      });
+
+      expect(result).toBeNull();
+      expect((await listDopamineMenuItems(tx, "test-user-2"))[0].text).toBe("Theirs");
     });
   });
 });

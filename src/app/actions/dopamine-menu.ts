@@ -6,6 +6,7 @@ import {
   addDopamineMenuItem,
   deleteDopamineMenuItem,
   setDopamineMenuItemIntention,
+  updateDopamineMenuItemText,
 } from "@/lib/dopamine-menu";
 import { getCurrentUserId } from "@/lib/auth";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
@@ -24,6 +25,17 @@ export async function addDopamineMenuItemAction(formData: FormData) {
 export async function deleteDopamineMenuItemAction(itemId: string) {
   const userId = await getCurrentUserId();
   await deleteDopamineMenuItem(db, { userId, itemId });
+
+  forgetStoredAfterSave(userId, ["dopamineMenu"]);
+}
+
+/** Saves an item's text after it's edited in place. */
+export async function updateDopamineMenuItemTextAction(itemId: string, formData: FormData) {
+  const validated = AddDopamineMenuItemSchema.safeParse({ text: formData.get("text") });
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  await updateDopamineMenuItemText(db, { userId, itemId, text: validated.data.text });
 
   forgetStoredAfterSave(userId, ["dopamineMenu"]);
 }
