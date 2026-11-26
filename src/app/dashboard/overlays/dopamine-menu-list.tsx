@@ -10,7 +10,7 @@ import { saveInBackground } from "./use-optimistic-list";
 type MenuItem = { id: string; text: string; done: boolean; intentionId: string | null };
 
 /**
- * The dopamine menu's items on the ruled paper, edited like a quick list
+ * The dopamine menu's items, edited like a quick list
  * (click to edit, backspace away to delete, type on the blank line to add).
  * Nothing gets ticked off, since menu items are meant to be reused: each
  * row's bullet is instead a dot in its intention's color (hollow when it has
