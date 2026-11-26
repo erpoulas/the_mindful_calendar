@@ -23,6 +23,10 @@ export default defineConfig({
     // "vmThreads" runs each test file in its own VM context inside a worker
     // and doesn't hit this.
     pool: "vmThreads",
+    // Many tests talk to the real Supabase database, ~100ms per query over
+    // the internet, so a busy test can pass the default 5s limit by chance.
+    // (withRollback gives its transactions the same 30s.)
+    testTimeout: 30_000,
   },
   resolve: {
     alias: {

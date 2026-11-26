@@ -9,10 +9,6 @@ import { markGoogleEventsForReread, syncGoogleCalendar } from "@/lib/google-sync
 import { createJournal, createJournalEntry, updateJournal } from "@/lib/journals";
 import { removeJournalSchedule, setJournalSchedule } from "@/lib/journal-schedules";
 
-// These run whole syncs against the real (remote) database, several per
-// test, and each query is a round trip, so they get more than the default 5s.
-vi.setConfig({ testTimeout: 10_000 });
-
 const USER = "test-user-1";
 const TIME_ZONE = "America/New_York";
 const NOW = new Date("2026-11-18T12:00:00Z");
