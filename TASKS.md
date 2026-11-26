@@ -121,6 +121,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 
 ## Going live
 - [x] Deploy to Vercel: generate the Prisma client on install, set env vars on Vercel, add production URLs to Supabase and Google OAuth redirects (done: 2fd87a4; env vars and redirect URLs set up on Vercel, Supabase and Google by the owner)
+- [ ] Check how the app looks and works on iPhones and other small screens: the week and month calendar, every popup and slide-over, post-its and drag-and-drop on touch, the sidebar, and sign-in pages. Test in browser dev tools' phone sizes (e.g. iPhone SE 375px, iPhone 15 393px) and on a real iPhone in Safari, list what breaks (overflow, tiny tap targets, cut-off popups, hover-only controls), then fix (requested 2026-11-26)
 
 ## Docs
 - [x] Bring README up to date with the current codebase (done: b2c9d3d)
