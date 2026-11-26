@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { shouldDrawCalendarUnderPopup } from "@/lib/calendar-under-popup";
 import DashboardPage from "./page";
 
 // The calendar under a popup, for addresses like /dashboard/dopamine-menu.
@@ -11,12 +12,12 @@ import DashboardPage from "./page";
 //   segment in a "default" slot, and refetches it from its own URL when the
 //   page refreshes). Rendering it here would re-run every calendar query for
 //   nothing, which is exactly the cost popups-as-routes are meant to save.
+// - Save in the popup: render it. If the calendar on screen came from a full
+//   load (the case above), the browser has no other calendar to keep, so it
+//   shows whatever this returns, and null would blank it.
 //
-// Browsers mark fetch() requests, which in-app navigations use, with
-// Sec-Fetch-Dest: empty; full page loads say "document". A browser that
-// sends neither still gets the calendar: slower, but never blank.
+// The rules, from the request headers, are in shouldDrawCalendarUnderPopup.
 export default async function CalendarUnderPanel() {
-  const requestHeaders = await headers();
-  if (requestHeaders.get("sec-fetch-dest") === "empty") return null;
+  if (!shouldDrawCalendarUnderPopup(await headers())) return null;
   return <DashboardPage params={Promise.resolve({})} searchParams={Promise.resolve({})} />;
 }
