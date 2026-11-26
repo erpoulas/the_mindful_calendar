@@ -74,27 +74,25 @@ export async function deleteJournalPromptAction(promptId: string) {
   forgetStoredAfterSave(userId, ["journals"]);
 }
 
-/** Saves a new entry; it then shows at the top of the entries below the box. */
-export async function createJournalEntryAction(journalId: string, formData: FormData) {
-  const rawStartAt = formData.get("startAt");
-
+/**
+ * Starts today's page: called by the page's autosave the first time
+ * something is written on it. Returns the new entry's id, so later saves
+ * update that same entry.
+ */
+export async function createJournalEntryAction(
+  journalId: string,
+  formData: FormData,
+): Promise<string | null> {
   const validated = CreateJournalEntrySchema.safeParse({
-    promptText: formData.get("promptText") || undefined,
     content: formData.get("content") || undefined,
-    startAt: rawStartAt && String(rawStartAt).trim() !== "" ? `${rawStartAt}:00Z` : undefined,
   });
-  if (!validated.success) return;
+  if (!validated.success) return null;
 
   const userId = await getCurrentUserId();
-  await createJournalEntry(db, {
-    userId,
-    journalId,
-    promptText: validated.data.promptText,
-    content: validated.data.content,
-    startAt: validated.data.startAt ? new Date(validated.data.startAt) : undefined,
-  });
+  const entry = await createJournalEntry(db, { userId, journalId, content: validated.data.content });
 
   forgetStoredAfterSave(userId, ["journals", "events", "intentions"]);
+  return entry?.id ?? null;
 }
 
 /**

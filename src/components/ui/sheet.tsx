@@ -24,26 +24,31 @@ const POPUP_CLASSES = {
 // shadow) is the panel's visual boundary, so an extra border line would just
 // cut across it.
 const IMAGE_POPUP_CLASSES = {
-  side: "h-full transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full",
+  // Centred top to bottom: on a narrow phone the photo can be shorter than the screen.
+  side: "self-center transition-transform duration-300 data-ending-style:translate-x-full data-starting-style:translate-x-full",
   center:
     "transition-all duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
 };
 
 const IMAGE_CLASSES = {
-  side: "block h-full w-auto max-w-none select-none",
-  // Its width is set by centerImageWidth below.
+  // Widths are set by imageWidth below.
+  side: "block h-auto max-w-none select-none",
   center: "block h-auto max-w-none select-none",
 };
 
 /**
+ * How wide the photo is drawn; its height follows, keeping its shape, so it
+ * fits phones and small laptops as well as big monitors, never cut off.
+ * A side photo is as tall as the screen, unless that would make it wider
+ * than the screen (a phone), when it shrinks to the screen's width.
  * A center photo is shown at `scale` times its own size, but never wider or
- * taller than the screen (less the viewport's 1rem padding each side), so it
- * fits phones and small laptops as well as big monitors. The height follows
- * from the width, keeping the photo's shape.
+ * taller than the screen (less the viewport's 1rem padding each side).
  */
-function centerImageWidth(art: PanelArt) {
+function imageWidth(art: PanelArt, size: "side" | "center") {
+  const shape = art.width / art.height;
+  if (size === "side") return `min(100vw, calc(100dvh * ${shape}))`;
   const scale = art.scale ?? 1;
-  return `min(${art.width * scale}px, calc(100vw - 2rem), calc((100dvh - 2rem) * ${art.width / art.height}))`;
+  return `min(${art.width * scale}px, calc(100vw - 2rem), calc((100dvh - 2rem) * ${shape}))`;
 }
 
 /**
@@ -63,6 +68,9 @@ function centerImageWidth(art: PanelArt) {
  *
  * `scale` (center popups) shows the photo bigger than its own pixel size
  * when the screen has room for it.
+ *
+ * `contentWidth` is how much of the paper's width the content may use, as a
+ * percentage (75 by default, which leaves a calm margin; plain paper only).
  */
 export type PanelArt = {
   src: string;
@@ -71,6 +79,7 @@ export type PanelArt = {
   paperArea: { top: number; right: number; bottom: number; left: number };
   ruledLines?: { spacing: number };
   scale?: number;
+  contentWidth?: number;
 };
 
 /** Body text is this share of a ruled line's height (18px on a 48px line). */
@@ -189,15 +198,15 @@ export function Sheet({
                 loading="eager"
                 fetchPriority="high"
                 className={cn("pointer-events-none", IMAGE_CLASSES[size])}
-                style={size === "center" ? { width: centerImageWidth(backgroundImage) } : undefined}
+                style={{ width: imageWidth(backgroundImage, size) }}
               />
               {/* The popup is exactly the photo's size, so percentages
                   here line up with the photo's pixels at any screen size. */}
               <div
                 className={cn(
-                  "absolute z-10 flex flex-col overflow-y-auto p-6 text-popover-foreground",
-                  // Lined paper only scrolls up and down; long text wraps instead.
-                  lined ? "overflow-x-hidden px-2" : "gap-4",
+                  // Photo popups only ever scroll up and down; long text wraps instead.
+                  "absolute z-10 flex flex-col overflow-x-hidden overflow-y-auto p-6 text-popover-foreground",
+                  lined ? "px-2" : "gap-4",
                 )}
                 style={{
                   top: `${backgroundImage.paperArea.top}%`,
@@ -210,9 +219,10 @@ export function Sheet({
                 {titleRow}
                 <div
                   className={cn(
-                    "flex w-full flex-1 flex-col",
-                    lined ? "" : "mx-auto max-w-[75%] justify-center",
+                    "flex w-full min-w-0 flex-1 flex-col",
+                    lined ? "" : "mx-auto justify-center",
                   )}
+                  style={lined ? undefined : { maxWidth: `${backgroundImage.contentWidth ?? 75}%` }}
                 >
                   <Drawer.Content className="flex flex-col gap-4">{children}</Drawer.Content>
                 </div>
