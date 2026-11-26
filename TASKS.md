@@ -76,6 +76,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [ ] Project Tracker popup: same redesign as Quick Lists. Less clutter, cuter look, and Reminders-style adding of tasks inline (requested 2026-11-22, after the Journals restyle) (claimed: journals-agent, 2026-11-22)
 - [ ] Sidebar panel icons: style more of them like desktop icons, just the image with its label underneath (no card or box around them), so the sidebar has a cute Y2K computer-desktop look overall. Builds on the panel art icons (e332ba9) (requested 2026-11-26)
 - [ ] Dopamine menu: tag each item with an intention, so whenever the item is scheduled (Schedule or Start now) the new calendar event automatically counts toward that intention. Builds on the dopamine-menu Schedule and Start now actions (3e959b6, 6cc02eb) (requested 2026-11-26)
+- [ ] (schema) Quick Lists: one default "Post-its" list kept in sync with the post-its. Making a post-it adds it to the list; dropping a post-it onto the calendar checks its item off (not deleted); deleting a post-it deletes its item. A checked-off item stays on the list until the user deletes it by hand, and deleting an item from the list by hand also deletes its post-it (if it still has one). Likely a link from `QuickListItem` to `PostIt` plus a way to mark the default list (requested 2026-11-26)
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
