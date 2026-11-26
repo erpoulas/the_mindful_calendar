@@ -75,6 +75,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Affirmations: click today's affirmation to edit it in place, and choose how long to keep it (just today, a week, a month, or until you change it) instead of a random pick from your list; a "back to random" option ends it early. Replaces the separate "Just for today" card (requested 2026-11-26) (done: 4a96193)
 - [ ] Project Tracker popup: same redesign as Quick Lists. Less clutter, cuter look, and Reminders-style adding of tasks inline (requested 2026-11-22, after the Journals restyle) (claimed: journals-agent, 2026-11-22)
 - [ ] Sidebar panel icons: style more of them like desktop icons, just the image with its label underneath (no card or box around them), so the sidebar has a cute Y2K computer-desktop look overall. Builds on the panel art icons (e332ba9) (requested 2026-11-26)
+- [ ] Dopamine menu: tag each item with an intention, so whenever the item is scheduled (Schedule or Start now) the new calendar event automatically counts toward that intention. Builds on the dopamine-menu Schedule and Start now actions (3e959b6, 6cc02eb) (requested 2026-11-26)
 
 ## Bugs
 - [x] "Today" markers use UTC instead of the user's time zone, so they land on the wrong day/hour in the evening (done: 114dea8)
