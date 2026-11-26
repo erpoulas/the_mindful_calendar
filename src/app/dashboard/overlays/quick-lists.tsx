@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   addQuickListItemAction,
   createQuickListAction,
@@ -16,6 +17,8 @@ import { getCurrentUserId } from "@/lib/auth";
 import { storedQuickListDetail, storedQuickLists } from "@/lib/stored-reads";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { Checklist } from "./checklist";
+import { pageHeadingClassName } from "./photo-page-styles";
+import { PopupEmptyState } from "./popup-empty-state";
 import { QuickListForm } from "./quick-list-form";
 import { QuickListTabs } from "./quick-list-tabs";
 
@@ -35,31 +38,41 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
       : null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <QuickListTabs lists={lists} activeId={list?.id} />
 
       {lists.length === 0 && (
-        <p className="text-sm text-muted-foreground">No lists yet — create one to get started.</p>
+        <PopupEmptyState
+          message="No lists yet. Groceries, packing, ideas: jot anything down."
+          action={{ href: dashboardRoutes.newQuickList(), label: "Start a list" }}
+        />
       )}
-
-      <Link href={dashboardRoutes.newQuickList()} className="text-sm hover:underline">
-        + Create new list
-      </Link>
 
       {list && (
         <>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{list.name}</h2>
-            <div className="flex gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className={pageHeadingClassName}>{list.name}</h2>
+            {/* Small icons: renaming or deleting a list is rare, and the
+                page is narrow, so the list's name gets the room. */}
+            <div className="flex shrink-0 gap-1">
               <Link
                 href={dashboardRoutes.editQuickList(list.id)}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
+                aria-label="Rename list"
+                title="Rename list"
+                className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
               >
-                Edit
+                <Pencil aria-hidden />
               </Link>
               <form action={deleteQuickListAction.bind(null, list.id)}>
-                <ConfirmSubmitButton confirmMessage="Delete this list and all its items? This can't be undone.">
-                  Delete
+                <ConfirmSubmitButton
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Delete list"
+                  title="Delete list"
+                  className="text-destructive"
+                  confirmMessage="Delete this list and all its items? This can't be undone."
+                >
+                  <Trash2 aria-hidden />
                 </ConfirmSubmitButton>
               </form>
             </div>
@@ -68,15 +81,12 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
           <Checklist
             listId={list.id}
             items={list.items.map(({ id, text, done }) => ({ id, text, done }))}
-            emptyText="No items yet — add one below."
-            addPlaceholder="Add an item"
+            addPlaceholder="New item"
             toggleAction={toggleQuickListItemAction}
             addAction={addQuickListItemAction}
             promoteToPostItAction={promoteQuickListItemToPostItAction}
             editTextAction={updateQuickListItemTextAction}
             startNowAction={scheduleQuickListItemNowAction}
-            listClassName="flex flex-col gap-2"
-            formClassName="flex gap-2"
           />
         </>
       )}

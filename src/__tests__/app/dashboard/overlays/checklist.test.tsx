@@ -23,12 +23,9 @@ function renderChecklist(overrides: Partial<Parameters<typeof Checklist>[0]> = {
     <Checklist
       listId="list-1"
       items={items}
-      emptyText="No items yet."
-      addPlaceholder="Add an item"
+      addPlaceholder="New item"
       toggleAction={vi.fn(async () => {})}
       addAction={vi.fn(async () => {})}
-      listClassName=""
-      formClassName=""
       {...overrides}
     />,
   );
@@ -50,18 +47,42 @@ describe("Checklist", () => {
     save.finish();
   });
 
-  it("shows a new item at once and empties the box", async () => {
+  it("adds an item from the blank line at the bottom and empties it for the next", async () => {
     const save = slowSave();
     renderChecklist({ addAction: save.action });
-    const box = screen.getByPlaceholderText("Add an item") as HTMLInputElement;
+    const box = screen.getByRole("textbox", { name: "New item" }) as HTMLInputElement;
 
     fireEvent.change(box, { target: { value: "Walk the dog" } });
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    // Pressing Enter in the box submits its form.
+    fireEvent.submit(box.form!);
 
     expect(await screen.findByText("Walk the dog")).toBeInTheDocument();
     expect(box.value).toBe("");
     expect(save.action).toHaveBeenCalledWith("list-1", expect.any(FormData));
     save.finish();
+  });
+
+  it("adds nothing when Enter is pressed on an empty line", async () => {
+    const addAction = vi.fn(async () => {});
+    renderChecklist({ addAction });
+
+    fireEvent.submit(screen.getByRole("textbox", { name: "New item" }).closest("form")!);
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(3));
+    expect(addAction).not.toHaveBeenCalled();
+  });
+
+  it("has no separate Add button", () => {
+    renderChecklist();
+
+    expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
+  });
+
+  it("shows just the blank line on an empty list", () => {
+    renderChecklist({ items: [] });
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.getByRole("textbox", { name: "New item" })).toBeInTheDocument();
   });
 
   it("undoes the tick when the save fails", async () => {

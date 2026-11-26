@@ -108,14 +108,11 @@ export async function ProjectDetailView({ id }: { id: string }) {
         <Checklist
           listId={project.id}
           items={project.tasks.map(({ id, text, done }) => ({ id, text, done }))}
-          emptyText="No tasks yet."
-          addPlaceholder="Add a task"
+          addPlaceholder="New task"
           toggleAction={toggleProjectTaskAction}
           addAction={addProjectTaskAction}
           scheduleProjectId={project.id}
           startNowAction={scheduleProjectTaskNowAction}
-          listClassName="mt-2 flex flex-col gap-2"
-          formClassName="mt-3 flex gap-2"
         />
       </div>
     </div>

@@ -14,9 +14,18 @@ import { saveInBackground } from "./use-optimistic-list";
 const iconButtonClass =
   "inline-flex rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground";
 
-export function RowActions({ children }: { children: React.ReactNode }) {
+export function RowActions({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  /** Extra classes, e.g. to float the icons over the row instead of beside it. */
+  className?: string;
+}) {
   return (
-    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-60">
+    <div
+      className={`flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-60 ${className}`}
+    >
       {children}
     </div>
   );

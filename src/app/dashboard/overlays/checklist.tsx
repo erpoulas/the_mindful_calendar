@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Check } from "lucide-react";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { isPendingItem, pendingItemId } from "@/lib/optimistic-list";
 import { PostItIconButton, RowActions, ScheduleIconLink, StartNowButton } from "./item-actions";
@@ -10,17 +9,21 @@ import { saveInBackground, useOptimisticList } from "./use-optimistic-list";
 
 type ChecklistItem = { id: string; text: string; done: boolean };
 
+// Roomy, easy-to-read text, the same for an item, its edit box and the blank line.
+const ITEM_TEXT_CLASSES = "text-[15px] leading-snug";
+
 /**
- * A project's tasks or a quick list's items: tick boxes, Schedule and
- * post-it icons that show when you hover a row, and an add box. Ticking,
- * adding and moving an item to the post-its change the list on screen at
- * once and save in the background. With `editTextAction`, clicking an
- * item's text turns it into a text box, the way post-its work.
+ * A project's tasks or a quick list's items, laid out like Apple Reminders:
+ * round tick circles, Schedule and post-it icons that show when you hover a
+ * row, and a blank line at the bottom where you type a new item and press
+ * Enter (the line empties, ready for the next one). Ticking, adding and
+ * moving an item to the post-its change the list on screen at once and save
+ * in the background. With `editTextAction`, clicking an item's text turns it
+ * into a text box that grows with what you type.
  */
 export function Checklist({
   listId,
   items,
-  emptyText,
   addPlaceholder,
   toggleAction,
   addAction,
@@ -28,12 +31,10 @@ export function Checklist({
   editTextAction,
   startNowAction,
   scheduleProjectId,
-  listClassName,
-  formClassName,
 }: {
   listId: string;
   items: ChecklistItem[];
-  emptyText: string;
+  /** The blank line's hint and label, e.g. "New item". */
   addPlaceholder: string;
   toggleAction: (itemId: string, listId: string) => Promise<void>;
   addAction: (listId: string, formData: FormData) => Promise<void>;
@@ -45,8 +46,6 @@ export function Checklist({
   editTextAction?: (itemId: string, formData: FormData) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
   scheduleProjectId?: string;
-  listClassName: string;
-  formClassName: string;
 }) {
   const [shownItems, changeList] = useOptimisticList(items);
   const addFormRef = useRef<HTMLFormElement>(null);
@@ -74,12 +73,12 @@ export function Checklist({
 
   return (
     <>
-      <ul className={listClassName}>
-        {shownItems.length === 0 && <p className="text-sm text-muted-foreground">{emptyText}</p>}
+      {/* No divider lines: the popups' paper art already has its own. */}
+      <ul className="flex flex-col">
         {shownItems.map((item) => {
           const saved = !isPendingItem(item.id);
           return (
-            <li key={item.id} className="group flex items-center gap-2">
+            <li key={item.id} className="group relative flex items-start gap-3 py-2">
               <form
                 action={async () => {
                   changeList({ type: "toggle", id: item.id });
@@ -90,10 +89,14 @@ export function Checklist({
                   type="submit"
                   disabled={!saved}
                   aria-label={item.done ? "Mark not done" : "Mark done"}
-                  className={`h-5 w-5 rounded border ${
-                    item.done ? "border-primary bg-primary" : "border-border bg-background"
+                  className={`mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition ${
+                    item.done
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-muted-foreground/40 hover:border-primary"
                   }`}
-                />
+                >
+                  {item.done && <Check className="size-3" strokeWidth={3} aria-hidden />}
+                </button>
               </form>
               {editingId === item.id ? (
                 <form
@@ -103,8 +106,9 @@ export function Checklist({
                   }}
                   className="flex-1"
                 >
-                  <input
+                  <textarea
                     name="text"
+                    rows={1}
                     autoFocus
                     defaultValue={item.text}
                     aria-label="Item text"
@@ -122,51 +126,71 @@ export function Checklist({
                         event.currentTarget.blur();
                       }
                     }}
-                    className="w-full border-b border-border bg-transparent outline-none"
+                    className={`${ITEM_TEXT_CLASSES} field-sizing-content w-full resize-none border-b border-primary/50 bg-transparent outline-none`}
                   />
                 </form>
               ) : editTextAction && saved ? (
                 <button
                   type="button"
                   onClick={() => setEditingId(item.id)}
-                  className={`flex-1 cursor-text text-left ${
+                  className={`${ITEM_TEXT_CLASSES} flex-1 cursor-text text-left ${
                     item.done ? "text-muted-foreground line-through" : ""
                   }`}
                 >
                   {item.text}
                 </button>
               ) : (
-                <span className={`flex-1 ${item.done ? "text-muted-foreground line-through" : ""}`}>
+                <span
+                  className={`${ITEM_TEXT_CLASSES} flex-1 ${item.done ? "text-muted-foreground line-through" : ""}`}
+                >
                   {item.text}
                 </span>
               )}
-              <RowActions>
-                <ScheduleIconLink
-                  href={dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })}
-                />
-                {startNowAction && saved && (
-                  <StartNowButton itemId={item.id} startNowAction={startNowAction} />
-                )}
-                {promoteToPostItAction && saved && (
-                  <form
-                    action={async () => {
-                      changeList({ type: "remove", id: item.id });
-                      await saveInBackground(() => promoteToPostItAction(item.id));
-                    }}
-                  >
-                    <PostItIconButton label="Move to post-its" />
-                  </form>
-                )}
-              </RowActions>
+              {/* With a mouse, the icons float over the end of the row on
+                  hover, so the text gets the full width; touch screens
+                  (no hover) keep them beside the text. They're hidden while
+                  the item is being edited, so they don't cover its text. */}
+              {editingId !== item.id && (
+                <RowActions className="absolute top-1.5 right-0 rounded-lg bg-white/95 px-0.5 shadow-sm [@media(hover:none)]:static [@media(hover:none)]:bg-transparent [@media(hover:none)]:shadow-none">
+                  <ScheduleIconLink
+                    href={dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })}
+                  />
+                  {startNowAction && saved && (
+                    <StartNowButton itemId={item.id} startNowAction={startNowAction} />
+                  )}
+                  {promoteToPostItAction && saved && (
+                    <form
+                      action={async () => {
+                        changeList({ type: "remove", id: item.id });
+                        await saveInBackground(() => promoteToPostItAction(item.id));
+                      }}
+                    >
+                      <PostItIconButton label="Move to post-its" />
+                    </form>
+                  )}
+                </RowActions>
+              )}
             </li>
           );
         })}
+        {/* The blank line: type and press Enter to add. The box keeps focus
+            and empties, so you can type the next item straight away. */}
+        <li className="flex items-start gap-3 py-2">
+          <span
+            aria-hidden
+            className="mt-0.5 size-5 shrink-0 rounded-full border-2 border-dashed border-muted-foreground/30"
+          />
+          <form ref={addFormRef} action={add} className="flex-1">
+            <input
+              name="text"
+              placeholder={addPlaceholder}
+              aria-label={addPlaceholder}
+              autoComplete="off"
+              className={`${ITEM_TEXT_CLASSES} w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
+            />
+          </form>
+        </li>
       </ul>
-
-      <form ref={addFormRef} action={add} className={formClassName}>
-        <Input name="text" placeholder={addPlaceholder} required />
-        <Button type="submit">Add</Button>
-      </form>
     </>
   );
 }

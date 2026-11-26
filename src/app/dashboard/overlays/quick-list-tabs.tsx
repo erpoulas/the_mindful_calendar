@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { pillTabClassName, pillTabsClassName } from "./photo-page-styles";
 
+// One pill per list, plus a "+" pill at the end that starts a new list.
 export function QuickListTabs({
   lists,
   activeId,
@@ -11,22 +14,27 @@ export function QuickListTabs({
   if (lists.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 border-b pb-2">
+    <nav aria-label="Lists" className={pillTabsClassName}>
       {lists.map((list) => (
         <Link
           key={list.id}
           href={dashboardRoutes.quickLists(list.id)}
           // Loads each list while the popup is open, so switching tabs is instant.
           prefetch
-          className={`rounded px-3 py-1 text-sm ${
-            list.id === activeId
-              ? "bg-primary text-primary-foreground"
-              : "bg-accent text-foreground hover:bg-secondary"
-          }`}
+          aria-current={list.id === activeId ? "page" : undefined}
+          className={pillTabClassName(list.id === activeId)}
         >
           {list.name}
         </Link>
       ))}
-    </div>
+      <Link
+        href={dashboardRoutes.newQuickList()}
+        aria-label="New list"
+        title="New list"
+        className={pillTabClassName(false)}
+      >
+        <Plus className="size-4" aria-hidden />
+      </Link>
+    </nav>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookHeart, BookOpen, Feather, Pencil, PenLine, Plus, Sparkles } from "lucide-react";
+import { BookHeart, BookOpen, Pencil, PenLine, Plus, Sparkles } from "lucide-react";
 import {
   addJournalPromptAction,
   createJournalAction,
@@ -22,6 +22,14 @@ import { dashboardRoutes, type JournalTab } from "@/lib/dashboard-routes";
 import { getRandomJournalPrompt } from "@/lib/journals";
 import { findListNeighbors } from "@/lib/list-neighbors";
 import { JournalForm } from "./journal-form";
+import {
+  pageHeadingClassName,
+  pillTabClassName,
+  pillTabsClassName,
+  softCardClassName,
+  softCardLinkClassName,
+} from "./photo-page-styles";
+import { PopupEmptyState } from "./popup-empty-state";
 import { PopupListNavigation } from "./popup-list-navigation";
 import { RemovableList } from "./removable-list";
 
@@ -37,43 +45,15 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
 const TEXTAREA_CLASSES =
   "field-sizing-content min-h-80 w-full resize-y rounded-xl border border-input bg-white/60 px-4 py-3 text-[15px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
-// The journal's look: soft, slightly lifted paper cards on the notebook art,
-// big League Gothic page headings and Finger Paint for prompts.
-const SOFT_CARD = "rounded-2xl border border-amber-900/10 bg-white/70 shadow-sm";
-const SOFT_CARD_LINK = `${SOFT_CARD} block transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md`;
-const PAGE_HEADING = "font-heading text-3xl tracking-wide uppercase";
-
-// A friendly "nothing here yet" note, with an optional next step.
-function JournalEmptyState({
-  message,
-  action,
-}: {
-  message: string;
-  action?: { href: string; label: string };
-}) {
-  return (
-    <div className={`${SOFT_CARD} flex flex-col items-center gap-3 px-4 py-8 text-center`}>
-      <Feather className="size-7 text-amber-700/60" aria-hidden />
-      <p className="font-handwritten text-base">{message}</p>
-      {action && (
-        <Link href={action.href} prefetch className={buttonVariants({ size: "sm" })}>
-          <PenLine aria-hidden />
-          {action.label}
-        </Link>
-      )}
-    </div>
-  );
-}
-
 export async function JournalsListView() {
   const userId = await getCurrentUserId();
   const journals = await storedJournals(userId);
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 className={PAGE_HEADING}>My journals</h2>
+      <h2 className={pageHeadingClassName}>My journals</h2>
       {journals.length === 0 ? (
-        <JournalEmptyState
+        <PopupEmptyState
           message="No journals yet. Start one for anything you'd like to reflect on."
           action={{ href: dashboardRoutes.newJournal(), label: "Start a journal" }}
         />
@@ -85,7 +65,7 @@ export async function JournalsListView() {
               <Link
                 href={dashboardRoutes.journal(journal.id)}
                 prefetch
-                className={`${SOFT_CARD_LINK} flex items-center gap-3 px-4 py-3`}
+                className={`${softCardLinkClassName} flex items-center gap-3 px-4 py-3`}
               >
                 <BookHeart className="size-5 shrink-0 text-amber-700/70" aria-hidden />
                 <span className="font-medium">{journal.name}</span>
@@ -129,7 +109,7 @@ function JournalTabs({ journalId, activeTab }: { journalId: string; activeTab: J
   return (
     <nav
       aria-label="Journal tabs"
-      className="flex gap-1 self-start rounded-full border border-amber-900/10 bg-white/60 p-1"
+      className={pillTabsClassName}
     >
       {tabs.map(({ tab, label, Icon }) => (
         <Link
@@ -137,11 +117,7 @@ function JournalTabs({ journalId, activeTab }: { journalId: string; activeTab: J
           href={dashboardRoutes.journal(journalId, tab)}
           prefetch
           aria-current={tab === activeTab ? "page" : undefined}
-          className={`flex items-center gap-1.5 rounded-full px-4 py-1 text-sm transition ${
-            tab === activeTab
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-white hover:text-foreground"
-          }`}
+          className={pillTabClassName(tab === activeTab)}
         >
           <Icon className="size-4" aria-hidden />
           {label}
@@ -172,7 +148,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
         next={next && { href: dashboardRoutes.journal(next.id), label: next.name }}
       />
       <div className="flex items-start justify-between gap-3">
-        <h2 className={PAGE_HEADING}>{journal.name}</h2>
+        <h2 className={pageHeadingClassName}>{journal.name}</h2>
         {/* Quiet buttons: renaming or deleting a journal is rare. */}
         <div className="flex shrink-0 gap-1">
           <Link
@@ -198,7 +174,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
 
       {activeTab === "read" ? (
         journal.entries.length === 0 ? (
-          <JournalEmptyState
+          <PopupEmptyState
             message="This page is still blank."
             action={{ href: dashboardRoutes.journal(journal.id, "write"), label: "Write the first entry" }}
           />
@@ -209,7 +185,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
                 <Link
                   href={dashboardRoutes.journalEntry(journal.id, entry.id)}
                   prefetch
-                  className={`${SOFT_CARD_LINK} flex flex-col gap-1 px-4 py-3`}
+                  className={`${softCardLinkClassName} flex flex-col gap-1 px-4 py-3`}
                 >
                   <p className="text-xs tracking-wide text-muted-foreground uppercase">
                     {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
@@ -247,7 +223,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
 
             <form
               action={createJournalEntryAction.bind(null, journal.id)}
-              className={`${SOFT_CARD} flex flex-col gap-3 p-4`}
+              className={`${softCardClassName} flex flex-col gap-3 p-4`}
             >
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="promptText" className="text-sm font-medium">
@@ -292,7 +268,7 @@ export async function JournalDetailView({ id, tab }: { id: string; tab?: Journal
           </div>
 
           {/* Folded away: it's set up once and rarely touched afterwards. */}
-          <details className={`${SOFT_CARD} px-4 py-3`}>
+          <details className={`${softCardClassName} px-4 py-3`}>
             <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
               My saved prompts ({journal.prompts.length})
             </summary>
@@ -372,7 +348,7 @@ export async function JournalEntryView({ id, entryId }: { id: string; entryId: s
       {entry.content ? (
         <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{entry.content}</p>
       ) : (
-        <JournalEmptyState message="Not written yet." />
+        <PopupEmptyState message="Not written yet." />
       )}
 
       <Link
