@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { withRollback } from "@/test/withRollback";
+import type { DbClient } from "@/lib/db";
 import { getOrCreateJournalIntention } from "@/lib/intentions";
 import { setUserTimezone } from "@/lib/user-settings";
 import {
@@ -130,6 +131,48 @@ describe("deleteJournal", () => {
 
       const prompts = await tx.journalPrompt.findMany({ where: { journalId: journal.id } });
       expect(prompts).toEqual([]);
+    });
+  });
+
+  // Wall-clock "now" for these tests: noon on 26 Nov 2026.
+  const NOW = new Date("2026-11-26T12:00:00Z");
+
+  async function journalWithEvents(tx: DbClient) {
+    const journal = await createJournal(tx, { userId: "test-user-1", name: "Gratitude" });
+    const write = (startAt: string) =>
+      createJournalEntry(tx, { userId: "test-user-1", journalId: journal.id, startAt: new Date(startAt) });
+    const past = await write("2026-11-20T21:00:00Z");
+    const future = await write("2026-11-30T21:00:00Z");
+    // A past entry's event that also lives in Google.
+    await tx.calendarEvent.update({ where: { id: past!.calendarEventId }, data: { googleEventId: "g-past" } });
+    return { journal, pastEventId: past!.calendarEventId, futureEventId: future!.calendarEventId };
+  }
+
+  it("keeps its past entries' events on the calendar, but not its future ones", async () => {
+    await withRollback(async (tx) => {
+      const { journal, pastEventId, futureEventId } = await journalWithEvents(tx);
+
+      await deleteJournal(tx, { userId: "test-user-1", journalId: journal.id, now: NOW });
+
+      expect(await tx.calendarEvent.findUnique({ where: { id: pastEventId } })).not.toBeNull();
+      expect(await tx.calendarEvent.findUnique({ where: { id: futureEventId } })).toBeNull();
+    });
+  });
+
+  it("deletes its past entries' events too when asked, in Google as well", async () => {
+    await withRollback(async (tx) => {
+      const { journal, pastEventId, futureEventId } = await journalWithEvents(tx);
+
+      await deleteJournal(tx, {
+        userId: "test-user-1",
+        journalId: journal.id,
+        deletePastEvents: true,
+        now: NOW,
+      });
+
+      const left = await tx.calendarEvent.findMany({ where: { id: { in: [pastEventId, futureEventId] } } });
+      expect(left).toEqual([]);
+      expect(await tx.googleEventDeletion.findUnique({ where: { googleEventId: "g-past" } })).not.toBeNull();
     });
   });
 

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Trash2 } from "lucide-react";
 import {
   addJournalPromptAction,
   createJournalAction,
@@ -11,7 +10,6 @@ import {
   updateJournalAction,
   updateJournalEntryAction,
 } from "@/app/actions/journals";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -19,6 +17,7 @@ import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { findTodaysEntry, formatPageDate } from "@/lib/journal-page";
 import { getRandomJournalPrompt } from "@/lib/journals";
 import { storedJournalDetail, storedJournals, storedTimezone } from "@/lib/stored-reads";
+import { DeleteJournalButton } from "./delete-journal-button";
 import { EditableName } from "./editable-name";
 import { JournalLog } from "./journal-log";
 import { JournalPage } from "./journal-page";
@@ -27,22 +26,6 @@ import { NameTabs } from "./name-tabs";
 import { NewNameButton } from "./new-name-button";
 import { pageHeadingClassName } from "./photo-page-styles";
 import { PopupEmptyState } from "./popup-empty-state";
-
-// A small trash icon: deleting is rare, so it stays out of the way.
-function DeleteIconButton({ label, confirmMessage }: { label: string; confirmMessage: string }) {
-  return (
-    <ConfirmSubmitButton
-      variant="ghost"
-      size="icon-sm"
-      aria-label={label}
-      title={label}
-      className="text-destructive"
-      confirmMessage={confirmMessage}
-    >
-      <Trash2 aria-hidden />
-    </ConfirmSubmitButton>
-  );
-}
 
 // Just what a page needs from an entry, so nothing else is sent to the browser.
 function pickPage(entry: { id: string; content: string | null; promptText: string | null }) {
@@ -119,12 +102,12 @@ export async function JournalsView({ activeId }: { activeId?: string }) {
               renameAction={updateJournalAction}
               className={`${pageHeadingClassName} wrap-anywhere`}
             />
-            <form action={deleteJournalAction.bind(null, journal.id)} className="shrink-0">
-              <DeleteIconButton
-                label="Delete journal"
-                confirmMessage="Delete this journal and all its entries? This can't be undone."
-              />
-            </form>
+            <DeleteJournalButton
+              key={`delete-${journal.id}`}
+              journalName={journal.name}
+              entryCount={journal.entries.length}
+              deleteAction={deleteJournalAction.bind(null, journal.id)}
+            />
           </div>
 
           <JournalScheduleControl

@@ -48,9 +48,16 @@ export async function updateJournal(
   return client.journal.update({ where: { id: journal.id }, data: { name: params.name } });
 }
 
+/**
+ * Deletes a journal with its pages and prompts. Its future journal events
+ * go with it: its repeating journal time (in Google too) and any entry
+ * event set after `now`. Its past entries' events stay on the calendar as
+ * plain events, unless `deletePastEvents` is set. `now` is wall-clock and
+ * defaults to now in the user's time zone.
+ */
 export async function deleteJournal(
   client: DbClient,
-  params: { userId: string; journalId: string },
+  params: { userId: string; journalId: string; deletePastEvents?: boolean; now?: Date },
 ) {
   const journal = await client.journal.findFirst({
     where: { id: params.journalId, userId: params.userId },
@@ -59,6 +66,18 @@ export async function deleteJournal(
 
   // Its schedule goes with it; this also deletes the repeating event in Google.
   await removeJournalSchedule(client, { userId: params.userId, journalId: journal.id });
+
+  const now =
+    params.now ?? toWallClockDate(new Date(), await getUserTimezoneWithFallback(client, params.userId));
+  const events = await client.calendarEvent.findMany({
+    where: {
+      journalEntry: { journalId: journal.id },
+      ...(params.deletePastEvents ? {} : { startAt: { gt: now } }),
+    },
+  });
+  // Through removeCalendarEventRow, so the next sync deletes them in Google too.
+  for (const event of events) await removeCalendarEventRow(client, event);
+
   await client.journal.delete({ where: { id: journal.id } });
   return journal;
 }

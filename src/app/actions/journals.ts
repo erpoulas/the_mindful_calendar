@@ -51,11 +51,13 @@ export async function updateJournalAction(journalId: string, formData: FormData)
 }
 
 /** Deletes a journal and moves on to the first one left, in the same popup. */
-export async function deleteJournalAction(journalId: string) {
+/** `pastEvents` says whether its past entries' events are deleted too ("delete") or kept. */
+export async function deleteJournalAction(journalId: string, formData: FormData) {
   const userId = await getCurrentUserId();
-  await deleteJournal(db, { userId, journalId });
+  await deleteJournal(db, { userId, journalId, deletePastEvents: formData.get("pastEvents") === "delete" });
 
-  forgetStoredAfterSave(userId, ["journals"]);
+  // Its entries' events and journal time come off the calendar.
+  forgetStoredAfterSave(userId, ["journals", "events"]);
   redirect(dashboardRoutes.journals());
 }
 
