@@ -31,7 +31,7 @@ const IMAGE_POPUP_CLASSES = {
 
 const IMAGE_CLASSES = {
   side: "block h-full w-auto max-w-none select-none",
-  center: "block h-auto max-h-[80vh] w-auto max-w-[85vw] select-none",
+  center: "block h-auto max-h-[90vh] w-auto max-w-[92vw] select-none",
 };
 
 /**
@@ -39,13 +39,35 @@ const IMAGE_CLASSES = {
  * paper sits, as percentages of the photo's size measured in from each
  * edge, leaving out see-through margins, shadows, the binding and clips.
  * The popup's scrolling content and scrollbar are kept inside that area.
+ *
+ * For lined paper, `ruledLines` gives the gap between two ruled lines, as a
+ * percentage of the photo's height. The content then fills the paper from
+ * the top (not centred) and gets a --paper-line CSS variable holding that
+ * gap at the photo's current size, so rows sized with it (the checklist's)
+ * sit on the lines. Set `paperArea.top` on a ruled line (or one gap above
+ * the first) so the first row starts on one.
  */
 export type PanelArt = {
   src: string;
   width: number;
   height: number;
   paperArea: { top: number; right: number; bottom: number; left: number };
+  ruledLines?: { spacing: number };
 };
+
+/**
+ * The --paper-line variable for lined art. The paper area is a size
+ * container, so 100cqh is its height, which is a known share of the photo's.
+ */
+function paperLineStyle(art: PanelArt): React.CSSProperties {
+  if (!art.ruledLines) return {};
+  const paperHeight = 100 - art.paperArea.top - art.paperArea.bottom;
+  return {
+    containerType: "size",
+    paddingBlock: 0,
+    ["--paper-line" as string]: `calc(100cqh * ${art.ruledLines.spacing / paperHeight})`,
+  };
+}
 
 export function Sheet({
   open,
@@ -75,6 +97,7 @@ export function Sheet({
   // already be dismissed via the backdrop, swipe, or Escape. Other popups
   // (including the quick-lists center popup) keep the visible close button.
   const showCloseButton = !(imageBacked && size === "side");
+  const lined = Boolean(imageBacked && backgroundImage.ruledLines);
 
   // The photo already carries its own visual identity (folder, notebook,
   // clipboard), so photo-backed popups skip the redundant heading text.
@@ -83,7 +106,13 @@ export function Sheet({
   // way the Drawer.Title stays in the DOM (sr-only) so the popup still has
   // an accessible name.
   const titleRow = (
-    <div className="relative z-10 flex items-start justify-end gap-4">
+    <div
+      className={cn(
+        "relative z-10 flex justify-end gap-4",
+        // On lined paper the header takes exactly one line.
+        lined ? "h-(--paper-line) shrink-0 items-center" : "items-start",
+      )}
+    >
       <div className="mr-auto flex items-center gap-3">
         {headerStart}
         <Drawer.Title
@@ -137,16 +166,25 @@ export function Sheet({
               {/* The popup is exactly the photo's size, so percentages
                   here line up with the photo's pixels at any screen size. */}
               <div
-                className="absolute z-10 flex flex-col gap-4 overflow-y-auto p-6 text-popover-foreground"
+                className={cn(
+                  "absolute z-10 flex flex-col overflow-y-auto p-6 text-popover-foreground",
+                  lined ? "px-2" : "gap-4",
+                )}
                 style={{
                   top: `${backgroundImage.paperArea.top}%`,
                   right: `${backgroundImage.paperArea.right}%`,
                   bottom: `${backgroundImage.paperArea.bottom}%`,
                   left: `${backgroundImage.paperArea.left}%`,
+                  ...paperLineStyle(backgroundImage),
                 }}
               >
                 {titleRow}
-                <div className="mx-auto flex w-full max-w-[75%] flex-1 flex-col justify-center">
+                <div
+                  className={cn(
+                    "flex w-full flex-1 flex-col",
+                    lined ? "" : "mx-auto max-w-[75%] justify-center",
+                  )}
+                >
                   <Drawer.Content className="flex flex-col gap-4">{children}</Drawer.Content>
                 </div>
               </div>

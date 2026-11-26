@@ -8,6 +8,7 @@ import {
   addQuickListItem,
   createQuickList,
   deleteQuickList,
+  deleteQuickListItem,
   toggleQuickListItem,
   updateQuickList,
   updateQuickListItemText,
@@ -85,6 +86,13 @@ export async function updateQuickListItemTextAction(itemId: string, formData: Fo
 
   const userId = await getCurrentUserId();
   await updateQuickListItemText(db, { userId, itemId, text: validated.data.text });
+
+  forgetStoredAfterSave(userId, ["quickLists"]);
+}
+
+export async function deleteQuickListItemAction(itemId: string) {
+  const userId = await getCurrentUserId();
+  await deleteQuickListItem(db, { userId, itemId });
 
   forgetStoredAfterSave(userId, ["quickLists"]);
 }

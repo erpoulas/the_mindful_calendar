@@ -163,4 +163,43 @@ describe("Checklist", () => {
 
     expect(screen.queryByRole("button", { name: /Start now/ })).not.toBeInTheDocument();
   });
+
+  it("deletes an item when its text is cleared away", async () => {
+    const save = slowSave();
+    renderChecklist({ editTextAction: vi.fn(async () => {}), deleteAction: save.action });
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy milk" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+
+    await waitFor(() => expect(screen.queryByText("Buy milk")).not.toBeInTheDocument());
+    expect(save.action).toHaveBeenCalledWith("a");
+    save.finish();
+  });
+
+  it("deletes an item on one more Backspace once its box is empty", async () => {
+    const save = slowSave();
+    renderChecklist({ editTextAction: vi.fn(async () => {}), deleteAction: save.action });
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy milk" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "" } });
+    fireEvent.keyDown(box, { key: "Backspace" });
+
+    await waitFor(() => expect(screen.queryByText("Buy milk")).not.toBeInTheDocument());
+    expect(save.action).toHaveBeenCalledWith("a");
+    save.finish();
+  });
+
+  it("keeps an item whose text is cleared when the list can't delete items", async () => {
+    renderChecklist({ editTextAction: vi.fn(async () => {}) });
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy milk" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+
+    expect(await screen.findByRole("button", { name: "Buy milk" })).toBeInTheDocument();
+  });
 });

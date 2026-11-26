@@ -5,6 +5,7 @@ import {
   addQuickListItemAction,
   createQuickListAction,
   deleteQuickListAction,
+  deleteQuickListItemAction,
   toggleQuickListItemAction,
   updateQuickListAction,
   updateQuickListItemTextAction,
@@ -38,8 +39,12 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
       : null;
 
   return (
-    <div className="flex flex-col gap-5">
-      <QuickListTabs lists={lists} activeId={list?.id} />
+    // Each row is one line of the ruled paper (--paper-line, set by the
+    // popup frame), so the items below sit on its lines.
+    <div className="flex flex-col">
+      <div className="flex h-(--paper-line) items-center">
+        <QuickListTabs lists={lists} activeId={list?.id} />
+      </div>
 
       {lists.length === 0 && (
         <PopupEmptyState
@@ -50,8 +55,8 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
 
       {list && (
         <>
-          <div className="flex items-start justify-between gap-3">
-            <h2 className={pageHeadingClassName}>{list.name}</h2>
+          <div className="flex h-(--paper-line) items-end justify-between gap-3">
+            <h2 className={`${pageHeadingClassName} truncate leading-none`}>{list.name}</h2>
             {/* Small icons: renaming or deleting a list is rare, and the
                 page is narrow, so the list's name gets the room. */}
             <div className="flex shrink-0 gap-1">
@@ -86,6 +91,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
             addAction={addQuickListItemAction}
             promoteToPostItAction={promoteQuickListItemToPostItAction}
             editTextAction={updateQuickListItemTextAction}
+            deleteAction={deleteQuickListItemAction}
             startNowAction={scheduleQuickListItemNowAction}
           />
         </>

@@ -5,6 +5,7 @@ import {
   countOpenQuickListItems,
   createQuickList,
   deleteQuickList,
+  deleteQuickListItem,
   getQuickListDetail,
   listQuickLists,
   toggleQuickListItem,
@@ -365,6 +366,35 @@ describe("updateQuickListItemText", () => {
       expect(result).toBeNull();
       const detail = await getQuickListDetail(tx, { userId: "test-user-1", quickListId: list.id });
       expect(detail?.items[0].text).toBe("Bank");
+    });
+  });
+});
+
+describe("deleteQuickListItem", () => {
+  it("removes just that item from the list", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const bank = await addQuickListItem(tx, { userId: "test-user-1", quickListId: list.id, text: "Bank" });
+      await addQuickListItem(tx, { userId: "test-user-1", quickListId: list.id, text: "Post office" });
+
+      const deleted = await deleteQuickListItem(tx, { userId: "test-user-1", itemId: bank!.id });
+
+      expect(deleted?.id).toBe(bank!.id);
+      const detail = await getQuickListDetail(tx, { userId: "test-user-1", quickListId: list.id });
+      expect(detail?.items.map((item) => item.text)).toEqual(["Post office"]);
+    });
+  });
+
+  it("refuses to delete another user's item", async () => {
+    await withRollback(async (tx) => {
+      const list = await createQuickList(tx, { userId: "test-user-1", name: "Errands" });
+      const item = await addQuickListItem(tx, { userId: "test-user-1", quickListId: list.id, text: "Bank" });
+
+      const result = await deleteQuickListItem(tx, { userId: "test-user-2", itemId: item!.id });
+
+      expect(result).toBeNull();
+      const detail = await getQuickListDetail(tx, { userId: "test-user-1", quickListId: list.id });
+      expect(detail?.items).toHaveLength(1);
     });
   });
 });

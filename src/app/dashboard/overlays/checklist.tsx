@@ -9,8 +9,13 @@ import { saveInBackground, useOptimisticList } from "./use-optimistic-list";
 
 type ChecklistItem = { id: string; text: string; done: boolean };
 
-// Roomy, easy-to-read text, the same for an item, its edit box and the blank line.
-const ITEM_TEXT_CLASSES = "text-[15px] leading-snug";
+// One row per ruled line. A popup whose paper art has ruled lines sets
+// --paper-line to their spacing (see PanelArt's ruledLines), so each line of
+// an item's text lands on a line of the paper; elsewhere rows are 2.25rem.
+// The text is the same for an item, its edit box and the blank line.
+const ITEM_TEXT_CLASSES = "text-[15px] leading-[var(--paper-line,2.25rem)]";
+// Holds a tick circle in the middle of an item's first line.
+const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-center";
 
 /**
  * A project's tasks or a quick list's items, laid out like Apple Reminders:
@@ -19,7 +24,8 @@ const ITEM_TEXT_CLASSES = "text-[15px] leading-snug";
  * Enter (the line empties, ready for the next one). Ticking, adding and
  * moving an item to the post-its change the list on screen at once and save
  * in the background. With `editTextAction`, clicking an item's text turns it
- * into a text box that grows with what you type.
+ * into a text box that grows with what you type; with `deleteAction`,
+ * backspacing all its text away deletes the item.
  */
 export function Checklist({
   listId,
@@ -29,6 +35,7 @@ export function Checklist({
   addAction,
   promoteToPostItAction,
   editTextAction,
+  deleteAction,
   startNowAction,
   scheduleProjectId,
 }: {
@@ -44,6 +51,8 @@ export function Checklist({
   startNowAction?: (itemId: string) => Promise<void>;
   /** Quick lists only: saves an item's edited text. */
   editTextAction?: (itemId: string, formData: FormData) => Promise<void>;
+  /** Quick lists only: deletes an item whose text was cleared away. */
+  deleteAction?: (itemId: string) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
   scheduleProjectId?: string;
 }) {
@@ -55,7 +64,15 @@ export function Checklist({
   function saveText(item: ChecklistItem, formData: FormData) {
     setEditingId(null);
     const text = String(formData.get("text") ?? "").trim();
-    // Clearing the text or leaving it unchanged just closes the box.
+    // Clearing the text deletes the item, like Reminders. Without a way to
+    // delete (or left unchanged), the box just closes.
+    if (!text && deleteAction) {
+      startTransition(async () => {
+        changeList({ type: "remove", id: item.id });
+        await saveInBackground(() => deleteAction(item.id));
+      });
+      return;
+    }
     if (!editTextAction || !text || text === item.text) return;
     startTransition(async () => {
       changeList({ type: "rename", id: item.id, text });
@@ -73,13 +90,16 @@ export function Checklist({
 
   return (
     <>
-      {/* No divider lines: the popups' paper art already has its own. */}
-      <ul className="flex flex-col">
+      {/* No divider lines: the popups' paper art already has its own. The
+          small nudge down sets the text on the ruled line rather than
+          floating in the middle of the gap between two lines. */}
+      <ul className="relative top-[calc(var(--paper-line,2.25rem)/2-0.6em)] flex flex-col text-[15px]">
         {shownItems.map((item) => {
           const saved = !isPendingItem(item.id);
           return (
-            <li key={item.id} className="group relative flex items-start gap-3 py-2">
+            <li key={item.id} className="group relative flex items-start gap-3">
               <form
+                className={CIRCLE_SLOT_CLASSES}
                 action={async () => {
                   changeList({ type: "toggle", id: item.id });
                   await saveInBackground(() => toggleAction(item.id, listId));
@@ -89,7 +109,7 @@ export function Checklist({
                   type="submit"
                   disabled={!saved}
                   aria-label={item.done ? "Mark not done" : "Mark done"}
-                  className={`mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition ${
+                  className={`flex size-5 items-center justify-center rounded-full border-2 transition ${
                     item.done
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-muted-foreground/40 hover:border-primary"
@@ -119,6 +139,10 @@ export function Checklist({
                       if (event.key === "Enter") {
                         event.preventDefault();
                         event.currentTarget.blur();
+                      } else if (event.key === "Backspace" && event.currentTarget.value === "") {
+                        // One more Backspace on an empty box deletes the item.
+                        event.preventDefault();
+                        event.currentTarget.blur();
                       } else if (event.key === "Escape") {
                         // Keep Escape from also closing the popup.
                         event.stopPropagation();
@@ -126,7 +150,7 @@ export function Checklist({
                         event.currentTarget.blur();
                       }
                     }}
-                    className={`${ITEM_TEXT_CLASSES} field-sizing-content w-full resize-none border-b border-primary/50 bg-transparent outline-none`}
+                    className={`${ITEM_TEXT_CLASSES} field-sizing-content block w-full resize-none rounded-sm bg-primary/5 outline-none`}
                   />
                 </form>
               ) : editTextAction && saved ? (
@@ -151,7 +175,7 @@ export function Checklist({
                   (no hover) keep them beside the text. They're hidden while
                   the item is being edited, so they don't cover its text. */}
               {editingId !== item.id && (
-                <RowActions className="absolute top-1.5 right-0 rounded-lg bg-white/95 px-0.5 shadow-sm [@media(hover:none)]:static [@media(hover:none)]:bg-transparent [@media(hover:none)]:shadow-none">
+                <RowActions className="absolute top-[calc((var(--paper-line,2.25rem)-1.75rem)/2)] right-0 rounded-lg bg-white/95 px-0.5 shadow-sm [@media(hover:none)]:static [@media(hover:none)]:bg-transparent [@media(hover:none)]:shadow-none">
                   <ScheduleIconLink
                     href={dashboardRoutes.newEvent({ title: item.text, projectId: scheduleProjectId })}
                   />
@@ -175,18 +199,20 @@ export function Checklist({
         })}
         {/* The blank line: type and press Enter to add. The box keeps focus
             and empties, so you can type the next item straight away. */}
-        <li className="flex items-start gap-3 py-2">
-          <span
-            aria-hidden
-            className="mt-0.5 size-5 shrink-0 rounded-full border-2 border-dashed border-muted-foreground/30"
-          />
+        <li className="flex items-start gap-3">
+          <span className={CIRCLE_SLOT_CLASSES}>
+            <span
+              aria-hidden
+              className="size-5 rounded-full border-2 border-dashed border-muted-foreground/30"
+            />
+          </span>
           <form ref={addFormRef} action={add} className="flex-1">
             <input
               name="text"
               placeholder={addPlaceholder}
               aria-label={addPlaceholder}
               autoComplete="off"
-              className={`${ITEM_TEXT_CLASSES} w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
+              className={`${ITEM_TEXT_CLASSES} block h-[var(--paper-line,2.25rem)] w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
             />
           </form>
         </li>

@@ -97,6 +97,19 @@ export async function updateQuickListItemText(
   });
 }
 
+/** Removes one item; returns null if it isn't this user's. */
+export async function deleteQuickListItem(
+  client: DbClient,
+  params: { userId: string; itemId: string },
+) {
+  const item = await client.quickListItem.findFirst({
+    where: { id: params.itemId, quickList: { userId: params.userId } },
+  });
+  if (!item) return null;
+
+  return client.quickListItem.delete({ where: { id: item.id } });
+}
+
 export async function countOpenQuickListItems(client: DbClient, userId: string) {
   return client.quickListItem.count({
     where: { done: false, quickList: { userId } },
