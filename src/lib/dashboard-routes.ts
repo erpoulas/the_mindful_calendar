@@ -9,8 +9,6 @@
 
 type Query = Record<string, string | undefined>;
 
-export type JournalTab = "read" | "write";
-
 function withQuery(path: string, query: Query) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
@@ -30,18 +28,8 @@ export const dashboardRoutes = {
     withQuery("/dashboard/event", { view: "new", ...prefill }),
   editEvent: (id: string) => withQuery("/dashboard/event", { view: "edit", id }),
 
-  journals: () => "/dashboard/journals",
-  newJournal: () => withQuery("/dashboard/journals", { view: "create" }),
-  // tab picks the Read tab (the entries) or the Write tab (new entry form and
-  // prompts). Left out, it opens on Write.
-  journal: (id: string, tab?: JournalTab) =>
-    withQuery("/dashboard/journals", { view: "detail", id, tab }),
-  editJournal: (id: string) => withQuery("/dashboard/journals", { view: "edit", id }),
-  // Reading one entry in full; editing it is a separate step.
-  journalEntry: (id: string, entryId: string) =>
-    withQuery("/dashboard/journals", { view: "entry", id, entryId }),
-  editJournalEntry: (id: string, entryId: string) =>
-    withQuery("/dashboard/journals", { view: "entry-edit", id, entryId }),
+  // One screen: a tab per journal, opening the chosen one (or the first).
+  journals: (activeId?: string) => withQuery("/dashboard/journals", { id: activeId }),
 
   quickLists: (activeId?: string) => withQuery("/dashboard/quick-lists", { id: activeId }),
 

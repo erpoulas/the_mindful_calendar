@@ -148,16 +148,34 @@ export async function createJournalEntry(
 
 export async function updateJournalEntry(
   client: DbClient,
-  params: { userId: string; entryId: string; content?: string; mediaUrls?: string[] },
+  // Left out, a field stays as it is; a null promptText removes the prompt.
+  params: {
+    userId: string;
+    entryId: string;
+    content?: string;
+    promptText?: string | null;
+    mediaUrls?: string[];
+  },
 ) {
   const entry = await client.journalEntry.findFirst({
     where: { id: params.entryId, userId: params.userId },
   });
   if (!entry) return null;
 
+  // The entry's calendar event is titled after its prompt (or the journal's
+  // name without one, as createJournalEntry does), so it follows a new prompt.
+  // A normal update, so the Google sync sees the change.
+  if (params.promptText !== undefined) {
+    const journal = await client.journal.findUniqueOrThrow({ where: { id: entry.journalId } });
+    await client.calendarEvent.update({
+      where: { id: entry.calendarEventId },
+      data: { title: params.promptText ?? journal.name },
+    });
+  }
+
   return client.journalEntry.update({
     where: { id: entry.id },
-    data: { content: params.content, mediaUrls: params.mediaUrls },
+    data: { content: params.content, promptText: params.promptText, mediaUrls: params.mediaUrls },
   });
 }
 

@@ -3,16 +3,20 @@
 import { useState } from "react";
 
 /**
- * Starts a new quick list in place: clicking it swaps it for a small name
- * box, and pressing Enter creates the list (the action then opens it in the
- * same popup). Escape, or leaving the box empty, turns it back into the button.
+ * Starts a new named thing (a quick list, a journal) in place: clicking it
+ * swaps it for a small name box, and pressing Enter creates it (the action
+ * then opens it in the same popup). Escape, or leaving the box empty, turns
+ * it back into the button.
  */
-export function NewQuickListButton({
+export function NewNameButton({
+  noun,
   createAction,
   className = "",
   inputClassName = "",
   children,
 }: {
+  /** What it makes, for its labels: "list" gives "New list" and "List name". */
+  noun: string;
   createAction: (formData: FormData) => Promise<void>;
   /** The button's look; the box keeps the same outline so the row doesn't jump. */
   className?: string;
@@ -25,8 +29,8 @@ export function NewQuickListButton({
     return (
       <button
         type="button"
-        aria-label="New list"
-        title="New list"
+        aria-label={`New ${noun}`}
+        title={`New ${noun}`}
         onClick={() => setNaming(true)}
         className={className}
       >
@@ -48,8 +52,8 @@ export function NewQuickListButton({
         name="name"
         autoFocus
         autoComplete="off"
-        placeholder="List name"
-        aria-label="New list name"
+        placeholder={`${noun[0].toUpperCase()}${noun.slice(1)} name`}
+        aria-label={`New ${noun} name`}
         onBlur={(event) => {
           if (!event.currentTarget.value.trim()) setNaming(false);
         }}

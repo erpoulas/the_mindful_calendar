@@ -1,8 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { refresh } from "next/cache";
-import { z } from "zod";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import {
   AddJournalPromptSchema,
@@ -24,46 +22,39 @@ import { getCurrentUserId } from "@/lib/auth";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
-export type JournalFormState = { errors?: { name?: string[] } } | undefined;
+// Everything here runs from the journal's one screen: boxes typed into right
+// on the popup, which skip an empty name, so an invalid one is just ignored.
 
-export async function createJournalAction(
-  _state: JournalFormState,
-  formData: FormData,
-): Promise<JournalFormState> {
+/** Creates a journal and opens its tab in the same popup. */
+export async function createJournalAction(formData: FormData) {
   const validated = CreateJournalSchema.safeParse({ name: formData.get("name") });
-  if (!validated.success) {
-    return { errors: z.flattenError(validated.error).fieldErrors };
-  }
+  if (!validated.success) return;
 
   const userId = await getCurrentUserId();
-  await createJournal(db, { userId, name: validated.data.name });
+  const journal = await createJournal(db, { userId, name: validated.data.name });
 
   forgetStoredAfterSave(userId, ["journals"]);
+  redirect(dashboardRoutes.journals(journal.id));
 }
 
-export async function updateJournalAction(
-  journalId: string,
-  _state: JournalFormState,
-  formData: FormData,
-): Promise<JournalFormState> {
+/** Renames a journal, keeping the popup open on it. */
+export async function updateJournalAction(journalId: string, formData: FormData) {
   const validated = CreateJournalSchema.safeParse({ name: formData.get("name") });
-  if (!validated.success) {
-    return { errors: z.flattenError(validated.error).fieldErrors };
-  }
+  if (!validated.success) return;
 
   const userId = await getCurrentUserId();
   await updateJournal(db, { userId, journalId, name: validated.data.name });
 
   forgetStoredAfterSave(userId, ["journals"]);
-  redirect("/dashboard");
 }
 
+/** Deletes a journal and moves on to the first one left, in the same popup. */
 export async function deleteJournalAction(journalId: string) {
   const userId = await getCurrentUserId();
   await deleteJournal(db, { userId, journalId });
 
   forgetStoredAfterSave(userId, ["journals"]);
-  redirect("/dashboard");
+  redirect(dashboardRoutes.journals());
 }
 
 export async function addJournalPromptAction(journalId: string, formData: FormData) {
@@ -83,10 +74,7 @@ export async function deleteJournalPromptAction(promptId: string) {
   forgetStoredAfterSave(userId, ["journals"]);
 }
 
-export async function pickJournalPromptAction() {
-  refresh();
-}
-
+/** Saves a new entry; it then shows at the top of the entries below the box. */
 export async function createJournalEntryAction(journalId: string, formData: FormData) {
   const rawStartAt = formData.get("startAt");
 
@@ -106,32 +94,38 @@ export async function createJournalEntryAction(journalId: string, formData: Form
     startAt: validated.data.startAt ? new Date(validated.data.startAt) : undefined,
   });
 
-  forgetStoredAfterSave(userId, ["journals","events","intentions"]);
-  // Back to the Read tab, where the new entry now sits at the top.
-  redirect(dashboardRoutes.journal(journalId, "read"));
+  forgetStoredAfterSave(userId, ["journals", "events", "intentions"]);
 }
 
-export async function updateJournalEntryAction(
-  entryId: string,
-  journalId: string,
-  formData: FormData,
-) {
+/**
+ * Saves an edit to an entry's text ("content") or its prompt ("promptText"),
+ * whichever the form holds. Clearing the text keeps the entry, now blank;
+ * clearing the prompt removes it.
+ */
+export async function updateJournalEntryAction(entryId: string, formData: FormData) {
+  const field = (name: string) => (formData.has(name) ? String(formData.get(name)) : undefined);
   const validated = UpdateJournalEntrySchema.safeParse({
-    content: formData.get("content") || undefined,
+    content: field("content"),
+    promptText: field("promptText"),
   });
   if (!validated.success) return;
+  const { content, promptText } = validated.data;
 
   const userId = await getCurrentUserId();
-  await updateJournalEntry(db, { userId, entryId, content: validated.data.content });
+  await updateJournalEntry(db, {
+    userId,
+    entryId,
+    content,
+    promptText: promptText === undefined ? undefined : promptText || null,
+  });
 
-  forgetStoredAfterSave(userId, ["journals"]);
-  redirect(dashboardRoutes.journalEntry(journalId, entryId));
+  // A new prompt also renames the entry's calendar event.
+  forgetStoredAfterSave(userId, promptText === undefined ? ["journals"] : ["journals", "events"]);
 }
 
-export async function deleteJournalEntryAction(entryId: string, journalId: string) {
+export async function deleteJournalEntryAction(entryId: string) {
   const userId = await getCurrentUserId();
   await deleteJournalEntry(db, { userId, entryId });
 
-  forgetStoredAfterSave(userId, ["journals","events"]);
-  redirect(dashboardRoutes.journal(journalId));
+  forgetStoredAfterSave(userId, ["journals", "events"]);
 }

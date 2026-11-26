@@ -4,20 +4,24 @@ import { useOptimistic, useState, useTransition } from "react";
 import { saveInBackground } from "./use-optimistic-list";
 
 /**
- * A quick list's name as its heading. Clicking it turns it into a text box
+ * A name (a quick list's, a journal's) as its heading. Clicking it turns it into a text box
  * right there; Enter or clicking away saves (the new name shows at once and
  * saves in the background), Escape throws the edit away. An empty or
  * unchanged name just closes the box.
  */
-export function QuickListName({
-  listId,
+export function EditableName({
+  id,
   name,
+  label,
   renameAction,
   className = "",
 }: {
-  listId: string;
+  /** What's being renamed, passed on to renameAction. */
+  id: string;
   name: string;
-  renameAction: (listId: string, formData: FormData) => Promise<void>;
+  /** The text box's label, e.g. "List name". */
+  label: string;
+  renameAction: (id: string, formData: FormData) => Promise<void>;
   /** Styling shared by the heading and its text box, so editing doesn't shift it. */
   className?: string;
 }) {
@@ -31,7 +35,7 @@ export function QuickListName({
     if (!newName || newName === shownName) return;
     startTransition(async () => {
       showName(newName);
-      await saveInBackground(() => renameAction(listId, formData));
+      await saveInBackground(() => renameAction(id, formData));
     });
   }
 
@@ -49,7 +53,7 @@ export function QuickListName({
           rows={1}
           autoFocus
           defaultValue={shownName}
-          aria-label="List name"
+          aria-label={label}
           onFocus={(event) => event.currentTarget.select()}
           onBlur={(event) => event.currentTarget.form?.requestSubmit()}
           onKeyDown={(event) => {

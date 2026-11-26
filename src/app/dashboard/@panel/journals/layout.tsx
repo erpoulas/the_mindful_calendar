@@ -13,9 +13,7 @@ const JOURNAL_ART: PanelArt = {
 // screens; page.tsx (behind loading.tsx) fills it.
 export default function JournalsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PanelSheet open title="Journals"
-      titlesByView={{ entry: "Entry", "entry-edit": "Edit entry", edit: "Edit journal", detail: "Journal", create: "New journal" }}
-      backgroundImage={JOURNAL_ART}>
+    <PanelSheet open title="Journals" backgroundImage={JOURNAL_ART}>
       {children}
     </PanelSheet>
   );

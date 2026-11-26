@@ -38,23 +38,9 @@ describe("dashboardRoutes", () => {
     });
   });
 
-  it("gives each journal screen its own address", () => {
+  it("opens the journals popup, on a chosen journal's tab", () => {
     expect(dashboardRoutes.journals()).toBe("/dashboard/journals");
-    expect(dashboardRoutes.newJournal()).toBe("/dashboard/journals?view=create");
-    expect(dashboardRoutes.journal("j1")).toBe("/dashboard/journals?view=detail&id=j1");
-    expect(dashboardRoutes.journal("j1", "write")).toBe(
-      "/dashboard/journals?view=detail&id=j1&tab=write",
-    );
-    expect(dashboardRoutes.journal("j1", "read")).toBe(
-      "/dashboard/journals?view=detail&id=j1&tab=read",
-    );
-    expect(dashboardRoutes.editJournal("j1")).toBe("/dashboard/journals?view=edit&id=j1");
-    expect(dashboardRoutes.journalEntry("j1", "n1")).toBe(
-      "/dashboard/journals?view=entry&id=j1&entryId=n1",
-    );
-    expect(dashboardRoutes.editJournalEntry("j1", "n1")).toBe(
-      "/dashboard/journals?view=entry-edit&id=j1&entryId=n1",
-    );
+    expect(dashboardRoutes.journals("j1")).toBe("/dashboard/journals?id=j1");
   });
 
   it("gives each quick list screen its own address, opening a chosen list's tab", () => {

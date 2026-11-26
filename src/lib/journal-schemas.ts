@@ -14,6 +14,9 @@ export const CreateJournalEntrySchema = z.object({
   startAt: z.string().trim().optional(),
 });
 
+// Each field is left out when the edit doesn't touch it. An empty prompt
+// (cleared away) removes it: see updateJournalEntryAction.
 export const UpdateJournalEntrySchema = z.object({
   content: z.string().trim().optional(),
+  promptText: z.string().trim().optional(),
 });

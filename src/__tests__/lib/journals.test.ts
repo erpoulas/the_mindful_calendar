@@ -382,6 +382,57 @@ describe("updateJournalEntry", () => {
     });
   });
 
+  it("changes or clears the entry's prompt, leaving its text alone", async () => {
+    await withRollback(async (tx) => {
+      const journal = await createJournal(tx, { userId: "test-user-1", name: "Gratitude" });
+      const entry = await createJournalEntry(tx, {
+        userId: "test-user-1",
+        journalId: journal.id,
+        promptText: "What went well?",
+        content: "The walk",
+      });
+
+      const renamed = await updateJournalEntry(tx, {
+        userId: "test-user-1",
+        entryId: entry!.id,
+        promptText: "What made you smile?",
+      });
+      expect(renamed?.promptText).toBe("What made you smile?");
+      expect(renamed?.content).toBe("The walk");
+
+      const cleared = await updateJournalEntry(tx, {
+        userId: "test-user-1",
+        entryId: entry!.id,
+        promptText: null,
+      });
+      expect(cleared?.promptText).toBeNull();
+    });
+  });
+
+  it("keeps the entry's calendar event titled after its prompt", async () => {
+    await withRollback(async (tx) => {
+      const journal = await createJournal(tx, { userId: "test-user-1", name: "Gratitude" });
+      const entry = await createJournalEntry(tx, {
+        userId: "test-user-1",
+        journalId: journal.id,
+        promptText: "What went well?",
+      });
+      const eventTitle = async () =>
+        (await tx.calendarEvent.findUnique({ where: { id: entry!.calendarEventId! } }))?.title;
+
+      await updateJournalEntry(tx, {
+        userId: "test-user-1",
+        entryId: entry!.id,
+        promptText: "What made you smile?",
+      });
+      expect(await eventTitle()).toBe("What made you smile?");
+
+      // With no prompt, the event goes by the journal's name, as when it was made.
+      await updateJournalEntry(tx, { userId: "test-user-1", entryId: entry!.id, promptText: null });
+      expect(await eventTitle()).toBe("Gratitude");
+    });
+  });
+
   it("returns null when the entry doesn't belong to the user", async () => {
     await withRollback(async (tx) => {
       const journal = await createJournal(tx, { userId: "test-user-2", name: "Theirs" });

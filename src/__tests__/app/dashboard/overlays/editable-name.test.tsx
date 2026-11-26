@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { QuickListName } from "@/app/dashboard/overlays/quick-list-name";
+import { EditableName } from "@/app/dashboard/overlays/editable-name";
 
 function renderName(renameAction = vi.fn(async () => {})) {
-  render(<QuickListName listId="list-1" name="Groceries" renameAction={renameAction} />);
+  render(<EditableName id="list-1" name="Groceries" label="List name" renameAction={renameAction} />);
   return renameAction;
 }
 
@@ -12,7 +12,7 @@ function openNameBox() {
   return screen.getByRole("textbox", { name: "List name" }) as HTMLTextAreaElement;
 }
 
-describe("QuickListName", () => {
+describe("EditableName", () => {
   it("turns the name into a text box when clicked, holding the current name", () => {
     renderName();
 

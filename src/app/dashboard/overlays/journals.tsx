@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookHeart, BookOpen, Pencil, PenLine, Plus, Sparkles } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   addJournalPromptAction,
   createJournalAction,
@@ -8,29 +7,23 @@ import {
   deleteJournalAction,
   deleteJournalEntryAction,
   deleteJournalPromptAction,
-  pickJournalPromptAction,
   updateJournalAction,
   updateJournalEntryAction,
 } from "@/app/actions/journals";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
-import { storedJournalDetail, storedJournals } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
-import { dashboardRoutes, type JournalTab } from "@/lib/dashboard-routes";
+import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { getRandomJournalPrompt } from "@/lib/journals";
-import { findListNeighbors } from "@/lib/list-neighbors";
-import { JournalForm } from "./journal-form";
-import {
-  pageHeadingClassName,
-  pillTabClassName,
-  pillTabsClassName,
-  softCardClassName,
-  softCardLinkClassName,
-} from "./photo-page-styles";
+import { storedJournalDetail, storedJournals } from "@/lib/stored-reads";
+import { EditableEntryText } from "./editable-entry-text";
+import { EditableName } from "./editable-name";
+import { EntryComposer } from "./entry-composer";
+import { NameTabs } from "./name-tabs";
+import { NewNameButton } from "./new-name-button";
+import { pageHeadingClassName, softCardClassName } from "./photo-page-styles";
 import { PopupEmptyState } from "./popup-empty-state";
-import { PopupListNavigation } from "./popup-list-navigation";
 import { RemovableList } from "./removable-list";
 
 const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
@@ -39,369 +32,155 @@ const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: "UTC",
 };
 
-// The writing box: tall from the start (about half a page of the notebook)
-// and growing with what you type (field-sizing-content), so you never write
-// into a tiny scrolling box. Same text size as the reading screen.
-const TEXTAREA_CLASSES =
-  "field-sizing-content min-h-80 w-full resize-y rounded-xl border border-input bg-white/60 px-4 py-3 text-[15px] leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-
-export async function JournalsListView() {
-  const userId = await getCurrentUserId();
-  const journals = await storedJournals(userId);
-
+// A small trash icon: deleting is rare, so it stays out of the way.
+function DeleteIconButton({ label, confirmMessage }: { label: string; confirmMessage: string }) {
   return (
-    <div className="flex flex-col gap-5">
-      <h2 className={pageHeadingClassName}>My journals</h2>
-      {journals.length === 0 ? (
-        <PopupEmptyState
-          message="No journals yet. Start one for anything you'd like to reflect on."
-          action={{ href: dashboardRoutes.newJournal(), label: "Start a journal" }}
-        />
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {journals.map((journal) => (
-            <li key={journal.id}>
-              {/* prefetch: loads each journal's screen while the list is open. */}
-              <Link
-                href={dashboardRoutes.journal(journal.id)}
-                prefetch
-                className={`${softCardLinkClassName} flex items-center gap-3 px-4 py-3`}
-              >
-                <BookHeart className="size-5 shrink-0 text-amber-700/70" aria-hidden />
-                <span className="font-medium">{journal.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {journals.length > 0 && (
-        <Link
-          href={dashboardRoutes.newJournal()}
-          className={`${buttonVariants({ variant: "outline", size: "sm" })} self-start rounded-full`}
-        >
-          <Plus aria-hidden />
-          New journal
-        </Link>
-      )}
-    </div>
-  );
-}
-
-export function JournalCreateView() {
-  return (
-    <JournalForm
-      action={createJournalAction}
-      heading="New journal"
-      submitLabel="Add journal"
-      pendingLabel="Adding..."
-    />
-  );
-}
-
-// The Read / Write switch on a journal's screen. Both tabs are prefetched,
-// so switching is instant.
-function JournalTabs({ journalId, activeTab }: { journalId: string; activeTab: JournalTab }) {
-  const tabs = [
-    { tab: "write", label: "Write", Icon: PenLine },
-    { tab: "read", label: "Read", Icon: BookOpen },
-  ] as const;
-  return (
-    <nav
-      aria-label="Journal tabs"
-      className={pillTabsClassName}
+    <ConfirmSubmitButton
+      variant="ghost"
+      size="icon-sm"
+      aria-label={label}
+      title={label}
+      className="text-destructive"
+      confirmMessage={confirmMessage}
     >
-      {tabs.map(({ tab, label, Icon }) => (
-        <Link
-          key={tab}
-          href={dashboardRoutes.journal(journalId, tab)}
-          prefetch
-          aria-current={tab === activeTab ? "page" : undefined}
-          className={pillTabClassName(tab === activeTab)}
-        >
-          <Icon className="size-4" aria-hidden />
-          {label}
-        </Link>
-      ))}
-    </nav>
+      <Trash2 aria-hidden />
+    </ConfirmSubmitButton>
   );
 }
 
-export async function JournalDetailView({ id, tab }: { id: string; tab?: JournalTab }) {
+/**
+ * The whole Journals popup on one screen, like Quick Lists: a tab per
+ * journal (with "+" to start one), the open journal's name (click to rename),
+ * the writing box for a new entry, and its past entries in full below, each
+ * edited by clicking its text. No separate list, entry or form screens.
+ */
+export async function JournalsView({ activeId }: { activeId?: string }) {
   const userId = await getCurrentUserId();
-
-  const [journal, journals, suggestedPrompt] = await Promise.all([
-    storedJournalDetail(userId, id),
+  // With a journal picked in the URL, load it alongside the tabs. Otherwise
+  // the first journal is shown, which needs the tabs first to know which it is.
+  const [journals, pickedJournal] = await Promise.all([
     storedJournals(userId),
-    getRandomJournalPrompt(db, { userId, journalId: id }),
+    activeId ? storedJournalDetail(userId, activeId) : null,
   ]);
-  if (!journal) notFound();
-  const { previous, next } = findListNeighbors(journals, journal.id);
-  // A journal opens on Write, ready for a new entry.
-  const activeTab = tab ?? "write";
+  const firstId = journals[0]?.id;
+  const journal = activeId
+    ? pickedJournal
+    : firstId
+      ? await storedJournalDetail(userId, firstId)
+      : null;
+  if (activeId && !journal) notFound();
+
+  // A saved prompt to start from, picked fresh each time the journal opens
+  // (a random pick, so it's never stored like the reads above).
+  const suggestedPrompt = journal
+    ? (await getRandomJournalPrompt(db, { userId, journalId: journal.id }))?.text
+    : undefined;
 
   return (
     <div className="flex flex-col gap-5">
-      <PopupListNavigation
-        back={{ href: dashboardRoutes.journals(), label: "All journals" }}
-        previous={previous && { href: dashboardRoutes.journal(previous.id), label: previous.name }}
-        next={next && { href: dashboardRoutes.journal(next.id), label: next.name }}
+      <NameTabs
+        label="Journals"
+        noun="journal"
+        items={journals}
+        activeId={journal?.id}
+        hrefFor={dashboardRoutes.journals}
+        createAction={createJournalAction}
       />
-      <div className="flex items-start justify-between gap-3">
-        <h2 className={pageHeadingClassName}>{journal.name}</h2>
-        {/* Quiet buttons: renaming or deleting a journal is rare. */}
-        <div className="flex shrink-0 gap-1">
-          <Link
-            href={dashboardRoutes.editJournal(journal.id)}
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
+
+      {!journal && (
+        <PopupEmptyState message="No journals yet. Start one for anything you'd like to reflect on.">
+          <NewNameButton
+            noun="journal"
+            createAction={createJournalAction}
+            className={`${buttonVariants({ size: "sm" })} rounded-full`}
+            inputClassName="text-center"
           >
-            Rename
-          </Link>
-          <form action={deleteJournalAction.bind(null, journal.id)}>
-            <ConfirmSubmitButton
-              variant="ghost"
-              size="sm"
-              className="text-destructive"
-              confirmMessage="Delete this journal and all its entries? This can't be undone."
-            >
-              Delete
-            </ConfirmSubmitButton>
-          </form>
-        </div>
-      </div>
+            Start a journal
+          </NewNameButton>
+        </PopupEmptyState>
+      )}
 
-      <JournalTabs journalId={journal.id} activeTab={activeTab} />
-
-      {activeTab === "read" ? (
-        journal.entries.length === 0 ? (
-          <PopupEmptyState
-            message="This page is still blank."
-            action={{ href: dashboardRoutes.journal(journal.id, "write"), label: "Write the first entry" }}
-          />
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {journal.entries.map((entry) => (
-              <li key={entry.id}>
-                <Link
-                  href={dashboardRoutes.journalEntry(journal.id, entry.id)}
-                  prefetch
-                  className={`${softCardLinkClassName} flex flex-col gap-1 px-4 py-3`}
-                >
-                  <p className="text-xs tracking-wide text-muted-foreground uppercase">
-                    {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-                  </p>
-                  {entry.promptText && (
-                    <p className="font-handwritten text-sm">{entry.promptText}</p>
-                  )}
-                  <p className="line-clamp-3 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                    {entry.content || "Not written yet. Tap to fill it in."}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )
-      ) : (
+      {journal && (
         <>
-          <div className="flex flex-col gap-3">
-            {suggestedPrompt && (
-              <div className="flex items-start gap-3 rounded-2xl bg-amber-100/70 px-4 py-3">
-                <Sparkles className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden />
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-xs tracking-wide text-amber-900/70 uppercase">
-                    Need a nudge?
-                  </span>
-                  <span className="font-handwritten text-sm">{suggestedPrompt.text}</span>
-                </div>
-                <form action={pickJournalPromptAction}>
-                  <Button type="submit" variant="ghost" size="sm">
-                    Another
-                  </Button>
-                </form>
-              </div>
-            )}
-
-            <form
-              action={createJournalEntryAction.bind(null, journal.id)}
-              className={`${softCardClassName} flex flex-col gap-3 p-4`}
-            >
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="promptText" className="text-sm font-medium">
-                  Prompt (optional)
-                </label>
-                <Input
-                  id="promptText"
-                  name="promptText"
-                  list="journal-prompts"
-                  placeholder="Pick from the list, or write your own"
-                />
-                <datalist id="journal-prompts">
-                  {journal.prompts.map((prompt) => (
-                    <option key={prompt.id} value={prompt.text} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="content" className="text-sm font-medium">
-                  Dear journal...
-                </label>
-                <textarea
-                  id="content"
-                  name="content"
-                  placeholder="Write now, or leave blank and fill it in later"
-                  className={TEXTAREA_CLASSES}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="startAt" className="text-sm font-medium">
-                  Schedule for later (optional)
-                </label>
-                <Input id="startAt" name="startAt" type="datetime-local" />
-              </div>
-
-              <Button type="submit" className="self-end rounded-full px-5">
-                Save entry
-              </Button>
+          <div className="flex items-start justify-between gap-3">
+            <EditableName
+              // A fresh box for each journal, so switching tabs drops a half-typed name.
+              key={journal.id}
+              id={journal.id}
+              name={journal.name}
+              label="Journal name"
+              renameAction={updateJournalAction}
+              className={`${pageHeadingClassName} wrap-anywhere`}
+            />
+            <form action={deleteJournalAction.bind(null, journal.id)} className="shrink-0">
+              <DeleteIconButton
+                label="Delete journal"
+                confirmMessage="Delete this journal and all its entries? This can't be undone."
+              />
             </form>
           </div>
+
+          <EntryComposer
+            // Starts fresh (with a new suggestion) for each journal.
+            key={journal.id}
+            prompts={journal.prompts.map(({ id, text }) => ({ id, text }))}
+            suggestedPrompt={suggestedPrompt}
+            createAction={createJournalEntryAction.bind(null, journal.id)}
+          />
 
           {/* Folded away: it's set up once and rarely touched afterwards. */}
           <details className={`${softCardClassName} px-4 py-3`}>
             <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-              My saved prompts ({journal.prompts.length})
+              Manage saved prompts ({journal.prompts.length})
             </summary>
             <RemovableList
               items={journal.prompts.map(({ id, text }) => ({ id, text }))}
               emptyText="No saved prompts yet."
-              addPlaceholder="Save a prompt you found elsewhere"
+              addPlaceholder="Save a prompt you like"
               addLabel="Save"
               removeAction={deleteJournalPromptAction}
               addAction={addJournalPromptAction.bind(null, journal.id)}
               listClassName="mt-2 flex flex-col gap-1.5"
             />
           </details>
+
+          {journal.entries.length > 0 && (
+            <section aria-label="Entries" className="flex flex-col gap-3">
+              <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Earlier entries</h3>
+              <ul className="flex flex-col gap-3">
+                {journal.entries.map((entry) => (
+                  <li key={entry.id} className={`${softCardClassName} flex flex-col gap-1.5 px-4 py-3`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                        {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
+                      </p>
+                      <form action={deleteJournalEntryAction.bind(null, entry.id)}>
+                        <DeleteIconButton
+                          label="Delete entry"
+                          confirmMessage="Delete this entry? This can't be undone."
+                        />
+                      </form>
+                    </div>
+                    <EditableEntryText
+                      entryId={entry.id}
+                      field="promptText"
+                      text={entry.promptText}
+                      saveAction={updateJournalEntryAction}
+                      className="font-handwritten text-lg leading-snug"
+                    />
+                    <EditableEntryText
+                      entryId={entry.id}
+                      text={entry.content}
+                      saveAction={updateJournalEntryAction}
+                      className="text-[15px] leading-relaxed"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </>
       )}
-    </div>
-  );
-}
-
-export async function JournalEditView({ id }: { id: string }) {
-  const userId = await getCurrentUserId();
-
-  const journal = await storedJournalDetail(userId, id);
-  if (!journal) notFound();
-
-  return (
-    <JournalForm
-      action={updateJournalAction.bind(null, id)}
-      heading="Edit journal"
-      submitLabel="Save"
-      pendingLabel="Saving..."
-      initialValues={{ name: journal.name }}
-    />
-  );
-}
-
-// Finds one entry of a journal, or shows the not-found screen.
-async function findJournalEntry(id: string, entryId: string) {
-  const userId = await getCurrentUserId();
-
-  const journal = await storedJournalDetail(userId, id);
-  if (!journal) notFound();
-
-  const entry = journal.entries.find((e) => e.id === entryId);
-  if (!entry) notFound();
-  return { journal, entry };
-}
-
-// An entry's date and prompt, the same on its reading and editing screens.
-function JournalEntryHeader({ title, createdAt }: { title: string; createdAt: Date }) {
-  return (
-    <header className="flex flex-col gap-1.5">
-      <p className="text-xs tracking-wide text-muted-foreground uppercase">
-        {createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-      </p>
-      <h2 className="font-handwritten text-xl leading-snug">{title}</h2>
-    </header>
-  );
-}
-
-// Reading one entry in full. Editing is a separate step behind the Edit
-// button, so you can't change an entry by accident while reading it.
-export async function JournalEntryView({ id, entryId }: { id: string; entryId: string }) {
-  const { journal, entry } = await findJournalEntry(id, entryId);
-  // Entries are listed newest first, so the one before is newer.
-  const { previous: newer, next: older } = findListNeighbors(journal.entries, entry.id);
-
-  return (
-    <article className="flex flex-col gap-5">
-      <PopupListNavigation
-        back={{ href: dashboardRoutes.journal(id, "read"), label: journal.name }}
-        previous={newer && { href: dashboardRoutes.journalEntry(id, newer.id), label: "Newer" }}
-        next={older && { href: dashboardRoutes.journalEntry(id, older.id), label: "Older" }}
-      />
-      <JournalEntryHeader title={entry.promptText ?? journal.name} createdAt={entry.createdAt} />
-
-      {entry.content ? (
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-      ) : (
-        <PopupEmptyState message="Not written yet." />
-      )}
-
-      <Link
-        href={dashboardRoutes.editJournalEntry(id, entry.id)}
-        className={`${buttonVariants({ variant: "outline", size: "sm" })} self-end rounded-full`}
-      >
-        <Pencil aria-hidden />
-        {entry.content ? "Edit" : "Write it now"}
-      </Link>
-    </article>
-  );
-}
-
-export async function JournalEntryEditView({ id, entryId }: { id: string; entryId: string }) {
-  const { journal, entry } = await findJournalEntry(id, entryId);
-  const entryHref = dashboardRoutes.journalEntry(id, entry.id);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PopupListNavigation back={{ href: entryHref, label: "Back to entry" }} />
-      <JournalEntryHeader title={entry.promptText ?? journal.name} createdAt={entry.createdAt} />
-
-      <form
-        action={updateJournalEntryAction.bind(null, entry.id, id)}
-        className="flex flex-col gap-3"
-      >
-        <textarea
-          name="content"
-          defaultValue={entry.content ?? undefined}
-          placeholder="Dear journal..."
-          aria-label="Entry"
-          className={TEXTAREA_CLASSES}
-        />
-        <div className="flex justify-end gap-2">
-          <Link href={entryHref} className={buttonVariants({ variant: "ghost" })}>
-            Cancel
-          </Link>
-          <Button type="submit" className="rounded-full px-5">
-            Save
-          </Button>
-        </div>
-      </form>
-
-      <form action={deleteJournalEntryAction.bind(null, entry.id, id)} className="self-start">
-        <ConfirmSubmitButton
-          variant="ghost"
-          size="sm"
-          className="text-destructive"
-          confirmMessage="Delete this entry? This can't be undone."
-        >
-          Delete entry
-        </ConfirmSubmitButton>
-      </form>
     </div>
   );
 }
