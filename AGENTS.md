@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repo.
 
 ## Project at a glance
 
-The Mindful Calendar is an intention-based calendar and journal app. You set broad life intentions (Health, Family, Creativity...), and projects, calendar events and journal entries count toward them. One person owns it, but they often run **several AI agents at the same time** in this repo, so the rules below are written so parallel agents don't trip over each other.
+The Mindful Calendar is an intention-based calendar and journal app. You set broad life intentions (Health, Family, Creativity...), and projects, calendar events and journal entries count toward them. One person owns it, but they often run **several AI agents at the same time**, each in its own git worktree (see "Working alongside other agents"), so the rules below are written so parallel agents don't trip over each other.
 
 The calendar at `/dashboard` is the only real page (`/` redirects there). Every other feature (Intentions, Projects, Quick Lists, Journals, Post-its, Dopamine menu, Affirmations, event new/edit, account settings) opens as a popup or slide-over on top of it. The week/month switch is a `?mode=month` param on the same page, not a popup. Don't add new top-level routes for features; add a popup instead.
 
@@ -53,34 +53,35 @@ Next.js 16 and React 19 are recent and differ from older versions. Check the ins
 ### Task list (TASKS.md)
 - [TASKS.md](./TASKS.md) is the checklist of features and fixes. Read it before starting any feature.
 - Before starting a new feature, tell the user where it sits in the plan (TASKS.md and `project-summary.md`) and what it maps to.
-- Only start a task that has no `(claimed: ...)` on its line. Claim it **before** writing code by adding `(claimed: <agent label>, <date>)`, for example `(claimed: agent-2, 2026-11-18)`. Use the label the user gave you, or a short description of your session if they gave none. This tells the other agents running at the same time to pick something else.
+- Only start a task that has no `(claimed: ...)` on its line. Claim it **before** writing code by adding `(claimed: <agent label>, <date>)`, for example `(claimed: agent-2, 2026-11-18)`. Use the label the user gave you, or a short description of your session if they gave none. This tells the other agents running at the same time to pick something else. Other agents only see a claim once it is on `main`, so commit it on its own (`docs(tasks): claim ...`) and push it right away, before any code. If the pull before that push shows someone else claimed the same task first, drop yours and pick another.
 - If the user asks for work that isn't in TASKS.md, first check that nothing similar is already there. If a match turns up, add to that task instead of making a duplicate. Otherwise add a new `[ ]` line in the matching section, then claim it.
-- When a task is finished and committed, check it off (`[ ]` to `[x]`), remove the claim and add the commit hash, for example `(done: 14f9e51)`.
-- A claim with an old date may have been abandoned. Ask the user before taking it over.
+- When a task is finished and its code is pushed, check it off (`[ ]` to `[x]`), remove the claim and add the commit hash, for example `(done: 14f9e51)`. Take the hash after the push: rebasing before a push changes the hashes.
+- When adding a task that will change `prisma/schema.prisma`, put `(schema)` on its line (see "Schema changes" below).
+- A claim more than 2 days old may have been abandoned. Ask the user before taking it over. Leave newer claims alone and pick another task.
 - Don't check off, re-word or remove a task another agent claimed unless the user asks.
 
 ### Working alongside other agents
-- Other agents may be editing files in the same folder while you work. When `git status` shows changes you didn't make, leave them alone: don't revert, reformat or "fix" them.
-- Stage only the files you changed, by name (`git add src/lib/foo.ts ...`). Never use `git add -A`, `git add .` or `git commit -a`, which would sweep another agent's half-finished work into your commit.
-- **Always name your files in the commit command too:** `git commit -m "..." -- src/lib/foo.ts src/app/bar.tsx`. Never run a bare `git commit`. All agents share one staging area (git's "index"), so a bare `git commit` also commits whatever *another* agent has staged at that moment. This really happened: a `docs(tasks)` commit swept in another agent's calendar code and had to be reverted. With file names after `--`, git commits only those files and leaves everything else staged as it was.
-- That commits each named file whole. If a file you changed also has another agent's uncommitted edits (check `git diff <file>`), their lines would go in too. In that case commit only your part from a private staging area, all in one command, so no other agent's commit can land in between:
-  ```sh
-  export GIT_INDEX_FILE=.git/index-<your label>; git read-tree HEAD \
-    && git apply --cached my-changes.patch \
-    && git commit -m "..."; unset GIT_INDEX_FILE; git reset -q -- <your files>
-  ```
-  `my-changes.patch` is `git diff <file>` with the other agent's hunks deleted. The final `git reset` updates the shared staging area to match your new commit. Afterwards, check `git show --stat HEAD` lists only your files. If this feels risky, stop and ask the user instead.
-- Before committing, run `git fetch origin`. If `origin/main` has new commits, pull them first. If that causes merge conflicts, stop and walk the user through them instead of resolving them silently.
-- If the checks below fail because of another agent's in-progress files rather than yours, tell the user instead of changing those files.
+**Each agent works in its own folder (a git worktree).** A worktree is an extra folder linked to this same repo, on its own branch, with its own files, staging area and `.next/` build folder. Agents in separate worktrees never see each other's half-finished work, so a test that another agent is deliberately keeping red (the first step of TDD) can't block your commit. Branches here are short-lived: every commit goes straight to `main`, so there's no separate merge step.
+
+- **Setup (the user does this once per agent):** from the main `calendar-app` folder, run `powershell -ExecutionPolicy Bypass -File scripts\new-agent-worktree.ps1 <label> <task>`. It creates `../calendar-app-<label>` from the latest `origin/main` and runs `npm install`. The user then copies `.env` in and starts the agent in that folder. When the agent is finished: `git worktree remove ../calendar-app-<label>` and `git branch -D <label>/<task>`.
+- **Code only in your own worktree.** If you were started in the main `calendar-app` folder and the task changes code, ask the user to set up a worktree for you. The main folder is for the user and for Markdown-only edits. Don't open or edit another agent's worktree folder.
+- **Push with `git push origin HEAD:main`**, never a plain `git push` (your branch has a different name from `main`). Before every push, run `git pull --rebase --autostash` to put your commits on top of everyone else's. If that brings in new commits, re-run the checks before pushing. If the push is rejected because someone pushed just before you, pull and push again.
+- **Rebase conflicts:** if both sides only changed different task lines in `TASKS.md` (claims or check-offs), keep both and continue. Any other conflict: stop and walk the user through it instead of resolving it silently.
+- **Pull often** (at least before starting each new step of a task), so you work on top of everyone else's latest code and conflicts stay small.
+- **Hot-spot files.** Almost every feature touches `prisma/schema.prisma`, `src/lib/dashboard-routes.ts`, `StoredArea` in `src/lib/stored-results.ts` and `TASKS.md`. Pull just before editing one of these, keep the change small, and commit and push it soon after. When choosing a task, prefer one in a different area from the tasks already claimed (journals and post-its at the same time, not two journal tasks).
+- **Schema changes.** All worktrees share one Supabase database, so two agents running migrations at once can clash. A task that changes `prisma/schema.prisma` is marked `(schema)` on its TASKS.md line, and only one `(schema)` task may be claimed at a time. After a pull brings in another agent's migration, run `npx prisma generate` (the database already has it). Never run `prisma migrate reset`, and never accept a prompt from `prisma migrate dev` to reset the database: stop and ask the user.
+- **Dev server:** each worktree needs its own port, e.g. `npm run dev -- -p 3001`. Sign-in redirects are set up for port 3000, so on other ports use `SKIP_LOGIN=true`.
+- **If you do work in the shared main folder** (Markdown-only edits): when `git status` shows changes you didn't make, leave them alone. Stage and commit only your files by name: `git commit -m "..." -- TASKS.md`. Never use `git add -A`, `git add .`, `git commit -a` or a bare `git commit`: everyone there shares one staging area, and a bare commit once swept another agent's code into a `docs(tasks)` commit. If a file you need to commit also has someone else's uncommitted edits (check `git diff <file>`), stop and ask the user.
 
 ### Safety and boundaries
 - Never read, write or edit the real `.env` file. Only touch `.env.example`.
-- Don't read files outside this repo directory without asking first.
+- Don't read files outside this repo directory without asking first. Your own worktree counts as this repo.
 
 ### Git
 - Never add `Co-Authored-By: Claude` (or any AI co-author line) to commits in this repo.
 - Keep commits small. Each commit covers one change or one feature, never several features together.
-- **Run the checks before every commit:** `npm test`, `npx tsc --noEmit`, `npm run lint` and `npm run build`. All of them must pass. If anything fails, stop and tell the user instead of committing. Skip the checks when a commit only changes Markdown files (such as `TASKS.md` or `AGENTS.md`), since no code runs.
+- **Run the checks before every commit:** `npm test`, `npx tsc --noEmit`, `npm run lint` and `npm run build`. All of them must pass. In your own worktree, a failure comes from your changes or from `main` itself. If it's yours, fix it. If the same check also fails on a clean `origin/main`, stop and tell the user instead of committing. Skip the checks when a commit only changes Markdown files (such as `TASKS.md` or `AGENTS.md`), since no code runs.
+- Run `npm run build` from PowerShell, not Git Bash: in Git Bash on this machine it crashes with error `0xc0000142`.
 - Write commit messages in the [Conventional Commits](https://www.conventionalcommits.org/) format:
   - **First line:** `type(scope): short summary`, for example `feat(dashboard): add drag-to-reorder for panels`.
     - `type` is one of `feat` (new feature), `fix` (bug fix), `docs`, `style` (formatting only), `refactor`, `test` or `chore` (tooling, config, dependencies).
@@ -101,7 +102,7 @@ Next.js 16 and React 19 are recent and differ from older versions. Check the ins
 ### Layering and TDD
 - Keep three layers separate: **data access** (`src/lib/*.ts`), **business logic** (pure helpers in `src/lib/`, called from server actions in `src/app/actions/`), and **UI** (`src/app/`, `src/components/`).
 - This project follows TDD. Write and test data-access functions **before** any UI is wired to them.
-- Tests use [Vitest](https://vitest.dev/). Run them with `npm test`. Keep the `vmThreads` pool in `vitest.config.ts`: the default pools fail to start on this machine with a misleading "Cannot read properties of undefined (reading 'config')" error.
+- Tests use [Vitest](https://vitest.dev/). While working, run only the tests you're working on, e.g. `npx vitest run src/__tests__/lib/journals.test.ts` (or `npm run test:watch`), to keep the red-green loop fast. Run the full `npm test` before committing. Keep the `vmThreads` pool in `vitest.config.ts`: the default pools fail to start on this machine with a misleading "Cannot read properties of undefined (reading 'config')" error.
 - Keep tests in `src/__tests__/`, mirroring the source layout (for example `src/lib/post-its.ts` is tested by `src/__tests__/lib/post-its.test.ts`). Don't put test files next to the code.
 - Tests for data access run against the real database. Wrap them in `withRollback` from `src/test/withRollback.ts` so they never leave data behind.
 
