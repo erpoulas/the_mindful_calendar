@@ -236,8 +236,8 @@ export function JournalPage({
                   prompt?.setSelectionRange(prompt.value.length, prompt.value.length);
                 }
               }}
-              // The last part of the page keeps some room to write into.
-              className={`${BOX_CLASSES} ${isLast ? (blocks.length === 1 ? "min-h-48" : "min-h-24") : ""}`}
+              // The last part of the page keeps plenty of room to write into.
+              className={`${BOX_CLASSES} ${isLast ? (blocks.length === 1 ? "min-h-[45dvh]" : "min-h-[30dvh]") : ""}`}
             />
           );
         })}

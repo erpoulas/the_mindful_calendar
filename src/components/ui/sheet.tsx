@@ -71,6 +71,8 @@ function imageWidth(art: PanelArt, size: "side" | "center") {
  *
  * `contentWidth` is how much of the paper's width the content may use, as a
  * percentage (75 by default, which leaves a calm margin; plain paper only).
+ * Plain-paper content sits in the middle of the page top to bottom, unless
+ * `alignTop` puts it at the top (for pages that fill up, like a journal's).
  */
 export type PanelArt = {
   src: string;
@@ -80,6 +82,7 @@ export type PanelArt = {
   ruledLines?: { spacing: number };
   scale?: number;
   contentWidth?: number;
+  alignTop?: boolean;
 };
 
 /** Body text is this share of a ruled line's height (18px on a 48px line). */
@@ -220,7 +223,8 @@ export function Sheet({
                 <div
                   className={cn(
                     "flex w-full min-w-0 flex-1 flex-col",
-                    lined ? "" : "mx-auto justify-center",
+                    lined ? "" : "mx-auto",
+                    !lined && !backgroundImage.alignTop && "justify-center",
                   )}
                   style={lined ? undefined : { maxWidth: `${backgroundImage.contentWidth ?? 75}%` }}
                 >
