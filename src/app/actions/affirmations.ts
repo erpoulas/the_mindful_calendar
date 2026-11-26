@@ -4,10 +4,13 @@ import { refresh } from "next/cache";
 import { AddAffirmationSchema, SetTodayAffirmationSchema } from "@/lib/affirmation-schemas";
 import {
   addAffirmation,
+  clearTodayAffirmation,
   deleteAffirmation,
+  keepAffirmationUntil,
   setTodayAffirmation,
 } from "@/lib/affirmations";
 import { getCurrentUserId } from "@/lib/auth";
+import { storedTimezone } from "@/lib/stored-reads";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
 
@@ -29,11 +32,22 @@ export async function deleteAffirmationAction(affirmationId: string) {
 }
 
 export async function setTodayAffirmationAction(formData: FormData) {
-  const validated = SetTodayAffirmationSchema.safeParse({ text: formData.get("text") });
+  const validated = SetTodayAffirmationSchema.safeParse({
+    text: formData.get("text"),
+    keepFor: formData.get("keepFor"),
+  });
   if (!validated.success) return;
 
   const userId = await getCurrentUserId();
-  await setTodayAffirmation(db, { userId, text: validated.data.text });
+  const keepUntil = keepAffirmationUntil(validated.data.keepFor, await storedTimezone(userId));
+  await setTodayAffirmation(db, { userId, text: validated.data.text, keepUntil });
+
+  forgetStoredAfterSave(userId, ["affirmations"]);
+}
+
+export async function clearTodayAffirmationAction() {
+  const userId = await getCurrentUserId();
+  await clearTodayAffirmation(db, userId);
 
   forgetStoredAfterSave(userId, ["affirmations"]);
 }

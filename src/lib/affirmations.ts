@@ -1,4 +1,5 @@
 import type { DbClient } from "./db";
+import type { KeepAffirmationFor } from "./affirmation-schemas";
 import { toWallClockDate } from "./wall-clock";
 
 export async function addAffirmation(
@@ -37,18 +38,42 @@ export async function deleteAffirmation(
 
 export async function setTodayAffirmation(
   client: DbClient,
-  params: { userId: string; text: string },
+  params: { userId: string; text: string; keepUntil: Date | null },
 ) {
+  const { userId, text, keepUntil } = params;
   return client.todayAffirmation.upsert({
-    where: { userId: params.userId },
-    create: { userId: params.userId, text: params.text },
-    update: { text: params.text, setAt: new Date() },
+    where: { userId },
+    create: { userId, text, keepUntil },
+    update: { text, keepUntil, setAt: new Date() },
   });
 }
 
-function isSameDay(first: Date, second: Date, timeZone: string) {
-  const dayOf = (date: Date) => toWallClockDate(date, timeZone).toISOString().slice(0, 10);
-  return dayOf(first) === dayOf(second);
+export async function clearTodayAffirmation(client: DbClient, userId: string) {
+  await client.todayAffirmation.deleteMany({ where: { userId } });
+}
+
+/** Today's calendar day in `timeZone`, as midnight UTC (how keepUntil is stored). */
+function todayIn(timeZone: string, now: Date) {
+  const wallClock = toWallClockDate(now, timeZone);
+  return new Date(
+    Date.UTC(wallClock.getUTCFullYear(), wallClock.getUTCMonth(), wallClock.getUTCDate()),
+  );
+}
+
+/** The last day an affirmation kept for `choice` shows; null keeps it until changed. */
+export function keepAffirmationUntil(
+  choice: KeepAffirmationFor,
+  timeZone: string,
+  now = new Date(),
+): Date | null {
+  const lastDay = todayIn(timeZone, now);
+  if (choice === "forever") return null;
+  if (choice === "week") lastDay.setUTCDate(lastDay.getUTCDate() + 6);
+  if (choice === "month") {
+    lastDay.setUTCMonth(lastDay.getUTCMonth() + 1);
+    lastDay.setUTCDate(lastDay.getUTCDate() - 1);
+  }
+  return lastDay;
 }
 
 export async function getTodayAffirmation(
@@ -56,12 +81,12 @@ export async function getTodayAffirmation(
   userId: string,
   timeZone = "UTC",
   now = new Date(),
-): Promise<{ text: string; isOverride: boolean } | null> {
+): Promise<{ text: string; isOverride: boolean; keepUntil: Date | null } | null> {
   const override = await client.todayAffirmation.findUnique({ where: { userId } });
-  if (override && isSameDay(override.setAt, now, timeZone)) {
-    return { text: override.text, isOverride: true };
+  if (override && (override.keepUntil === null || override.keepUntil >= todayIn(timeZone, now))) {
+    return { text: override.text, isOverride: true, keepUntil: override.keepUntil };
   }
 
   const picked = await getRandomAffirmation(client, userId);
-  return picked ? { text: picked.text, isOverride: false } : null;
+  return picked ? { text: picked.text, isOverride: false, keepUntil: null } : null;
 }

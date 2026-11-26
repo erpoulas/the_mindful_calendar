@@ -261,13 +261,15 @@ model Affirmation {
   @@index([userId])
 }
 
-// One row per user: holds a "just for today" affirmation override that
-// doesn't touch the permanent Affirmation pool. setAt's calendar date
-// decides whether the override is still valid for today.
+// One row per user: an affirmation the user wrote or picked to show instead
+// of a random one from their permanent Affirmation pool (it isn't added to
+// the pool). It shows through keepUntil, a calendar day in the user's time
+// zone (stored as midnight UTC); null keeps it until the user changes it.
 model TodayAffirmation {
-  userId String   @id
-  text   String
-  setAt  DateTime @default(now())
+  userId    String    @id
+  text      String
+  setAt     DateTime  @default(now())
+  keepUntil DateTime? @db.Date
 }
 
 // One row per user: which sidebar panels they've hidden from the dashboard.

@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
 import {
   addAffirmation,
+  clearTodayAffirmation,
   deleteAffirmation,
   getRandomAffirmation,
   getTodayAffirmation,
+  keepAffirmationUntil,
   listAffirmations,
   setTodayAffirmation,
 } from "@/lib/affirmations";
@@ -82,6 +84,8 @@ describe("deleteAffirmation", () => {
 });
 
 describe("setTodayAffirmation / getTodayAffirmation", () => {
+  const NOV_18 = new Date("2026-11-18T00:00:00Z");
+
   it("returns null when there's no override and no pool", async () => {
     await withRollback(async (tx) => {
       const result = await getTodayAffirmation(tx, "test-user-1");
@@ -97,29 +101,39 @@ describe("setTodayAffirmation / getTodayAffirmation", () => {
 
       expect(result?.text).toBe("A");
       expect(result?.isOverride).toBe(false);
+      expect(result?.keepUntil).toBeNull();
     });
   });
 
-  it("returns today's override without saving it to the permanent pool", async () => {
+  it("returns the override without saving it to the permanent pool", async () => {
     await withRollback(async (tx) => {
       await setTodayAffirmation(tx, {
         userId: "test-user-1",
-        text: "Just for today: be gentle with yourself",
+        text: "Be gentle with yourself",
+        keepUntil: NOV_18,
       });
 
-      const result = await getTodayAffirmation(tx, "test-user-1");
+      const result = await getTodayAffirmation(
+        tx,
+        "test-user-1",
+        "UTC",
+        new Date("2026-11-18T12:00:00Z"),
+      );
       const pool = await listAffirmations(tx, "test-user-1");
 
-      expect(result?.text).toBe("Just for today: be gentle with yourself");
-      expect(result?.isOverride).toBe(true);
+      expect(result).toEqual({
+        text: "Be gentle with yourself",
+        isOverride: true,
+        keepUntil: NOV_18,
+      });
       expect(pool).toEqual([]);
     });
   });
 
   it("replaces a previous override when set again", async () => {
     await withRollback(async (tx) => {
-      await setTodayAffirmation(tx, { userId: "test-user-1", text: "First" });
-      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Second" });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "First", keepUntil: null });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Second", keepUntil: null });
 
       const result = await getTodayAffirmation(tx, "test-user-1");
 
@@ -127,30 +141,43 @@ describe("setTodayAffirmation / getTodayAffirmation", () => {
     });
   });
 
-  it("falls back to the pool once the override is from a previous day", async () => {
+  it("keeps an override with no end date until it's changed", async () => {
     await withRollback(async (tx) => {
       await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
-      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Yesterday's override" });
-      await tx.todayAffirmation.update({
-        where: { userId: "test-user-1" },
-        data: { setAt: new Date("2020-01-01T00:00:00Z") },
-      });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Forever", keepUntil: null });
 
-      const result = await getTodayAffirmation(tx, "test-user-1");
+      const result = await getTodayAffirmation(
+        tx,
+        "test-user-1",
+        "UTC",
+        new Date("2030-01-01T12:00:00Z"),
+      );
+
+      expect(result?.text).toBe("Forever");
+    });
+  });
+
+  it("falls back to the pool the day after the override's last day", async () => {
+    await withRollback(async (tx) => {
+      await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Old", keepUntil: NOV_18 });
+
+      const result = await getTodayAffirmation(
+        tx,
+        "test-user-1",
+        "UTC",
+        new Date("2026-11-19T12:00:00Z"),
+      );
 
       expect(result?.text).toBe("Pool pick");
       expect(result?.isOverride).toBe(false);
     });
   });
 
-  it("keeps an override set this morning when it's already tomorrow in UTC", async () => {
+  it("keeps the override through its last day in the user's time zone", async () => {
     await withRollback(async (tx) => {
       await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
-      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Morning override" });
-      await tx.todayAffirmation.update({
-        where: { userId: "test-user-1" },
-        data: { setAt: new Date("2026-11-18T14:00:00Z") }, // 9am Nov 18 in New York
-      });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Mine", keepUntil: NOV_18 });
 
       const result = await getTodayAffirmation(
         tx,
@@ -159,27 +186,53 @@ describe("setTodayAffirmation / getTodayAffirmation", () => {
         new Date("2026-11-19T03:00:00Z"), // 10pm Nov 18 in New York
       );
 
-      expect(result?.text).toBe("Morning override");
+      expect(result?.text).toBe("Mine");
+    });
+  });
+});
+
+describe("clearTodayAffirmation", () => {
+  it("ends the override so the pool is used again", async () => {
+    await withRollback(async (tx) => {
+      await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
+      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Pinned", keepUntil: null });
+
+      await clearTodayAffirmation(tx, "test-user-1");
+
+      const result = await getTodayAffirmation(tx, "test-user-1");
+      expect(result?.text).toBe("Pool pick");
     });
   });
 
-  it("drops last night's override even when it's still the same day in UTC", async () => {
+  it("does nothing when no override is set", async () => {
     await withRollback(async (tx) => {
-      await addAffirmation(tx, { userId: "test-user-1", text: "Pool pick" });
-      await setTodayAffirmation(tx, { userId: "test-user-1", text: "Last night's override" });
-      await tx.todayAffirmation.update({
-        where: { userId: "test-user-1" },
-        data: { setAt: new Date("2026-11-18T03:00:00Z") }, // 10pm Nov 17 in New York
-      });
-
-      const result = await getTodayAffirmation(
-        tx,
-        "test-user-1",
-        "America/New_York",
-        new Date("2026-11-18T14:00:00Z"), // 9am Nov 18 in New York
-      );
-
-      expect(result?.text).toBe("Pool pick");
+      await expect(clearTodayAffirmation(tx, "test-user-1")).resolves.not.toThrow();
     });
+  });
+});
+
+describe("keepAffirmationUntil", () => {
+  const now = new Date("2026-11-19T03:00:00Z"); // 10pm Nov 18 in New York
+
+  it("ends today for 'today', counting the day in the user's time zone", () => {
+    expect(keepAffirmationUntil("today", "America/New_York", now)).toEqual(
+      new Date("2026-11-18T00:00:00Z"),
+    );
+  });
+
+  it("covers seven days, today included, for 'week'", () => {
+    expect(keepAffirmationUntil("week", "America/New_York", now)).toEqual(
+      new Date("2026-11-24T00:00:00Z"),
+    );
+  });
+
+  it("ends the day before the same date next month for 'month'", () => {
+    expect(keepAffirmationUntil("month", "America/New_York", now)).toEqual(
+      new Date("2026-12-17T00:00:00Z"),
+    );
+  });
+
+  it("has no end date for 'forever'", () => {
+    expect(keepAffirmationUntil("forever", "America/New_York", now)).toBeNull();
   });
 });
