@@ -77,3 +77,74 @@ export function pickPromptToAdd(
   const choices = saved.filter((prompt) => !onPage.includes(prompt.text));
   return choices[Math.floor(random() * choices.length)]?.text;
 }
+
+/**
+ * A page's date for its header, like "Thursday, November 26", in the
+ * user's time zone (an entry's createdAt is a real moment). Pages from
+ * another year say the year too.
+ */
+export function formatPageDate(createdAt: Date, timeZone: string, now = new Date()) {
+  const sameYear = dayIn(createdAt, timeZone).slice(0, 4) === dayIn(now, timeZone).slice(0, 4);
+  return createdAt.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: sameYear ? undefined : "numeric",
+    timeZone,
+  });
+}
+
+export type JournalSearchResult = {
+  id: string;
+  /** The words around the match, so a result can show it highlighted. */
+  snippet: { before: string; match: string; after: string };
+};
+
+// How many letters of a page to show either side of a match.
+const SNIPPET_REACH = 40;
+
+/** A page as one line of plain text: prompts and writing, without the asterisks. */
+function pageAsText(content: string | null, legacyPrompt?: string | null) {
+  return parseJournalPage(content, legacyPrompt)
+    .map((block) => block.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * The pages whose writing, prompts or date contain the search (ignoring
+ * case), newest first as given. A match in the writing comes with the
+ * words around it; a page found by its date shows its opening words.
+ */
+export function searchJournalPages(
+  pages: { id: string; date: string; content: string | null; promptText?: string | null }[],
+  search: string,
+): JournalSearchResult[] {
+  const wanted = search.trim().replace(/\s+/g, " ").toLowerCase();
+  if (!wanted) return [];
+
+  return pages.flatMap((page) => {
+    const text = pageAsText(page.content, page.promptText);
+    const at = text.toLowerCase().indexOf(wanted);
+    if (at >= 0) {
+      const from = Math.max(0, at - SNIPPET_REACH);
+      const to = Math.min(text.length, at + wanted.length + SNIPPET_REACH);
+      return [
+        {
+          id: page.id,
+          snippet: {
+            before: (from > 0 ? "…" : "") + text.slice(from, at),
+            match: text.slice(at, at + wanted.length),
+            after: text.slice(at + wanted.length, to) + (to < text.length ? "…" : ""),
+          },
+        },
+      ];
+    }
+    if (page.date.toLowerCase().includes(wanted)) {
+      const opening = text.length > SNIPPET_REACH * 2 ? `${text.slice(0, SNIPPET_REACH * 2)}…` : text;
+      return [{ id: page.id, snippet: { before: "", match: "", after: opening } }];
+    }
+    return [];
+  });
+}

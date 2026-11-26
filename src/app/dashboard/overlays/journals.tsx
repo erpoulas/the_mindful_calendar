@@ -16,22 +16,17 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { findTodaysEntry } from "@/lib/journal-page";
+import { findTodaysEntry, formatPageDate } from "@/lib/journal-page";
 import { getRandomJournalPrompt } from "@/lib/journals";
 import { storedJournalDetail, storedJournals, storedTimezone } from "@/lib/stored-reads";
 import { EditableName } from "./editable-name";
+import { JournalLog } from "./journal-log";
 import { JournalPage } from "./journal-page";
 import { JournalScheduleControl } from "./journal-schedule-control";
 import { NameTabs } from "./name-tabs";
 import { NewNameButton } from "./new-name-button";
 import { pageHeadingClassName } from "./photo-page-styles";
 import { PopupEmptyState } from "./popup-empty-state";
-
-const DATETIME_FORMAT: Intl.DateTimeFormatOptions = {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-};
 
 // A small trash icon: deleting is rare, so it stays out of the way.
 function DeleteIconButton({ label, confirmMessage }: { label: string; confirmMessage: string }) {
@@ -57,8 +52,9 @@ function pickPage(entry: { id: string; content: string | null; promptText: strin
 /**
  * The whole Journals popup on one screen, like Quick Lists: a tab per
  * journal (with "+" to start one), the open journal's name (click to rename),
- * today's page (one per day, saving as you write, with the saved prompts
- * under it), and the earlier pages below, editable the same way.
+ * and its pages as an adventure log: today's page first (one per day, saving
+ * as you write, with the saved prompts under it), then the earlier ones a
+ * page at a time, searchable and editable the same way.
  */
 export async function JournalsView({ activeId }: { activeId?: string }) {
   const userId = await getCurrentUserId();
@@ -143,45 +139,32 @@ export async function JournalsView({ activeId }: { activeId?: string }) {
             saveAction={setJournalScheduleAction.bind(null, journal.id)}
           />
 
-          <section aria-label="Today's page" className="flex flex-col gap-1.5">
-            <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Today</h3>
-            <JournalPage
-              // One page per journal; it keeps its own text while it saves.
-              key={journal.id}
-              entry={todaysEntry ? pickPage(todaysEntry) : undefined}
-              suggestedPrompt={suggestedPrompt}
-              savedPrompts={journal.prompts.map(({ id, text }) => ({ id, text }))}
-              createAction={createJournalEntryAction.bind(null, journal.id)}
-              updateAction={updateJournalEntryAction}
-              addPromptAction={addJournalPromptAction.bind(null, journal.id)}
-              deletePromptAction={deleteJournalPromptAction}
-              deleteAction={deleteJournalEntryAction}
-            />
-          </section>
-
-          {earlierEntries.length > 0 && (
-            <section aria-label="Earlier pages" className="flex flex-col gap-3">
-              <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Earlier pages</h3>
-              <ul className="flex flex-col gap-4">
-                {earlierEntries.map((entry) => (
-                  <li key={entry.id} className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs tracking-wide text-muted-foreground uppercase">
-                        {entry.createdAt.toLocaleString(undefined, DATETIME_FORMAT)}
-                      </p>
-                      <form action={deleteJournalEntryAction.bind(null, entry.id)}>
-                        <DeleteIconButton
-                          label="Delete entry"
-                          confirmMessage="Delete this entry? This can't be undone."
-                        />
-                      </form>
-                    </div>
-                    <JournalPage entry={pickPage(entry)} updateAction={updateJournalEntryAction} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <JournalLog
+            // A fresh log for each journal, opening on today's page.
+            key={`log-${journal.id}`}
+            todayNumber={earlierEntries.length + 1}
+            pages={earlierEntries.map((entry, index) => ({
+              ...pickPage(entry),
+              number: earlierEntries.length - index,
+              date: formatPageDate(entry.createdAt, timeZone),
+            }))}
+            updateAction={updateJournalEntryAction}
+            deleteAction={deleteJournalEntryAction}
+            today={
+              <JournalPage
+                // One page per journal; it keeps its own text while it saves.
+                key={journal.id}
+                entry={todaysEntry ? pickPage(todaysEntry) : undefined}
+                suggestedPrompt={suggestedPrompt}
+                savedPrompts={journal.prompts.map(({ id, text }) => ({ id, text }))}
+                createAction={createJournalEntryAction.bind(null, journal.id)}
+                updateAction={updateJournalEntryAction}
+                addPromptAction={addJournalPromptAction.bind(null, journal.id)}
+                deletePromptAction={deleteJournalPromptAction}
+                deleteAction={deleteJournalEntryAction}
+              />
+            }
+          />
         </>
       )}
     </div>

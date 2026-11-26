@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   findTodaysEntry,
+  formatPageDate,
   parseJournalPage,
   pickPromptToAdd,
+  searchJournalPages,
   serializeJournalPage,
 } from "@/lib/journal-page";
 
@@ -99,5 +101,53 @@ describe("pickPromptToAdd", () => {
 
   it("gives nothing once every prompt is on the page", () => {
     expect(pickPromptToAdd(saved, ["A", "B", "C"])).toBeUndefined();
+  });
+});
+
+describe("formatPageDate", () => {
+  const now = new Date("2026-11-26T15:00:00Z");
+
+  it("names the day in the user's time zone", () => {
+    // 1:50am on 27 Nov in UTC is still the evening of the 26th in New York.
+    expect(formatPageDate(new Date("2026-11-27T01:50:00Z"), "America/New_York", now)).toBe(
+      "Thursday, November 26",
+    );
+  });
+
+  it("adds the year for a page from another year", () => {
+    expect(formatPageDate(new Date("2025-03-02T12:00:00Z"), "UTC", now)).toBe("Sunday, March 2, 2025");
+  });
+});
+
+describe("searchJournalPages", () => {
+  const pages = [
+    { id: "a", date: "Thursday, November 26", content: "*What went well?*\nA long walk by the river with Sam." },
+    { id: "b", date: "Monday, November 23", content: "Rainy day. Stayed in." },
+  ];
+
+  it("finds the pages with the words, ignoring case, with the match in a snippet", () => {
+    expect(searchJournalPages(pages, "RIVER")).toEqual([
+      { id: "a", snippet: { before: "What went well? A long walk by the ", match: "river", after: " with Sam." } },
+    ]);
+  });
+
+  it("finds words in a prompt, and pages by their date", () => {
+    expect(searchJournalPages(pages, "went well").map((result) => result.id)).toEqual(["a"]);
+    expect(searchJournalPages(pages, "november 23")).toEqual([
+      { id: "b", snippet: { before: "", match: "", after: "Rainy day. Stayed in." } },
+    ]);
+  });
+
+  it("cuts a long page down to the words around the match", () => {
+    const long = { id: "c", date: "Friday", content: `${"word ".repeat(30)}found it${" more".repeat(30)}` };
+    const [{ snippet }] = searchJournalPages([long], "found");
+
+    expect(snippet.before.startsWith("…")).toBe(true);
+    expect(snippet.before.length).toBeLessThan(50);
+    expect(snippet.after.endsWith("…")).toBe(true);
+  });
+
+  it("finds nothing for a blank search", () => {
+    expect(searchJournalPages(pages, "  ")).toEqual([]);
   });
 });

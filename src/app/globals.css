@@ -4,6 +4,28 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Turning a journal page (JournalLog): the new page swings in from the
+   side you turned towards, like a page of a book settling flat. */
+@theme {
+  --animate-page-older: page-turn-older 320ms ease-out;
+  --animate-page-newer: page-turn-newer 320ms ease-out;
+
+  @keyframes page-turn-older {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(12deg) translateX(-1rem);
+      transform-origin: left center;
+    }
+  }
+  @keyframes page-turn-newer {
+    from {
+      opacity: 0;
+      transform: perspective(1400px) rotateY(-12deg) translateX(1rem);
+      transform-origin: right center;
+    }
+  }
+}
+
 /* @fontsource/open-sauce-sans ships a corrupted woff2 for weight 400
    (invalid file signature, rejected by Firefox's font sanitizer) — this
    is a bug in the published package itself, present in every version.
