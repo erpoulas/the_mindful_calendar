@@ -102,4 +102,20 @@ describe("JournalPage", () => {
     expect(formData.get("promptText")).toBe("");
     expect(createAction).not.toHaveBeenCalled();
   });
+
+  it("deletes today's page with its trash icon, leaving a fresh blank one", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const deleteAction = vi.fn<(entryId: string) => Promise<void>>(async () => {});
+    const { createAction } = renderPage({ deleteAction });
+    expect(screen.queryByRole("button", { name: "Delete this page" })).not.toBeInTheDocument();
+
+    fireEvent.change(writingBoxes()[0], { target: { value: "A slow morning." } });
+    fireEvent.click(await screen.findByRole("button", { name: "Delete this page" }));
+
+    await waitFor(() => expect(deleteAction).toHaveBeenCalledWith("new-entry"));
+    expect(writingBoxes()[0]).toHaveValue("");
+    // Writing again starts a new page rather than editing the deleted one.
+    fireEvent.change(writingBoxes()[0], { target: { value: "Take two." } });
+    await waitFor(() => expect(createAction).toHaveBeenCalledTimes(2));
+  });
 });

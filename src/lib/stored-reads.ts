@@ -5,6 +5,7 @@ import { getDashboardPreferences } from "./dashboard-preferences";
 import { db } from "./db";
 import { listDopamineMenuItems } from "./dopamine-menu";
 import { listIntentions } from "./intentions";
+import { listJournalSchedules } from "./journal-schedules";
 import { getJournalDetail, listJournals } from "./journals";
 import { listPostIts } from "./post-its";
 import { getProjectDetail, listProjects } from "./projects";
@@ -78,6 +79,11 @@ export const storedQuickListDetail = storedRead(
 );
 
 export const storedJournals = storedRead("journals", ["journals"], (userId) => listJournals(db, userId));
+
+/** Every journal's repeating writing time, for the calendar's "journal time" blocks. */
+export const storedJournalSchedules = storedRead("journalSchedules", ["journals"], (userId) =>
+  listJournalSchedules(db, userId),
+);
 
 export const storedJournalDetail = storedRead("journalDetail", ["journals"], (userId, journalId: string) =>
   getJournalDetail(db, { userId, journalId }),

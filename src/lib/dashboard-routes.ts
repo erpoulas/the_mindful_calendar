@@ -55,3 +55,13 @@ export const dashboardRoutes = {
 export function stringParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value : undefined;
 }
+
+/**
+ * Where clicking an event on the calendar leads: a journal entry's event
+ * opens its journal; any other event opens its editor.
+ */
+export function calendarEventHref(event: { id: string; journalEntry?: { journalId: string } | null }) {
+  return event.journalEntry
+    ? dashboardRoutes.journals(event.journalEntry.journalId)
+    : dashboardRoutes.editEvent(event.id);
+}

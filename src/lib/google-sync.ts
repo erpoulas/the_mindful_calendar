@@ -20,13 +20,17 @@ import {
 } from "./google-connections";
 import { withIntentionColors } from "./calendar-events";
 import { eventColor } from "./intention-colors";
+import { toGoogleRecurringBody, toJournalTimeSchedule } from "./journal-time";
 import { fromWallClockDate, toWallClockDate } from "./wall-clock";
 
 // Two-way Google Calendar sync, run each time the calendar loads ("polling
 // on app open", see project-summary.md). Each run:
 //   1. deletes in Google the events deleted in the app since last time,
+//      then sends new or changed journal schedules, each as one repeating
+//      event (one way: the app's schedule is what counts),
 //   2. reconciles the range on screen: Google's new events come in, and
-//      events changed on one side are copied to the other,
+//      events changed on one side are copied to the other (the times of a
+//      journal schedule's repeating event are skipped: the app has them),
 //   3. sends app edits made anywhere else (say, to an event next month),
 //   4. sends app events that Google doesn't have yet.
 //
@@ -87,6 +91,7 @@ export async function syncGoogleCalendar(
   const sync = new GoogleSync(client, userId, timeZone, now, createGoogleCall(client, connection, now));
   try {
     await sync.pushDeletions();
+    await sync.pushJournalSchedules();
     await sync.reconcileRange(params.start, params.end);
     await sync.pushChangedEvents();
     // "From today on": events from the day the user connected onwards, plus
@@ -163,6 +168,8 @@ function createGoogleCall(
 class GoogleSync {
   /** Set once an app event is created, changed or deleted from Google's side. */
   changedAppEvents = false;
+  /** The Google ids of the journal schedules' repeating events (see pushJournalSchedules). */
+  private scheduleEventIds = new Set<string>();
 
   constructor(
     private client: DbClient,
@@ -183,13 +190,53 @@ class GoogleSync {
     }
   }
 
+  /**
+   * Step 1, continued: journal schedules that are new, or changed since
+   * they were last sent. One deleted in Google is made again, under a new id.
+   */
+  async pushJournalSchedules() {
+    // All of them in one read: step 2 needs every one's Google id too.
+    const schedules = await this.client.journalSchedule.findMany({
+      where: { userId: this.userId },
+      include: { journal: { select: { name: true } } },
+    });
+    for (const schedule of schedules) {
+      const changed =
+        !schedule.googleEventId || !schedule.lastSyncedAt || schedule.updatedAt > schedule.lastSyncedAt;
+      if (!changed) {
+        this.scheduleEventIds.add(schedule.googleEventId!);
+        continue;
+      }
+      const body = toGoogleRecurringBody(toJournalTimeSchedule(schedule, this.timeZone), this.timeZone);
+      const updated =
+        schedule.googleEventId &&
+        (await this.google((token) => patchGoogleEvent(token, schedule.googleEventId!, body)));
+      // The first time, the id comes from the schedule's, so a retried sync
+      // can't make a second copy; a remake needs a fresh one.
+      const googleEventId = schedule.googleEventId
+        ? googleEventIdFor(crypto.randomUUID())
+        : googleEventIdFor(schedule.id);
+      const saved = updated || (await this.google((token) => insertGoogleEvent(token, googleEventId, body)));
+      await this.client.journalSchedule.update({
+        where: { id: schedule.id },
+        data: { googleEventId: saved.id, lastSyncedAt: this.now, updatedAt: this.now },
+      });
+      this.scheduleEventIds.add(saved.id);
+    }
+  }
+
   /** Step 2. */
   async reconcileRange(start: Date, end: Date) {
-    const googleEvents = await this.google((token) =>
+    const fetched = await this.google((token) =>
       fetchGoogleEvents(token, {
         timeMin: fromWallClockDate(start, this.timeZone),
         timeMax: fromWallClockDate(end, this.timeZone),
       }),
+    );
+    // The times of a journal schedule's repeating event: the app works them
+    // out from the schedule itself, so they never become app events.
+    const googleEvents = fetched.filter(
+      (event) => !this.scheduleEventIds.has(event.recurringEventId ?? event.id),
     );
     const googleIds = new Set(googleEvents.map((event) => event.id));
 

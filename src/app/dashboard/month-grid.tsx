@@ -1,6 +1,5 @@
-import type { listCalendarEvents } from "@/lib/calendar-events";
 import { getMonthGrid } from "@/lib/calendar-month";
-import { MonthDayCell } from "./month-day-cell";
+import { MonthDayCell, type MonthEvent } from "./month-day-cell";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -13,7 +12,7 @@ export function MonthGrid({
   events,
 }: {
   referenceDate: Date;
-  events: Awaited<ReturnType<typeof listCalendarEvents>>;
+  events: MonthEvent[];
 }) {
   const { monthStart, monthEnd, gridStart, gridEnd } = getMonthGrid(referenceDate);
 

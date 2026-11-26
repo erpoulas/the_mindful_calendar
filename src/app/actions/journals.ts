@@ -6,8 +6,10 @@ import {
   AddJournalPromptSchema,
   CreateJournalEntrySchema,
   CreateJournalSchema,
+  JournalScheduleSchema,
   UpdateJournalEntrySchema,
 } from "@/lib/journal-schemas";
+import { setJournalSchedule } from "@/lib/journal-schedules";
 import {
   addJournalPrompt,
   createJournal,
@@ -126,4 +128,22 @@ export async function deleteJournalEntryAction(entryId: string) {
   await deleteJournalEntry(db, { userId, entryId });
 
   forgetStoredAfterSave(userId, ["journals", "events"]);
+}
+
+/**
+ * Sets a journal's repeating writing time (or turns it off with no days).
+ * The calendar shows it at once; the next Google sync sends it there.
+ */
+export async function setJournalScheduleAction(journalId: string, formData: FormData) {
+  const validated = JournalScheduleSchema.safeParse({
+    weekdays: formData.getAll("weekdays"),
+    startMinutes: formData.get("startMinutes"),
+    durationMinutes: formData.get("durationMinutes"),
+  });
+  if (!validated.success) return;
+
+  const userId = await getCurrentUserId();
+  await setJournalSchedule(db, { userId, journalId, ...validated.data });
+
+  forgetStoredAfterSave(userId, ["journals"]);
 }

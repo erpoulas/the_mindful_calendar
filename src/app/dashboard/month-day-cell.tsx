@@ -5,12 +5,15 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import type { listCalendarEvents } from "@/lib/calendar-events";
 import { fitEventCount } from "@/lib/calendar-month";
-import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { eventColor } from "@/lib/intention-colors";
 import { eventColorStyle, toDayKey } from "./time-grid";
 import { useWallClockNow } from "./use-wall-clock-now";
 
-type MonthEvent = Awaited<ReturnType<typeof listCalendarEvents>>[number];
+/** A saved event or a journal's scheduled time, with where clicking it leads. */
+export type MonthEvent = Pick<
+  Awaited<ReturnType<typeof listCalendarEvents>>[number],
+  "id" | "title" | "startAt" | "intentions"
+> & { href: string };
 
 // Every line under the day number (an event, or "+N more") is h-5 with a
 // gap-1 above it, in rem so the sums follow the browser's text size.
@@ -109,7 +112,7 @@ export function MonthDayCell({
         return (
           <Link
             key={event.id}
-            href={dashboardRoutes.editEvent(event.id)}
+            href={event.href}
             style={eventColorStyle(color)}
             // A fixed one-line height that never shrinks: a busy day shows
             // fewer events instead of squashing them into slivers.

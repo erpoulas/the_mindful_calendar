@@ -10,6 +10,7 @@ function makeEvents(count: number) {
     id: `event-${index}`,
     title: `Event number ${index + 1} with a long title`,
     intentions: [],
+    href: `/dashboard/event?view=edit&id=event-${index}`,
   })) as unknown as Parameters<typeof MonthDayCell>[0]["events"];
 }
 

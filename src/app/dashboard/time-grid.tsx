@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { HourLabelColumn } from "@/lib/hour-labels";
-import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { applyEventMoves } from "@/lib/dropped-positions";
 import type { IntentionColor } from "@/lib/intention-colors";
 import { useDroppedPositions } from "./dropped-positions-context";
@@ -23,6 +22,13 @@ export type TimeGridEvent = {
   endAt: Date | null;
   /** From the event's intention; null keeps the plain look. */
   color: IntentionColor | null;
+  /** Where clicking it leads (see calendarEventHref). */
+  href: string;
+  /**
+   * False for a journal's scheduled writing time: it comes from the
+   * journal's schedule, so it can't be dragged, and it looks lighter (a plan).
+   */
+  movable?: boolean;
 };
 
 /** Inline colors for an event drawn in its intention's color. */
@@ -135,7 +141,7 @@ function AllDayList({ events }: { events: TimeGridEvent[] }) {
       {events.map((event) => (
         <li key={event.id}>
           <Link
-            href={dashboardRoutes.editEvent(event.id)}
+            href={event.href}
             title={event.title}
             style={eventColorStyle(event.color)}
             className={`block truncate rounded px-1 text-[11px] ${
@@ -210,9 +216,11 @@ function NowIndicator({ now }: { now: Date }) {
 }
 
 function EventBlock({ event }: { event: TimeGridEvent }) {
+  const movable = event.movable !== false;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: { type: "event" },
+    disabled: !movable,
   });
 
   const top = (minutesSinceMidnightUTC(event.startAt) / 60) * HOUR_HEIGHT;
@@ -236,13 +244,17 @@ function EventBlock({ event }: { event: TimeGridEvent }) {
       {...listeners}
       {...attributes}
       className={`absolute inset-x-0.5 touch-none overflow-hidden rounded px-1 text-[11px] leading-tight ${
-        event.color ? "" : "bg-primary text-primary-foreground"
+        !movable
+          ? "border border-dashed border-primary/40 bg-background/80 text-foreground"
+          : event.color
+            ? ""
+            : "bg-primary text-primary-foreground"
       } ${
-        isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
+        !movable ? "cursor-pointer" : isDragging ? "cursor-grabbing opacity-80" : "cursor-grab"
       }`}
     >
       <Link
-        href={dashboardRoutes.editEvent(event.id)}
+        href={event.href}
         className="block h-full truncate"
         draggable={false}
       >

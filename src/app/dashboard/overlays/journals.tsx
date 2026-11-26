@@ -7,6 +7,7 @@ import {
   deleteJournalAction,
   deleteJournalEntryAction,
   deleteJournalPromptAction,
+  setJournalScheduleAction,
   updateJournalAction,
   updateJournalEntryAction,
 } from "@/app/actions/journals";
@@ -20,6 +21,7 @@ import { getRandomJournalPrompt } from "@/lib/journals";
 import { storedJournalDetail, storedJournals, storedTimezone } from "@/lib/stored-reads";
 import { EditableName } from "./editable-name";
 import { JournalPage } from "./journal-page";
+import { JournalScheduleControl } from "./journal-schedule-control";
 import { NameTabs } from "./name-tabs";
 import { NewNameButton } from "./new-name-button";
 import { pageHeadingClassName } from "./photo-page-styles";
@@ -129,6 +131,18 @@ export async function JournalsView({ activeId }: { activeId?: string }) {
             </form>
           </div>
 
+          <JournalScheduleControl
+            key={`schedule-${journal.id}`}
+            schedule={
+              journal.schedule && {
+                weekdays: journal.schedule.weekdays,
+                startMinutes: journal.schedule.startMinutes,
+                durationMinutes: journal.schedule.durationMinutes,
+              }
+            }
+            saveAction={setJournalScheduleAction.bind(null, journal.id)}
+          />
+
           <section aria-label="Today's page" className="flex flex-col gap-1.5">
             <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Today</h3>
             <JournalPage
@@ -141,6 +155,7 @@ export async function JournalsView({ activeId }: { activeId?: string }) {
               updateAction={updateJournalEntryAction}
               addPromptAction={addJournalPromptAction.bind(null, journal.id)}
               deletePromptAction={deleteJournalPromptAction}
+              deleteAction={deleteJournalEntryAction}
             />
           </section>
 

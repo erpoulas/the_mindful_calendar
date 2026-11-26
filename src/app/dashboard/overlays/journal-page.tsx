@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { Shuffle } from "lucide-react";
+import { Shuffle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   parseJournalPage,
@@ -35,7 +35,8 @@ const STATUS_TEXT = { saving: "Saving...", saved: "Saved", error: "Couldn't save
  * Without `entry` it is today's page, not saved yet: the first thing written
  * creates the entry (`createAction`), and later saves update that same one.
  * With `savedPrompts`, the journal's prompts sit under it as chips; picking
- * one adds it at the end of the page, ready to answer.
+ * one adds it at the end of the page, ready to answer. With `deleteAction`,
+ * a saved page gets a trash icon that deletes it and leaves a blank page.
  */
 export function JournalPage({
   entry,
@@ -45,6 +46,7 @@ export function JournalPage({
   updateAction,
   addPromptAction,
   deletePromptAction,
+  deleteAction,
   autosaveDelayMs = 800,
 }: {
   entry?: { id: string; content: string | null; promptText: string | null };
@@ -55,6 +57,7 @@ export function JournalPage({
   updateAction: (entryId: string, formData: FormData) => Promise<void>;
   addPromptAction?: (formData: FormData) => Promise<void>;
   deletePromptAction?: (promptId: string) => Promise<void>;
+  deleteAction?: (entryId: string) => Promise<void>;
   autosaveDelayMs?: number;
 }) {
   const [blocks, setBlocks] = useState(() =>
@@ -65,6 +68,8 @@ export function JournalPage({
     ),
   );
   const [status, setStatus] = useState<keyof typeof STATUS_TEXT | null>(null);
+  // Whether the page has been saved as an entry yet (so it can be deleted).
+  const [isSaved, setIsSaved] = useState(Boolean(entry));
 
   // What saving needs between renders. Refs, not state: changing them
   // shouldn't redraw the page.
@@ -120,6 +125,7 @@ export function JournalPage({
       entryId.current = await creating.current;
       if (!entryId.current) creating.current = null;
       saved = Boolean(entryId.current);
+      setIsSaved(saved);
     } else {
       const id = entryId.current ?? (await creating.current);
       entryId.current = id;
@@ -137,6 +143,24 @@ export function JournalPage({
     if (saveTimer.current) void save();
   });
   useEffect(() => () => saveBeforeLeaving(), []);
+
+  // Deletes the entry and starts over on a blank page; writing again makes a new one.
+  async function deletePage() {
+    const id = entryId.current ?? (await creating.current);
+    if (!id || !deleteAction || !window.confirm("Delete this page? This can't be undone.")) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    entryId.current = null;
+    creating.current = null;
+    hasLegacyPrompt.current = false;
+    const blank = withKeys(parseJournalPage(null));
+    latestBlocks.current = blank;
+    savedContent.current = "";
+    setBlocks(blank);
+    setIsSaved(false);
+    setStatus(null);
+    await saveInBackground(() => deleteAction(id));
+  }
 
   function changePage(next: Block[], focus?: { key: number; at: "start" | "end" }) {
     latestBlocks.current = next;
@@ -243,9 +267,22 @@ export function JournalPage({
         })}
       </div>
 
-      <p aria-live="polite" className="h-4 text-right text-xs text-muted-foreground">
-        {status && STATUS_TEXT[status]}
-      </p>
+      <div className="flex h-6 items-center justify-end gap-2 text-xs text-muted-foreground">
+        <p aria-live="polite">{status && STATUS_TEXT[status]}</p>
+        {deleteAction && isSaved && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Delete this page"
+            title="Delete this page"
+            onClick={() => void deletePage()}
+            className="text-destructive"
+          >
+            <Trash2 aria-hidden />
+          </Button>
+        )}
+      </div>
 
       {savedPrompts && addPromptAction && deletePromptAction && (
         <div className="flex items-start gap-1">

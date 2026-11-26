@@ -121,8 +121,34 @@ model Journal {
   name      String
   createdAt DateTime @default(now())
 
-  prompts JournalPrompt[]
-  entries JournalEntry[]
+  prompts  JournalPrompt[]
+  entries  JournalEntry[]
+  schedule JournalSchedule?
+
+  @@index([userId])
+}
+
+// A journal's repeating writing time ("Gratitude journal time"), e.g. Mon,
+// Wed and Fri at 9:00pm for 20 minutes. It isn't stored as one event per
+// day: the calendar works out each week's times from it, and Google gets it
+// as one repeating event.
+model JournalSchedule {
+  id              String    @id @default(uuid())
+  userId          String
+  journalId       String    @unique
+  // The days it repeats on, 1 = Monday ... 7 = Sunday.
+  weekdays        Int[]
+  // Start time on the user's wall clock, as minutes after midnight (21:00 = 1260).
+  startMinutes    Int
+  durationMinutes Int
+  // The repeating event in Google, once sent. The sync sends it again when
+  // updatedAt has moved past lastSyncedAt (the schedule was changed).
+  googleEventId   String?   @unique
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  journal Journal @relation(fields: [journalId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

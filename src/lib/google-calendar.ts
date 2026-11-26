@@ -48,6 +48,10 @@ export type GoogleApiEvent = {
   colorId?: string;
   start?: GoogleTime;
   end?: GoogleTime;
+  /** A repeating event's rule, e.g. ["RRULE:FREQ=WEEKLY;BYDAY=MO,WE"]. */
+  recurrence?: string[];
+  /** On one time of a repeating event: the repeating event's id. */
+  recurringEventId?: string;
 };
 
 /** The fields that sync both ways, in our format (wall-clock times). */

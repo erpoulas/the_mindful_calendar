@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dashboardRoutes, stringParam } from "@/lib/dashboard-routes";
+import { calendarEventHref, dashboardRoutes, stringParam } from "@/lib/dashboard-routes";
 
 describe("dashboardRoutes", () => {
   it("points the calendar at /dashboard", () => {
@@ -36,6 +36,12 @@ describe("dashboardRoutes", () => {
     it("edits one event", () => {
       expect(dashboardRoutes.editEvent("e1")).toBe("/dashboard/event?view=edit&id=e1");
     });
+  });
+
+  it("opens an event's editor, or its journal for a journal entry's event", () => {
+    expect(calendarEventHref({ id: "e1" })).toBe("/dashboard/event?view=edit&id=e1");
+    expect(calendarEventHref({ id: "e1", journalEntry: null })).toBe("/dashboard/event?view=edit&id=e1");
+    expect(calendarEventHref({ id: "e2", journalEntry: { journalId: "j1" } })).toBe("/dashboard/journals?id=j1");
   });
 
   it("opens the journals popup, on a chosen journal's tab", () => {

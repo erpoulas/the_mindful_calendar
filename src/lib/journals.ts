@@ -1,4 +1,5 @@
 import { createCalendarEvent, removeCalendarEventRow } from "./calendar-events";
+import { removeJournalSchedule } from "./journal-schedules";
 import type { DbClient } from "./db";
 import { getOrCreateJournalIntention } from "./intentions";
 import { getUserTimezoneWithFallback } from "./user-settings";
@@ -24,6 +25,7 @@ export async function getJournalDetail(
     include: {
       prompts: { orderBy: { createdAt: "asc" } },
       entries: { orderBy: { createdAt: "desc" } },
+      schedule: true,
     },
   });
 }
@@ -37,6 +39,12 @@ export async function updateJournal(
   });
   if (!journal) return null;
 
+  // Its journal time is named after it, so mark the schedule changed: the
+  // next sync renames the repeating event in Google.
+  await client.journalSchedule.updateMany({
+    where: { journalId: journal.id },
+    data: { updatedAt: new Date() },
+  });
   return client.journal.update({ where: { id: journal.id }, data: { name: params.name } });
 }
 
@@ -49,6 +57,8 @@ export async function deleteJournal(
   });
   if (!journal) return null;
 
+  // Its schedule goes with it; this also deletes the repeating event in Google.
+  await removeJournalSchedule(client, { userId: params.userId, journalId: journal.id });
   await client.journal.delete({ where: { id: journal.id } });
   return journal;
 }

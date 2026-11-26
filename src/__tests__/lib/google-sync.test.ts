@@ -6,7 +6,12 @@ import type { GoogleApiEvent } from "@/lib/google-calendar";
 import { getGoogleConnection, saveGoogleConnection } from "@/lib/google-connections";
 import { createIntention, updateIntention } from "@/lib/intentions";
 import { markGoogleEventsForReread, syncGoogleCalendar } from "@/lib/google-sync";
-import { createJournal, createJournalEntry } from "@/lib/journals";
+import { createJournal, createJournalEntry, updateJournal } from "@/lib/journals";
+import { removeJournalSchedule, setJournalSchedule } from "@/lib/journal-schedules";
+
+// These run whole syncs against the real (remote) database, several per
+// test, and each query is a round trip, so they get more than the default 5s.
+vi.setConfig({ testTimeout: 10_000 });
 
 const USER = "test-user-1";
 const TIME_ZONE = "America/New_York";
@@ -651,6 +656,114 @@ describe("syncGoogleCalendar", () => {
         await expect(sync(tx)).resolves.toBe(false);
         expect(await getGoogleConnection(tx, USER)).not.toBeNull();
       });
+    });
+  });
+});
+
+describe("syncGoogleCalendar: journal schedules", () => {
+  const EVENING = { weekdays: [1, 3, 5], startMinutes: 21 * 60, durationMinutes: 20 };
+
+  /** A journal with a schedule set up on Mon 16 Nov 2026. */
+  async function scheduledJournal(tx: DbClient) {
+    const journal = await createJournal(tx, { userId: USER, name: "Gratitude" });
+    const schedule = await setJournalSchedule(tx, { userId: USER, journalId: journal.id, ...EVENING });
+    await tx.journalSchedule.update({
+      where: { id: schedule!.id },
+      data: { createdAt: new Date("2026-11-16T12:00:00Z") },
+    });
+    return { journal, schedule: schedule! };
+  }
+
+  it("sends a schedule to Google as one weekly repeating event", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { schedule } = await scheduledJournal(tx);
+      await sync(tx);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(saved.googleEventId).toBeTruthy();
+      expect(google.events.get(saved.googleEventId!)).toMatchObject({
+        summary: "Gratitude journal time",
+        start: { dateTime: "2026-11-16T21:00:00", timeZone: TIME_ZONE },
+        recurrence: ["RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"],
+      });
+    });
+  });
+
+  it("doesn't send it again until it changes, then updates the same event", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { journal, schedule } = await scheduledJournal(tx);
+      await sync(tx);
+      const requestsAfterFirstSync = google.requests.length;
+      await sync(tx);
+      expect(google.requests.slice(requestsAfterFirstSync).some((request) => request.startsWith("PATCH"))).toBe(false);
+
+      await setJournalSchedule(tx, { userId: USER, journalId: journal.id, ...EVENING, weekdays: [2] });
+      await sync(tx);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(google.events.get(saved.googleEventId!)?.recurrence).toEqual(["RRULE:FREQ=WEEKLY;BYDAY=TU"]);
+    });
+  });
+
+  it("renames the repeating event when the journal is renamed", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { journal, schedule } = await scheduledJournal(tx);
+      await sync(tx);
+
+      await updateJournal(tx, { userId: USER, journalId: journal.id, name: "Thanks" });
+      await sync(tx);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(google.events.get(saved.googleEventId!)?.summary).toBe("Thanks journal time");
+    });
+  });
+
+  it("never brings the repeating event's times back in as app events", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { schedule } = await scheduledJournal(tx);
+      await sync(tx);
+      const { googleEventId } = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      // Google lists each time of a repeating event on its own.
+      google.put(googleEvent(`${googleEventId}_20261118`, "2026-11-18", { recurringEventId: googleEventId! }));
+
+      await sync(tx);
+
+      expect(await tx.calendarEvent.count({ where: { userId: USER } })).toBe(0);
+    });
+  });
+
+  it("deletes the repeating event in Google when the schedule is turned off", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { journal, schedule } = await scheduledJournal(tx);
+      await sync(tx);
+      const { googleEventId } = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+
+      await removeJournalSchedule(tx, { userId: USER, journalId: journal.id });
+      await sync(tx);
+
+      expect(google.events.get(googleEventId!)?.status).toBe("cancelled");
+    });
+  });
+
+  it("makes a new repeating event if the old one was deleted in Google", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { journal, schedule } = await scheduledJournal(tx);
+      await sync(tx);
+      const first = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      google.put({ ...google.events.get(first.googleEventId!)!, status: "cancelled" });
+
+      await setJournalSchedule(tx, { userId: USER, journalId: journal.id, ...EVENING, weekdays: [2] });
+      await sync(tx);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(saved.googleEventId).not.toBe(first.googleEventId);
+      expect(google.events.get(saved.googleEventId!)?.status).toBe("confirmed");
     });
   });
 });

@@ -8,19 +8,21 @@ import { getTodayAffirmation } from "@/lib/affirmations";
 import { getWeekRange } from "@/lib/calendar-week";
 import { sortPanelKeys } from "@/lib/dashboard-preferences";
 import { db } from "@/lib/db";
-import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { calendarEventHref, dashboardRoutes } from "@/lib/dashboard-routes";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 import { getGoogleConnection } from "@/lib/google-connections";
 import { getMonthGrid } from "@/lib/calendar-month";
 import {
   storedCalendarEvents,
   storedDashboardPreferences,
+  storedJournalSchedules,
   storedPostIts,
   storedSettings,
   storedWeeklyReviewStats,
 } from "@/lib/stored-reads";
 import { buildHourLabelColumns } from "@/lib/hour-labels";
 import { eventColor } from "@/lib/intention-colors";
+import { journalTimeOccurrences, toJournalTimeSchedule } from "@/lib/journal-time";
 import { toWallClockDate } from "@/lib/wall-clock";
 import { CalendarDndProvider } from "./calendar-dnd";
 import { DashboardShell } from "./dashboard-shell";
@@ -73,6 +75,7 @@ export default async function DashboardPage({
     storedPostIts(userId),
     getGoogleConnection(db, userId),
     cookies(),
+    storedJournalSchedules(userId),
   ]);
   timezoneFreeQueries.catch(() => {});
 
@@ -97,7 +100,7 @@ export default async function DashboardPage({
     affirmation,
     reviewStats,
     events,
-    [{ hiddenPanels, panelOrder }, postIts, googleConnection, cookieStore],
+    [{ hiddenPanels, panelOrder }, postIts, googleConnection, cookieStore, journalSchedules],
   ] = await Promise.all([
     getTodayAffirmation(db, userId, timeZone),
     // Also holds the intention breakdown, so it isn't fetched a second time.
@@ -107,9 +110,21 @@ export default async function DashboardPage({
     timezoneFreeQueries,
   ]);
 
-  // Changes whenever an event on screen is added, edited or deleted, which
-  // tells GoogleCalendarSync to send the change to Google.
-  const eventsVersion = `${events.length}-${Math.max(0, ...events.map((event) => event.updatedAt.getTime()))}`;
+  // Each journal's scheduled writing time in the range, worked out from its schedule.
+  const journalTimes = journalTimeOccurrences(
+    journalSchedules.map((schedule) => toJournalTimeSchedule(schedule, timeZone)),
+    visibleRange,
+  );
+
+  // Changes whenever an event on screen is added, edited or deleted, or a
+  // journal schedule changes, which tells GoogleCalendarSync to send the
+  // change to Google.
+  const latestEdit = Math.max(
+    0,
+    ...events.map((event) => event.updatedAt.getTime()),
+    ...journalSchedules.map((schedule) => schedule.updatedAt.getTime()),
+  );
+  const eventsVersion = `${events.length}-${journalSchedules.length}-${latestEdit}`;
 
   // Only nudge when connecting would actually work (the Google env vars are
   // set) and the user hasn't already closed the banner.
@@ -138,7 +153,17 @@ export default async function DashboardPage({
     headerLabel = monthStart.toLocaleDateString(undefined, MONTH_FORMAT);
     prevHref = `/dashboard?mode=month&start=${toDateParam(prevMonthRef)}`;
     nextHref = `/dashboard?mode=month&start=${toDateParam(nextMonthRef)}`;
-    calendarBody = <MonthGrid referenceDate={referenceDate} events={events} />;
+    const monthEvents = [
+      ...events.map((event) => ({ ...event, href: calendarEventHref(event) })),
+      ...journalTimes.map((time) => ({
+        id: time.id,
+        title: time.title,
+        startAt: time.startAt,
+        intentions: [],
+        href: dashboardRoutes.journals(time.journalId),
+      })),
+    ].sort((a, b) => (a.startAt?.getTime() ?? 0) - (b.startAt?.getTime() ?? 0));
+    calendarBody = <MonthGrid referenceDate={referenceDate} events={monthEvents} />;
   } else {
     const { start } = visibleRange;
     const toTimeGridEvent = (event: (typeof events)[number]): TimeGridEvent => ({
@@ -147,10 +172,23 @@ export default async function DashboardPage({
       startAt: event.startAt!,
       endAt: event.endAt,
       color: eventColor(event.intentions),
+      href: calendarEventHref(event),
     });
     const datedEvents = events.filter((event) => event.startAt);
     const allDayEvents = datedEvents.filter((event) => event.isAllDay).map(toTimeGridEvent);
     const timedEvents = datedEvents.filter((event) => !event.isAllDay).map(toTimeGridEvent);
+    // Journal times open their journal and can't be dragged (see TimeGridEvent).
+    const journalTimeEvents = journalTimes.map(
+      (time): TimeGridEvent => ({
+        id: time.id,
+        title: time.title,
+        startAt: time.startAt,
+        endAt: time.endAt,
+        color: null,
+        href: dashboardRoutes.journals(time.journalId),
+        movable: false,
+      }),
+    );
 
     const prevWeekStart = new Date(start.getTime() - 7 * 24 * 60 * 60 * 1000);
     const nextWeekStart = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -170,7 +208,7 @@ export default async function DashboardPage({
     calendarBody = (
       <TimeGrid
         weekStart={start}
-        events={timedEvents}
+        events={[...timedEvents, ...journalTimeEvents]}
         allDayEvents={allDayEvents}
         hourLabelColumns={hourLabelColumns}
       />

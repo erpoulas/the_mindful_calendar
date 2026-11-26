@@ -52,7 +52,8 @@ export async function listCalendarEvents(
       startAt: { gte: params.start, lt: params.end },
     },
     orderBy: { startAt: "asc" },
-    include: withIntentionColors,
+    // The journal of a journal entry's event, which clicking it opens.
+    include: { ...withIntentionColors, journalEntry: { select: { journalId: true } } },
   });
 }
 
