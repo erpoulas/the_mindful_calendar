@@ -142,10 +142,9 @@ export async function JournalsView({ activeId }: { activeId?: string }) {
           <JournalLog
             // A fresh log for each journal, opening on today's page.
             key={`log-${journal.id}`}
-            todayNumber={earlierEntries.length + 1}
-            pages={earlierEntries.map((entry, index) => ({
+            todayDate={formatPageDate(new Date(), timeZone)}
+            pages={earlierEntries.map((entry) => ({
               ...pickPage(entry),
-              number: earlierEntries.length - index,
               date: formatPageDate(entry.createdAt, timeZone),
             }))}
             updateAction={updateJournalEntryAction}

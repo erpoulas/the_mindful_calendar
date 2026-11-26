@@ -8,8 +8,6 @@ import { JournalPage } from "./journal-page";
 
 type PastPage = {
   id: string;
-  /** Its place in the journal: the first page ever written is Entry 1. */
-  number: number;
   /** "Thursday, November 26", already in the user's time zone. */
   date: string;
   content: string | null;
@@ -22,19 +20,20 @@ type PastPage = {
  * typing) to turn to older and newer pages, and a search that jumps
  * straight to a past page. Pages stay editable, saving as you write.
  *
- * `today` is today's page, already set up. `pages` are the earlier ones,
+ * `today` is today's page, already set up, and `todayDate` its date.
+ * `pages` are the earlier ones,
  * newest first. Pages you have turned to stay mounted, only hidden, so one
  * still saving keeps its writing when you turn away and back.
  */
 export function JournalLog({
   today,
-  todayNumber,
+  todayDate,
   pages,
   updateAction,
   deleteAction,
 }: {
   today: ReactNode;
-  todayNumber: number;
+  todayDate: string;
   pages: PastPage[];
   updateAction: (entryId: string, formData: FormData) => Promise<void>;
   deleteAction: (entryId: string) => Promise<void>;
@@ -113,7 +112,7 @@ export function JournalLog({
                         className="block w-full rounded-xl border border-amber-900/10 bg-white/55 px-3 py-2 text-left transition hover:bg-white"
                       >
                         <span className="block text-xs tracking-wide text-amber-900/70 uppercase">
-                          Entry {page.number} · {page.date}
+                          {page.date}
                         </span>
                         <span className="block text-sm wrap-anywhere">
                           {result.snippet.before}
@@ -149,7 +148,7 @@ export function JournalLog({
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span aria-hidden className="h-px flex-1 bg-amber-900/20" />
           <h3 className="text-center font-heading text-xl tracking-wider text-amber-900/80 uppercase">
-            Entry {shown ? shown.number : todayNumber} · {shown ? shown.date : "Today"}
+            {shown ? shown.date : `Today · ${todayDate}`}
           </h3>
           <span aria-hidden className="h-px flex-1 bg-amber-900/20" />
         </div>
