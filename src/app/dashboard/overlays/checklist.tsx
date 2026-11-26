@@ -14,7 +14,7 @@ type ChecklistItem = { id: string; text: string; done: boolean };
 // an item's text lands on a line of the paper; elsewhere rows are 2.25rem.
 // The text is the same for an item, its edit box and the blank line.
 // Very long words wrap too, so nothing pushes the list sideways.
-const ITEM_TEXT_CLASSES = "min-w-0 text-[15px] leading-[var(--paper-line,2.25rem)] wrap-break-word";
+const ITEM_TEXT_CLASSES = "min-w-0 text-[length:var(--paper-text,15px)] leading-[var(--paper-line,2.25rem)] wrap-break-word";
 // Holds a tick circle in the middle of an item's first line.
 const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-center";
 

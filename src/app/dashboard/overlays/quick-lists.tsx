@@ -40,7 +40,8 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
     // Each row is one line of the ruled paper (--paper-line, set by the
     // popup frame), so the items below sit on its lines.
     <div className="flex flex-col">
-      <div className="flex">
+      {/* One blank ruled line between the tabs and the list's name. */}
+      <div className="mb-(--paper-line) flex">
         <QuickListTabs lists={lists} activeId={list?.id} />
       </div>
 
@@ -68,7 +69,10 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
               listId={list.id}
               name={list.name}
               renameAction={updateQuickListAction}
-              className={`${pageHeadingClassName} relative top-[calc(var(--paper-line)/2-0.45em)] leading-(--paper-line) wrap-break-word`}
+              // Twice the item text, so it grows with the paper like the rest.
+              // wrap-anywhere lets even one long word wrap, so the name
+              // never runs under the trash icon.
+              className={`${pageHeadingClassName} text-[length:calc(var(--paper-text,15px)*2)]! relative top-[calc(var(--paper-line)/2-0.45em)] leading-(--paper-line) wrap-anywhere`}
             />
             {/* A small icon: deleting a list is rare, and the page is
                 narrow, so the list's name gets the room. */}

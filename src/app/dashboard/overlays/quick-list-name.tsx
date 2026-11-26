@@ -70,12 +70,14 @@ export function QuickListName({
   }
 
   return (
-    <h2 className="min-w-0">
+    // Takes the row's free room and no more, so a long name wraps before
+    // it reaches anything beside it (the trash icon).
+    <h2 className="min-w-0 flex-1">
       <button
         type="button"
         title="Click to rename"
         onClick={() => setEditing(true)}
-        className={`${className} cursor-text text-left`}
+        className={`${className} max-w-full cursor-text text-left`}
       >
         {shownName}
       </button>

@@ -10,6 +10,8 @@ const QUICK_NOTES_ART: PanelArt = {
   // popup's rows line up with the ruled lines, 4.806% of the photo apart.
   paperArea: { top: 15.17, right: 4.5, bottom: 0.4, left: 13 },
   ruledLines: { spacing: 4.806 },
+  // 30% bigger than the photo's own size when the screen has room.
+  scale: 1.3,
 };
 
 // The popup's frame. It stays on screen while you move between its

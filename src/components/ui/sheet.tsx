@@ -31,9 +31,20 @@ const IMAGE_POPUP_CLASSES = {
 
 const IMAGE_CLASSES = {
   side: "block h-full w-auto max-w-none select-none",
-  // As big as the screen allows, less the viewport's 1rem padding each side.
-  center: "block h-auto max-h-[calc(100dvh-2rem)] w-auto max-w-[calc(100vw-2rem)] select-none",
+  // Its width is set by centerImageWidth below.
+  center: "block h-auto max-w-none select-none",
 };
+
+/**
+ * A center photo is shown at `scale` times its own size, but never wider or
+ * taller than the screen (less the viewport's 1rem padding each side), so it
+ * fits phones and small laptops as well as big monitors. The height follows
+ * from the width, keeping the photo's shape.
+ */
+function centerImageWidth(art: PanelArt) {
+  const scale = art.scale ?? 1;
+  return `min(${art.width * scale}px, calc(100vw - 2rem), calc((100dvh - 2rem) * ${art.width / art.height}))`;
+}
 
 /**
  * A photo used as a popup's background. `paperArea` says where its writable
@@ -46,7 +57,12 @@ const IMAGE_CLASSES = {
  * the top (not centred) and gets a --paper-line CSS variable holding that
  * gap at the photo's current size, so rows sized with it (the checklist's)
  * sit on the lines. Set `paperArea.top` on a ruled line (or one gap above
- * the first) so the first row starts on one.
+ * the first) so the first row starts on one. It also gets --paper-text, a
+ * font size that grows and shrinks with the lines, so the writing keeps the
+ * same size on the paper whatever the photo's size on screen.
+ *
+ * `scale` (center popups) shows the photo bigger than its own pixel size
+ * when the screen has room for it.
  */
 export type PanelArt = {
   src: string;
@@ -54,11 +70,18 @@ export type PanelArt = {
   height: number;
   paperArea: { top: number; right: number; bottom: number; left: number };
   ruledLines?: { spacing: number };
+  scale?: number;
 };
 
+/** Body text is this share of a ruled line's height (15px on a 48px line). */
+const PAPER_TEXT_PER_LINE = 0.3125;
+
 /**
- * The --paper-line variable for lined art. The paper area is a size
- * container, so 100cqh is its height, which is a known share of the photo's.
+ * The --paper-line and --paper-text variables for lined art. The paper area
+ * is a size container, so 100cqh is its height, which is a known share of
+ * the photo's. (Its children use them: an element's own cqh would measure
+ * the container around it, not itself.) On a small screen the text stops
+ * shrinking at 12px so it stays readable.
  */
 function paperLineStyle(art: PanelArt): React.CSSProperties {
   if (!art.ruledLines) return {};
@@ -67,6 +90,7 @@ function paperLineStyle(art: PanelArt): React.CSSProperties {
     containerType: "size",
     paddingBlock: 0,
     ["--paper-line" as string]: `calc(100cqh * ${art.ruledLines.spacing / paperHeight})`,
+    ["--paper-text" as string]: `max(12px, calc(var(--paper-line) * ${PAPER_TEXT_PER_LINE}))`,
   };
 }
 
@@ -165,6 +189,7 @@ export function Sheet({
                 loading="eager"
                 fetchPriority="high"
                 className={cn("pointer-events-none", IMAGE_CLASSES[size])}
+                style={size === "center" ? { width: centerImageWidth(backgroundImage) } : undefined}
               />
               {/* The popup is exactly the photo's size, so percentages
                   here line up with the photo's pixels at any screen size. */}

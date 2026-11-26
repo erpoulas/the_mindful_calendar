@@ -14,7 +14,9 @@ import { pillTabClassName, pillTabsClassName } from "./photo-page-styles";
 // border + 2px padding) above and below, so n rows are exactly n lines.
 const FIT_TABS_CLASSES =
   "max-w-full gap-x-1! gap-y-1.5! rounded-[calc(var(--paper-line,2.25rem)/2)]! px-0.5! py-0.5!";
-const FIT_TAB_CLASSES = "h-[calc(var(--paper-line,2.25rem)-6px)] min-w-0 py-0! whitespace-nowrap";
+// The tab text grows with the paper too, a touch smaller than the items.
+const FIT_TAB_CLASSES =
+  "h-[calc(var(--paper-line,2.25rem)-6px)] min-w-0 py-0! whitespace-nowrap text-[length:calc(var(--paper-text,15px)*0.93)]!";
 export function QuickListTabs({
   lists,
   activeId,
