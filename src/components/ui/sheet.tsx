@@ -150,7 +150,9 @@ export function Sheet({
         >
           {imageBacked ? (
             <Drawer.Popup
-              className={cn("isolate relative", IMAGE_POPUP_CLASSES[size])}
+              // No outline when focus falls back to the popup (e.g. after an
+              // edit box closes), like the plain popup below.
+              className={cn("isolate relative outline-none", IMAGE_POPUP_CLASSES[size])}
             >
               <Image
                 src={backgroundImage.src}

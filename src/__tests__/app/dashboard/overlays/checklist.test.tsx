@@ -47,6 +47,12 @@ describe("Checklist", () => {
     save.finish();
   });
 
+  it("puts the cursor on the blank line when asked, as for a list just made", () => {
+    renderChecklist({ items: [], focusNewItem: true });
+
+    expect(screen.getByRole("textbox", { name: "New item" })).toHaveFocus();
+  });
+
   it("adds an item from the blank line at the bottom and empties it for the next", async () => {
     const save = slowSave();
     renderChecklist({ addAction: save.action });

@@ -40,6 +40,7 @@ export function Checklist({
   deleteAction,
   startNowAction,
   scheduleProjectId,
+  focusNewItem = false,
 }: {
   listId: string;
   items: ChecklistItem[];
@@ -57,6 +58,8 @@ export function Checklist({
   deleteAction?: (itemId: string) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
   scheduleProjectId?: string;
+  /** Puts the cursor on the blank line, e.g. in a list that was just made. */
+  focusNewItem?: boolean;
 }) {
   const [shownItems, changeList] = useOptimisticList(items);
   const addFormRef = useRef<HTMLFormElement>(null);
@@ -248,6 +251,7 @@ export function Checklist({
               placeholder={addPlaceholder}
               aria-label={addPlaceholder}
               autoComplete="off"
+              autoFocus={focusNewItem}
               // Backspace on the empty line steps up into the last item.
               onKeyDown={(event) => {
                 if (event.key !== "Backspace" || event.currentTarget.value !== "" || !canBackspaceAway) return;

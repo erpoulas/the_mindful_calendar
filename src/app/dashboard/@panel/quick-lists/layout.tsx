@@ -18,7 +18,6 @@ export default function QuickListsLayout({ children }: { children: React.ReactNo
   return (
     <PanelSheet open size="center"
       title="Quick Lists"
-      titlesByView={{ edit: "Edit list", create: "New list" }}
       backgroundImage={QUICK_NOTES_ART}>
       {children}
     </PanelSheet>

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { createQuickListAction } from "@/app/actions/quick-lists";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
+import { NewQuickListButton } from "./new-quick-list-button";
 import { pillTabClassName, pillTabsClassName } from "./photo-page-styles";
 
-// One pill per list, plus a "+" pill at the end that starts a new list.
+// One pill per list, plus a "+" pill at the end that turns into a name box
+// right there to start a new list.
 // The tabs sit on the popup's ruled paper, sized from its line spacing
 // (--paper-line) so they never spill onto the list name below. With many
 // lists they wrap onto the next line (never a sideways scroll): each row of
@@ -37,14 +40,12 @@ export function QuickListTabs({
           <span className="max-w-[10rem] truncate">{list.name}</span>
         </Link>
       ))}
-      <Link
-        href={dashboardRoutes.newQuickList()}
-        aria-label="New list"
-        title="New list"
+      <NewQuickListButton
+        createAction={createQuickListAction}
         className={`${pillTabClassName(false)} ${FIT_TAB_CLASSES}`}
       >
         <Plus className="size-4" aria-hidden />
-      </Link>
+      </NewQuickListButton>
     </nav>
   );
 }

@@ -4,13 +4,15 @@ import { buttonVariants } from "@/components/ui/button";
 import { softCardClassName } from "./photo-page-styles";
 
 // A friendly "nothing here yet" note on a photo-backed popup, with an
-// optional button for the next step.
+// optional button for the next step (a link, or any control as children).
 export function PopupEmptyState({
   message,
   action,
+  children,
 }: {
   message: string;
   action?: { href: string; label: string };
+  children?: React.ReactNode;
 }) {
   return (
     <div className={`${softCardClassName} flex flex-col items-center gap-3 px-4 py-8 text-center`}>
@@ -21,6 +23,7 @@ export function PopupEmptyState({
           {action.label}
         </Link>
       )}
+      {children}
     </div>
   );
 }
