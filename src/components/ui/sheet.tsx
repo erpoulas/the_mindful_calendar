@@ -31,7 +31,8 @@ const IMAGE_POPUP_CLASSES = {
 
 const IMAGE_CLASSES = {
   side: "block h-full w-auto max-w-none select-none",
-  center: "block h-auto max-h-[90vh] w-auto max-w-[92vw] select-none",
+  // As big as the screen allows, less the viewport's 1rem padding each side.
+  center: "block h-auto max-h-[calc(100dvh-2rem)] w-auto max-w-[calc(100vw-2rem)] select-none",
 };
 
 /**
@@ -168,7 +169,8 @@ export function Sheet({
               <div
                 className={cn(
                   "absolute z-10 flex flex-col overflow-y-auto p-6 text-popover-foreground",
-                  lined ? "px-2" : "gap-4",
+                  // Lined paper only scrolls up and down; long text wraps instead.
+                  lined ? "overflow-x-hidden px-2" : "gap-4",
                 )}
                 style={{
                   top: `${backgroundImage.paperArea.top}%`,

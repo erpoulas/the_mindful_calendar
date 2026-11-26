@@ -202,4 +202,34 @@ describe("Checklist", () => {
 
     expect(await screen.findByRole("button", { name: "Buy milk" })).toBeInTheDocument();
   });
+
+  it("moves up to the end of the item above after backspacing one away, to keep going", async () => {
+    const save = slowSave();
+    renderChecklist({ editTextAction: vi.fn(async () => {}), deleteAction: save.action });
+
+    fireEvent.click(screen.getByRole("button", { name: "Call mom" }));
+    const box = screen.getByRole("textbox", { name: "Item text" });
+    fireEvent.change(box, { target: { value: "" } });
+    fireEvent.keyDown(box, { key: "Backspace" });
+
+    await waitFor(() => expect(screen.queryByText("Call mom")).not.toBeInTheDocument());
+    expect(save.action).toHaveBeenCalledWith("b");
+    const above = (await screen.findByRole("textbox", { name: "Item text" })) as HTMLTextAreaElement;
+    expect(above.value).toBe("Buy milk");
+    expect(document.activeElement).toBe(above);
+    // The cursor waits at the end, so the next Backspace takes off a letter.
+    expect(above.selectionStart).toBe("Buy milk".length);
+    expect(above.selectionEnd).toBe("Buy milk".length);
+    save.finish();
+  });
+
+  it("moves into the last item on Backspace from the empty blank line", async () => {
+    renderChecklist({ editTextAction: vi.fn(async () => {}), deleteAction: vi.fn(async () => {}) });
+
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "New item" }), { key: "Backspace" });
+
+    const last = (await screen.findByRole("textbox", { name: "Item text" })) as HTMLTextAreaElement;
+    expect(last.value).toBe("Call mom");
+    expect(last.selectionStart).toBe("Call mom".length);
+  });
 });

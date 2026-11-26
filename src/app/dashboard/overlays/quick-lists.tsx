@@ -42,7 +42,7 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
     // Each row is one line of the ruled paper (--paper-line, set by the
     // popup frame), so the items below sit on its lines.
     <div className="flex flex-col">
-      <div className="flex h-(--paper-line) items-center">
+      <div className="flex">
         <QuickListTabs lists={lists} activeId={list?.id} />
       </div>
 
@@ -55,11 +55,18 @@ export async function QuickListsView({ activeId }: { activeId?: string }) {
 
       {list && (
         <>
-          <div className="flex h-(--paper-line) items-end justify-between gap-3">
-            <h2 className={`${pageHeadingClassName} truncate leading-none`}>{list.name}</h2>
+          {/* A long name wraps onto the next ruled line rather than being cut
+              off. Each of its lines is one ruled line tall, nudged down so the
+              letters stand on the line. */}
+          <div className="flex min-h-(--paper-line) items-start justify-between gap-3">
+            <h2
+              className={`${pageHeadingClassName} relative top-[calc(var(--paper-line)/2-0.45em)] min-w-0 leading-(--paper-line) break-words`}
+            >
+              {list.name}
+            </h2>
             {/* Small icons: renaming or deleting a list is rare, and the
                 page is narrow, so the list's name gets the room. */}
-            <div className="flex shrink-0 gap-1">
+            <div className="flex h-(--paper-line) shrink-0 items-end gap-1">
               <Link
                 href={dashboardRoutes.editQuickList(list.id)}
                 aria-label="Rename list"

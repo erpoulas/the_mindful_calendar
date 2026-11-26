@@ -13,7 +13,8 @@ type ChecklistItem = { id: string; text: string; done: boolean };
 // --paper-line to their spacing (see PanelArt's ruledLines), so each line of
 // an item's text lands on a line of the paper; elsewhere rows are 2.25rem.
 // The text is the same for an item, its edit box and the blank line.
-const ITEM_TEXT_CLASSES = "text-[15px] leading-[var(--paper-line,2.25rem)]";
+// Very long words wrap too, so nothing pushes the list sideways.
+const ITEM_TEXT_CLASSES = "min-w-0 text-[15px] leading-[var(--paper-line,2.25rem)] wrap-break-word";
 // Holds a tick circle in the middle of an item's first line.
 const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-center";
 
@@ -25,7 +26,8 @@ const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-c
  * moving an item to the post-its change the list on screen at once and save
  * in the background. With `editTextAction`, clicking an item's text turns it
  * into a text box that grows with what you type; with `deleteAction`,
- * backspacing all its text away deletes the item.
+ * backspacing all its text away deletes the item and moves up to the end of
+ * the one above, so holding Backspace can clear the whole list, like Notes.
  */
 export function Checklist({
   listId,
@@ -59,18 +61,46 @@ export function Checklist({
   const [shownItems, changeList] = useOptimisticList(items);
   const addFormRef = useRef<HTMLFormElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Clicking an item selects all its text; arriving by Backspace puts the
+  // cursor at the end instead, ready to take off the next letter.
+  const cursorAtEndRef = useRef(false);
+  // The item just deleted by Backspace, whose box closing mustn't save it.
+  const deletedByBackspaceRef = useRef<string | null>(null);
   const [, startTransition] = useTransition();
+  const canBackspaceAway = Boolean(deleteAction && editTextAction);
+
+  function startEditing(itemId: string | null, { cursorAtEnd = false } = {}) {
+    cursorAtEndRef.current = cursorAtEnd;
+    setEditingId(itemId);
+  }
+
+  // The nearest saved item above (an item still being added can't be edited yet).
+  function savedItemAbove(index: number) {
+    return shownItems.slice(0, index).findLast((item) => !isPendingItem(item.id));
+  }
+
+  function deleteItem(item: ChecklistItem) {
+    if (!deleteAction) return;
+    startTransition(async () => {
+      changeList({ type: "remove", id: item.id });
+      await saveInBackground(() => deleteAction(item.id));
+    });
+  }
+
+  function backspaceAway(item: ChecklistItem, index: number) {
+    deletedByBackspaceRef.current = item.id;
+    deleteItem(item);
+    startEditing(savedItemAbove(index)?.id ?? null, { cursorAtEnd: true });
+  }
 
   function saveText(item: ChecklistItem, formData: FormData) {
+    if (deletedByBackspaceRef.current === item.id) return;
     setEditingId(null);
     const text = String(formData.get("text") ?? "").trim();
     // Clearing the text deletes the item, like Reminders. Without a way to
     // delete (or left unchanged), the box just closes.
     if (!text && deleteAction) {
-      startTransition(async () => {
-        changeList({ type: "remove", id: item.id });
-        await saveInBackground(() => deleteAction(item.id));
-      });
+      deleteItem(item);
       return;
     }
     if (!editTextAction || !text || text === item.text) return;
@@ -94,7 +124,7 @@ export function Checklist({
           small nudge down sets the text on the ruled line rather than
           floating in the middle of the gap between two lines. */}
       <ul className="relative top-[calc(var(--paper-line,2.25rem)/2-0.6em)] flex flex-col text-[15px]">
-        {shownItems.map((item) => {
+        {shownItems.map((item, index) => {
           const saved = !isPendingItem(item.id);
           return (
             <li key={item.id} className="group relative flex items-start gap-3">
@@ -132,7 +162,11 @@ export function Checklist({
                     autoFocus
                     defaultValue={item.text}
                     aria-label="Item text"
-                    onFocus={(event) => event.currentTarget.select()}
+                    onFocus={(event) => {
+                      const box = event.currentTarget;
+                      if (cursorAtEndRef.current) box.setSelectionRange(box.value.length, box.value.length);
+                      else box.select();
+                    }}
                     // Leaving the box saves; Enter saves, Escape throws the edit away.
                     onBlur={(event) => event.currentTarget.form?.requestSubmit()}
                     onKeyDown={(event) => {
@@ -140,9 +174,11 @@ export function Checklist({
                         event.preventDefault();
                         event.currentTarget.blur();
                       } else if (event.key === "Backspace" && event.currentTarget.value === "") {
-                        // One more Backspace on an empty box deletes the item.
+                        // One more Backspace on an empty box deletes the item
+                        // and carries on into the one above.
                         event.preventDefault();
-                        event.currentTarget.blur();
+                        if (canBackspaceAway) backspaceAway(item, index);
+                        else event.currentTarget.blur();
                       } else if (event.key === "Escape") {
                         // Keep Escape from also closing the popup.
                         event.stopPropagation();
@@ -156,7 +192,7 @@ export function Checklist({
               ) : editTextAction && saved ? (
                 <button
                   type="button"
-                  onClick={() => setEditingId(item.id)}
+                  onClick={() => startEditing(item.id)}
                   className={`${ITEM_TEXT_CLASSES} flex-1 cursor-text text-left ${
                     item.done ? "text-muted-foreground line-through" : ""
                   }`}
@@ -212,6 +248,14 @@ export function Checklist({
               placeholder={addPlaceholder}
               aria-label={addPlaceholder}
               autoComplete="off"
+              // Backspace on the empty line steps up into the last item.
+              onKeyDown={(event) => {
+                if (event.key !== "Backspace" || event.currentTarget.value !== "" || !canBackspaceAway) return;
+                const last = savedItemAbove(shownItems.length);
+                if (!last) return;
+                event.preventDefault();
+                startEditing(last.id, { cursorAtEnd: true });
+              }}
               className={`${ITEM_TEXT_CLASSES} block h-[var(--paper-line,2.25rem)] w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
             />
           </form>
