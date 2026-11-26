@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   addDopamineMenuItemAction,
   deleteDopamineMenuItemAction,
@@ -28,10 +27,6 @@ export async function DopamineMenuView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-center">
-        <Image src="/panel-art/dopamine-tracker.png" alt="" width={144} height={100} className="h-24 w-auto" />
-      </div>
-
       {/* Today's random pick, big, with quiet icons beside it. */}
       {pick ? (
         <section className="flex flex-col gap-1">
