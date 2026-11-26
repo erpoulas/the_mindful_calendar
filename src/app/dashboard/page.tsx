@@ -35,6 +35,7 @@ import { PostItColumn } from "./post-it-column";
 import { SaveBrowserTimezone } from "./save-browser-timezone";
 import {
   AffirmationPanel,
+  DESKTOP_ICON_PANEL_KEYS,
   DopaminePanel,
   IntentionBreakdownPanel,
   JournalPanel,
@@ -260,7 +261,11 @@ export default async function DashboardPage({
           sidebar={
             <PanelList panelKeys={visiblePanelKeys}>
               {visiblePanelKeys.map((key) => (
-                <SortablePanel key={key} panelKey={key}>
+                <SortablePanel
+                  key={key}
+                  panelKey={key}
+                  isDesktopIcon={DESKTOP_ICON_PANEL_KEYS.includes(key)}
+                >
                   {panelComponents[key]}
                 </SortablePanel>
               ))}

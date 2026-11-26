@@ -1,6 +1,6 @@
 "use client";
 
-import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { togglePanelVisibilityAction } from "@/app/actions/dashboard";
 import { useDashboardCustomization } from "./dashboard-shell";
@@ -29,10 +29,12 @@ export function PanelList({
 
   return (
     <div
-      className="group flex flex-col gap-3"
+      className="group flex flex-wrap gap-3"
       data-customizing={isCustomizing ? "true" : "false"}
     >
-      <SortableContext items={panelKeys} strategy={verticalListSortingStrategy}>
+      {/* The list wraps so desktop icons sit two to a row; rectSortingStrategy
+          lets drag-to-reorder move panels across rows, not just up and down. */}
+      <SortableContext items={panelKeys} strategy={rectSortingStrategy}>
         {children}
       </SortableContext>
     </div>
@@ -44,9 +46,11 @@ export function PanelList({
 // normally the rest of the time.
 export function SortablePanel({
   panelKey,
+  isDesktopIcon = false,
   children,
 }: {
   panelKey: string;
+  isDesktopIcon?: boolean;
   children: React.ReactNode;
 }) {
   const { isCustomizing } = useDashboardCustomization();
@@ -72,11 +76,13 @@ export function SortablePanel({
       ref={setNodeRef}
       style={style}
       {...(isCustomizing ? { ...attributes, ...listeners } : {})}
-      className={
+      className={[
+        // Half the sidebar minus half the gap-3, so two icons fit per row.
+        isDesktopIcon ? "w-[calc(50%-0.375rem)]" : "w-full",
         isCustomizing
           ? `touch-none ${isDragging ? "cursor-grabbing opacity-40" : "cursor-grab"}`
-          : undefined
-      }
+          : "",
+      ].join(" ")}
     >
       {children}
     </div>

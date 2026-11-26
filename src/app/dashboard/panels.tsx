@@ -27,15 +27,21 @@ function PanelIcon({
   );
 }
 
+// The launcher panels that only open a popup. The sidebar draws them as
+// desktop icons, two to a row, instead of full-width cards.
+export const DESKTOP_ICON_PANEL_KEYS = ["projects", "quicklist", "journal", "dopamine"];
+
 function PanelShell({
   panelKey,
+  variant = "card",
   children,
 }: {
   panelKey: string;
+  variant?: "card" | "desktopIcon";
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative rounded border p-3">
+    <div className={variant === "card" ? "relative rounded border p-3" : "relative"}>
       <form
         action={togglePanelVisibilityAction.bind(null, panelKey)}
         className="absolute top-2 right-2 hidden group-data-[customizing=true]:block"
@@ -121,7 +127,10 @@ export function IntentionBreakdownPanel({ breakdown }: { breakdown: IntentionBre
   );
 }
 
-function IconPanelLink({
+// A desktop icon: the picture with its name underneath and no box around it.
+// Hovering or tabbing to it highlights the name like a selected file on an
+// old computer desktop.
+function DesktopIconLink({
   href,
   iconSrc,
   iconWidth,
@@ -138,17 +147,31 @@ function IconPanelLink({
   // shows this panel (deployed app only), so a click opens it already
   // filled in. Its reads are stored (stored-reads.ts), so this is cheap.
   return (
-    <Link href={href} prefetch className="flex items-center gap-2">
-      <PanelIcon src={iconSrc} width={iconWidth} height={iconHeight} />
-      <div className="text-sm font-medium">{title}</div>
+    <Link
+      href={href}
+      prefetch
+      className="group/icon flex flex-col items-center gap-1.5 rounded-md p-1 outline-none"
+    >
+      <div className="flex h-16 w-16 items-center justify-center transition-transform group-hover/icon:-translate-y-0.5 group-focus-visible/icon:-translate-y-0.5">
+        <Image
+          src={iconSrc}
+          alt=""
+          width={iconWidth}
+          height={iconHeight}
+          className="h-auto max-h-16 w-auto max-w-16 object-contain drop-shadow-[1px_2px_0_rgba(52,52,52,0.18)]"
+        />
+      </div>
+      <span className="rounded-sm px-1.5 py-0.5 text-center text-xs leading-tight font-medium group-hover/icon:bg-[#cfe0ff] group-focus-visible/icon:bg-[#3d6bd9] group-focus-visible/icon:text-white">
+        {title}
+      </span>
     </Link>
   );
 }
 
 export function ProjectsPanel() {
   return (
-    <PanelShell panelKey="projects">
-      <IconPanelLink
+    <PanelShell panelKey="projects" variant="desktopIcon">
+      <DesktopIconLink
         href={dashboardRoutes.projects()}
         iconSrc="/panel-art/project-tracker-button.png"
         iconWidth={197}
@@ -161,8 +184,8 @@ export function ProjectsPanel() {
 
 export function QuickListPanel() {
   return (
-    <PanelShell panelKey="quicklist">
-      <IconPanelLink
+    <PanelShell panelKey="quicklist" variant="desktopIcon">
+      <DesktopIconLink
         href={dashboardRoutes.quickLists()}
         iconSrc="/panel-art/quick-notes-button.png"
         iconWidth={253}
@@ -175,8 +198,8 @@ export function QuickListPanel() {
 
 export function JournalPanel() {
   return (
-    <PanelShell panelKey="journal">
-      <IconPanelLink
+    <PanelShell panelKey="journal" variant="desktopIcon">
+      <DesktopIconLink
         href={dashboardRoutes.journals()}
         iconSrc="/panel-art/journal-button.png"
         iconWidth={201}
@@ -189,8 +212,8 @@ export function JournalPanel() {
 
 export function DopaminePanel() {
   return (
-    <PanelShell panelKey="dopamine">
-      <IconPanelLink
+    <PanelShell panelKey="dopamine" variant="desktopIcon">
+      <DesktopIconLink
         href={dashboardRoutes.dopamineMenu()}
         iconSrc="/panel-art/dopamine-tracker.png"
         iconWidth={144}
