@@ -7,12 +7,14 @@ import {
   completeProject,
   createProject,
   deleteProject,
+  deleteProjectTask,
   getProjectDetail,
   listProjects,
   pauseProject,
   resumeProject,
   toggleProjectTask,
   updateProject,
+  updateProjectTaskText,
 } from "@/lib/projects";
 
 describe("createProject", () => {
@@ -559,7 +561,32 @@ describe("updateProject", () => {
     });
   });
 
-  it("clears the due date when it's omitted from the update (full-form edit, not a partial patch)", async () => {
+  it("changes only the fields it's given (the popup saves one field at a time)", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const dueDate = new Date("2026-10-12T00:00:00Z");
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Train for a 5k",
+        endGoal: "Run the race",
+        intentionIds: [intention.id],
+        dueDate,
+      });
+
+      const updated = await updateProject(tx, {
+        userId: "test-user-1",
+        projectId: project.id,
+        endGoal: "Run the Cedar Falls 5k",
+      });
+
+      expect(updated?.title).toBe("Train for a 5k");
+      expect(updated?.endGoal).toBe("Run the Cedar Falls 5k");
+      expect(updated?.dueDate).toEqual(dueDate);
+      expect(updated?.intentions.map((pi) => pi.intentionId)).toEqual([intention.id]);
+    });
+  });
+
+  it("clears the due date when given null", async () => {
     await withRollback(async (tx) => {
       const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
       const project = await createProject(tx, {
@@ -573,9 +600,7 @@ describe("updateProject", () => {
       const updated = await updateProject(tx, {
         userId: "test-user-1",
         projectId: project.id,
-        title: project.title,
-        endGoal: project.endGoal,
-        intentionIds: [intention.id],
+        dueDate: null,
       });
 
       expect(updated?.dueDate).toBeNull();
@@ -722,6 +747,91 @@ describe("deleteProject", () => {
       const result = await deleteProject(tx, { userId: "test-user-1", projectId: project.id });
 
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("updateProjectTaskText", () => {
+  it("changes a task's text", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Garden",
+        endGoal: "Grow tomatoes",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy seeds"],
+      });
+
+      const updated = await updateProjectTaskText(tx, {
+        userId: "test-user-1",
+        taskId: project.tasks[0].id,
+        text: "Buy tomato seeds",
+      });
+
+      expect(updated?.text).toBe("Buy tomato seeds");
+    });
+  });
+
+  it("returns null when the task's project doesn't belong to the user", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+        starterTasks: ["Theirs"],
+      });
+
+      const result = await updateProjectTaskText(tx, {
+        userId: "test-user-1",
+        taskId: project.tasks[0].id,
+        text: "Hijacked",
+      });
+
+      expect(result).toBeNull();
+      const detail = await getProjectDetail(tx, { userId: "test-user-2", projectId: project.id });
+      expect(detail?.tasks[0].text).toBe("Theirs");
+    });
+  });
+});
+
+describe("deleteProjectTask", () => {
+  it("removes the task and keeps the others", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Garden",
+        endGoal: "Grow tomatoes",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy seeds", "Plant"],
+      });
+
+      await deleteProjectTask(tx, { userId: "test-user-1", taskId: project.tasks[0].id });
+
+      const detail = await getProjectDetail(tx, { userId: "test-user-1", projectId: project.id });
+      expect(detail?.tasks.map((task) => task.text)).toEqual(["Plant"]);
+    });
+  });
+
+  it("returns null and deletes nothing when the task isn't the user's", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Someone else's",
+        endGoal: "n/a",
+        intentionIds: [intention.id],
+        starterTasks: ["Theirs"],
+      });
+
+      const result = await deleteProjectTask(tx, { userId: "test-user-1", taskId: project.tasks[0].id });
+
+      expect(result).toBeNull();
+      const detail = await getProjectDetail(tx, { userId: "test-user-2", projectId: project.id });
+      expect(detail?.tasks).toHaveLength(1);
     });
   });
 });

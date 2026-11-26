@@ -60,11 +60,10 @@ describe("dashboardRoutes", () => {
     expect(dashboardRoutes.quickLists("q1")).toBe("/dashboard/quick-lists?id=q1");
   });
 
-  it("gives each project screen its own address", () => {
+  it("gives each project screen its own address, opening a chosen project's tab", () => {
     expect(dashboardRoutes.projects()).toBe("/dashboard/projects");
-    expect(dashboardRoutes.newProject()).toBe("/dashboard/projects?view=create");
-    expect(dashboardRoutes.project("p1")).toBe("/dashboard/projects?view=detail&id=p1");
-    expect(dashboardRoutes.editProject("p1")).toBe("/dashboard/projects?view=edit&id=p1");
+    expect(dashboardRoutes.projects("p1")).toBe("/dashboard/projects?id=p1");
+    expect(dashboardRoutes.newProject()).toBe("/dashboard/projects?view=new");
   });
 
   it("gives each intention screen its own address", () => {

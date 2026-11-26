@@ -52,9 +52,9 @@ export function Checklist({
   promoteToPostItAction?: (itemId: string) => Promise<void>;
   /** Makes a 1-hour event from the item, starting now. */
   startNowAction?: (itemId: string) => Promise<void>;
-  /** Quick lists only: saves an item's edited text. */
+  /** Saves an item's edited text. */
   editTextAction?: (itemId: string, formData: FormData) => Promise<void>;
-  /** Quick lists only: deletes an item whose text was cleared away. */
+  /** Deletes an item whose text was cleared away. */
   deleteAction?: (itemId: string) => Promise<void>;
   /** Projects only: new events scheduled from a task count toward the project. */
   scheduleProjectId?: string;

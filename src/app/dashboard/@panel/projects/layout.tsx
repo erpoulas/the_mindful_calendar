@@ -13,8 +13,7 @@ const PROJECT_ART: PanelArt = {
 // screens; page.tsx (behind loading.tsx) fills it.
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PanelSheet open title="Projects"
-      titlesByView={{ edit: "Edit project", detail: "Project", create: "New project" }}
+    <PanelSheet open title="Projects" titlesByView={{ new: "New project" }}
       backgroundImage={PROJECT_ART}>
       {children}
     </PanelSheet>

@@ -52,18 +52,22 @@ export async function getProjectDetail(
   });
 }
 
+/**
+ * Changes only the fields given, so the popup can save one field at a time
+ * (just the end goal, just the intentions...). `dueDate: null` clears it.
+ */
 export async function updateProject(
   client: DbClient,
   params: {
     userId: string;
     projectId: string;
-    title: string;
-    endGoal: string;
-    intentionIds: string[];
-    dueDate?: Date;
+    title?: string;
+    endGoal?: string;
+    intentionIds?: string[];
+    dueDate?: Date | null;
   },
 ) {
-  if (params.intentionIds.length === 0) {
+  if (params.intentionIds?.length === 0) {
     throw new Error("A project must serve at least one intention");
   }
 
@@ -77,8 +81,8 @@ export async function updateProject(
     data: {
       title: params.title,
       endGoal: params.endGoal,
-      dueDate: params.dueDate ?? null,
-      intentions: {
+      dueDate: params.dueDate,
+      intentions: params.intentionIds && {
         deleteMany: {},
         create: params.intentionIds.map((intentionId) => ({ intentionId })),
       },
@@ -181,4 +185,32 @@ export async function toggleProjectTask(
     where: { id: task.id },
     data: { done: !task.done, completedAt: !task.done ? new Date() : null },
   });
+}
+
+export async function updateProjectTaskText(
+  client: DbClient,
+  params: { userId: string; taskId: string; text: string },
+) {
+  const task = await client.projectTask.findFirst({
+    where: { id: params.taskId, project: { userId: params.userId } },
+  });
+  if (!task) return null;
+
+  return client.projectTask.update({
+    where: { id: task.id },
+    data: { text: params.text },
+  });
+}
+
+/** Removes one task; returns null if it isn't this user's. */
+export async function deleteProjectTask(
+  client: DbClient,
+  params: { userId: string; taskId: string },
+) {
+  const task = await client.projectTask.findFirst({
+    where: { id: params.taskId, project: { userId: params.userId } },
+  });
+  if (!task) return null;
+
+  return client.projectTask.delete({ where: { id: task.id } });
 }
