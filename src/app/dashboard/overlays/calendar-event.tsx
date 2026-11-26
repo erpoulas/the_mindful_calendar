@@ -16,11 +16,14 @@ export async function NewEventView({
   title,
   postItId,
   projectId,
+  intentionId,
 }: {
   date?: string;
   title?: string;
   postItId?: string;
   projectId?: string;
+  /** Ticked already, e.g. a dopamine-menu item's intention. */
+  intentionId?: string;
 }) {
   const userId = await getCurrentUserId();
   const [projects, intentions, mainTimeZone] = await Promise.all([
@@ -31,7 +34,7 @@ export async function NewEventView({
 
   // A date (from a post-it dropped on the month view) makes an all-day event.
   const initialValues =
-    date || title || projectId
+    date || title || projectId || intentionId
       ? {
           title: title ?? "",
           startAt: date ? new Date(`${date}T00:00:00Z`) : null,
@@ -40,7 +43,7 @@ export async function NewEventView({
           location: null,
           notes: null,
           projectId: projectId ?? null,
-          intentionIds: [],
+          intentionIds: intentionId ? [intentionId] : [],
           timeZone: null,
         }
       : undefined;

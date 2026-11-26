@@ -33,6 +33,12 @@ describe("dashboardRoutes", () => {
       );
     });
 
+    it("schedules a dopamine-menu item as an event already counting toward its intention", () => {
+      expect(dashboardRoutes.newEvent({ title: "Walk", intentionId: "i1" })).toBe(
+        "/dashboard/event?view=new&title=Walk&intentionId=i1",
+      );
+    });
+
     it("edits one event", () => {
       expect(dashboardRoutes.editEvent("e1")).toBe("/dashboard/event?view=edit&id=e1");
     });

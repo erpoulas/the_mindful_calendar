@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { withRollback } from "@/test/withRollback";
-import { addDopamineMenuItem } from "@/lib/dopamine-menu";
+import { addDopamineMenuItem, setDopamineMenuItemIntention } from "@/lib/dopamine-menu";
 import { createIntention } from "@/lib/intentions";
 import { addProjectTask, createProject } from "@/lib/projects";
 import { addQuickListItem, createQuickList } from "@/lib/quick-lists";
@@ -141,6 +141,32 @@ describe("scheduleDopamineItemNow", () => {
         startAt: start,
         endAt: end,
       });
+    });
+  });
+
+  it("counts the event toward the item's intention", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Take a walk" });
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: health.id,
+      });
+
+      const event = await scheduleDopamineItemNow(tx, { userId: "test-user-1", itemId: item.id, now });
+
+      expect(event?.intentions.map((ei) => ei.intentionId)).toEqual([health.id]);
+    });
+  });
+
+  it("adds no intention for an untagged item", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Take a walk" });
+
+      const event = await scheduleDopamineItemNow(tx, { userId: "test-user-1", itemId: item.id, now });
+
+      expect(event?.intentions).toEqual([]);
     });
   });
 

@@ -111,4 +111,56 @@ describe("RemovableList", () => {
     expect(await screen.findByRole("status", { name: "Added to your calendar" })).toBeInTheDocument();
     expect(startNow).toHaveBeenCalledWith("a");
   });
+
+  describe("intention tags (dopamine menu)", () => {
+    const intentions = [
+      { id: "i1", name: "Health" },
+      { id: "i2", name: "Family" },
+    ];
+
+    function renderTagged(setIntentionAction = vi.fn(never)) {
+      render(
+        <RemovableList
+          items={[
+            { id: "a", text: "Take a walk", intentionId: "i1" },
+            { id: "b", text: "Call a friend", intentionId: null },
+          ]}
+          emptyText="Nothing here yet."
+          addPlaceholder="e.g. Take a 10 minute walk"
+          addLabel="Add"
+          removeAction={vi.fn(never)}
+          addAction={vi.fn(never)}
+          listClassName=""
+          createPostItAction={vi.fn(never)}
+          intentionTags={{ intentions, setIntentionAction }}
+        />,
+      );
+      return setIntentionAction;
+    }
+
+    it("shows each row's intention", () => {
+      renderTagged();
+
+      expect(screen.getByRole("combobox", { name: "Intention for Take a walk" })).toHaveValue("i1");
+      expect(screen.getByRole("combobox", { name: "Intention for Call a friend" })).toHaveValue("");
+    });
+
+    it("saves a new intention when one is picked", () => {
+      const setIntentionAction = renderTagged();
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Intention for Call a friend" }), {
+        target: { value: "i2" },
+      });
+
+      expect(setIntentionAction).toHaveBeenCalledWith("b", "i2");
+    });
+
+    it("schedules a tagged row with its intention already ticked", () => {
+      renderTagged();
+
+      const [tagged, untagged] = screen.getAllByRole("link", { name: "Schedule" });
+      expect(tagged).toHaveAttribute("href", "/dashboard/event?view=new&title=Take+a+walk&intentionId=i1");
+      expect(untagged).toHaveAttribute("href", "/dashboard/event?view=new&title=Call+a+friend");
+    });
+  });
 });

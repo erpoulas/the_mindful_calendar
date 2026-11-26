@@ -59,6 +59,7 @@ export async function scheduleProjectTaskNow(
   });
 }
 
+/** The event counts toward the item's intention, if it has one. */
 export async function scheduleDopamineItemNow(
   client: DbClient,
   params: ScheduleNowParams & { itemId: string },
@@ -72,6 +73,7 @@ export async function scheduleDopamineItemNow(
     userId: params.userId,
     title: item.text,
     notes: "From your dopamine menu",
+    intentionIds: item.intentionId ? [item.intentionId] : undefined,
     ...oneHourStartingAt(params.now),
   });
 }

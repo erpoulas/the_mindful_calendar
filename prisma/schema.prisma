@@ -23,8 +23,9 @@ model Intention {
 
   projects        ProjectIntention[]
   events          EventIntention[]
-  workoutRoutines WorkoutRoutine[]
-  savedMeals      SavedMeal[]
+  workoutRoutines   WorkoutRoutine[]
+  savedMeals        SavedMeal[]
+  dopamineMenuItems DopamineMenuItem[]
 
   @@index([userId])
 }
@@ -270,12 +271,18 @@ model SavedMeal {
 }
 
 model DopamineMenuItem {
-  id        String   @id @default(uuid())
-  userId    String
-  text      String
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  userId      String
+  text        String
+  // Events made from this item (Schedule or Start now) count toward this
+  // intention. Deleting the intention just untags the item.
+  intentionId String?
+  createdAt   DateTime @default(now())
+
+  intention Intention? @relation(fields: [intentionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([intentionId])
 }
 
 model Affirmation {

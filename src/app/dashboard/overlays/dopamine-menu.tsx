@@ -3,13 +3,14 @@ import {
   addDopamineMenuItemAction,
   deleteDopamineMenuItemAction,
   pickDopamineMenuItemAction,
+  setDopamineMenuItemIntentionAction,
 } from "@/app/actions/dopamine-menu";
 import { createPostItAction } from "@/app/actions/post-its";
 import { scheduleDopamineItemNowAction } from "@/app/actions/schedule-now";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserId } from "@/lib/auth";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
-import { storedDopamineMenuItems } from "@/lib/stored-reads";
+import { storedDopamineMenuItems, storedIntentions } from "@/lib/stored-reads";
 import { db } from "@/lib/db";
 import { getRandomDopamineMenuItem } from "@/lib/dopamine-menu";
 import { CopyToPostItButton, ScheduleIconLink, StartNowButton } from "./item-actions";
@@ -17,9 +18,10 @@ import { RemovableList } from "./removable-list";
 
 export async function DopamineMenuView() {
   const userId = await getCurrentUserId();
-  const [pick, items] = await Promise.all([
+  const [pick, items, intentions] = await Promise.all([
     getRandomDopamineMenuItem(db, userId),
     storedDopamineMenuItems(userId),
+    storedIntentions(userId),
   ]);
 
   return (
@@ -47,7 +49,12 @@ export async function DopamineMenuView() {
             {/* Put the pick on the calendar or the post-its in one click. */}
             {pick && (
               <>
-                <ScheduleIconLink href={dashboardRoutes.newEvent({ title: pick.text })} />
+                <ScheduleIconLink
+                  href={dashboardRoutes.newEvent({
+                    title: pick.text,
+                    intentionId: pick.intentionId ?? undefined,
+                  })}
+                />
                 <StartNowButton itemId={pick.id} startNowAction={scheduleDopamineItemNowAction} />
                 <CopyToPostItButton text={pick.text} createPostItAction={createPostItAction} />
               </>
@@ -59,7 +66,7 @@ export async function DopamineMenuView() {
       <div>
         <h2 className="text-sm font-medium text-muted-foreground">Your menu</h2>
         <RemovableList
-          items={items.map(({ id, text }) => ({ id, text }))}
+          items={items.map(({ id, text, intentionId }) => ({ id, text, intentionId }))}
           emptyText="Nothing here yet — save something you found below."
           addPlaceholder="e.g. Take a 10 minute walk"
           addLabel="Add"
@@ -68,6 +75,10 @@ export async function DopamineMenuView() {
           listClassName="mt-2 flex flex-col gap-2"
           createPostItAction={createPostItAction}
           startNowAction={scheduleDopamineItemNowAction}
+          intentionTags={{
+            intentions: intentions.map(({ id, name }) => ({ id, name })),
+            setIntentionAction: setDopamineMenuItemIntentionAction,
+          }}
         />
       </div>
     </div>

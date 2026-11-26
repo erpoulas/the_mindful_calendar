@@ -12,6 +12,7 @@ export default async function EventPanel({ searchParams }: PageProps<"/dashboard
       title={stringParam(query.title)}
       postItId={stringParam(query.postItId)}
       projectId={stringParam(query.projectId)}
+      intentionId={stringParam(query.intentionId)}
     />
   );
 }

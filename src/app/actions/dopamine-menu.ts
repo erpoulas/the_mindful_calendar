@@ -2,7 +2,11 @@
 
 import { refresh } from "next/cache";
 import { AddDopamineMenuItemSchema } from "@/lib/dopamine-menu-schemas";
-import { addDopamineMenuItem, deleteDopamineMenuItem } from "@/lib/dopamine-menu";
+import {
+  addDopamineMenuItem,
+  deleteDopamineMenuItem,
+  setDopamineMenuItemIntention,
+} from "@/lib/dopamine-menu";
 import { getCurrentUserId } from "@/lib/auth";
 import { forgetStoredAfterSave } from "@/lib/stored-results";
 import { db } from "@/lib/db";
@@ -20,6 +24,14 @@ export async function addDopamineMenuItemAction(formData: FormData) {
 export async function deleteDopamineMenuItemAction(itemId: string) {
   const userId = await getCurrentUserId();
   await deleteDopamineMenuItem(db, { userId, itemId });
+
+  forgetStoredAfterSave(userId, ["dopamineMenu"]);
+}
+
+/** Tags a menu item with an intention ("" clears it). */
+export async function setDopamineMenuItemIntentionAction(itemId: string, intentionId: string) {
+  const userId = await getCurrentUserId();
+  await setDopamineMenuItemIntention(db, { userId, itemId, intentionId: intentionId || null });
 
   forgetStoredAfterSave(userId, ["dopamineMenu"]);
 }

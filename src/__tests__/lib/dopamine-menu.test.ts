@@ -5,7 +5,9 @@ import {
   deleteDopamineMenuItem,
   getRandomDopamineMenuItem,
   listDopamineMenuItems,
+  setDopamineMenuItemIntention,
 } from "@/lib/dopamine-menu";
+import { createIntention, deleteIntention } from "@/lib/intentions";
 
 describe("addDopamineMenuItem", () => {
   it("adds an item to the user's pool", async () => {
@@ -84,6 +86,79 @@ describe("deleteDopamineMenuItem", () => {
       });
 
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("setDopamineMenuItemIntention", () => {
+  it("tags the item with one of the user's intentions, and clears it with null", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Walk" });
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+
+      const tagged = await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: health.id,
+      });
+      expect(tagged?.intentionId).toBe(health.id);
+      expect((await listDopamineMenuItems(tx, "test-user-1"))[0].intentionId).toBe(health.id);
+
+      const cleared = await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: null,
+      });
+      expect(cleared?.intentionId).toBeNull();
+    });
+  });
+
+  it("returns null and changes nothing for another user's item", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-2", text: "Theirs" });
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+
+      const result = await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: health.id,
+      });
+
+      expect(result).toBeNull();
+      expect((await listDopamineMenuItems(tx, "test-user-2"))[0].intentionId).toBeNull();
+    });
+  });
+
+  it("returns null and changes nothing for another user's intention", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Walk" });
+      const theirs = await createIntention(tx, { userId: "test-user-2", name: "Theirs" });
+
+      const result = await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: theirs.id,
+      });
+
+      expect(result).toBeNull();
+      expect((await listDopamineMenuItems(tx, "test-user-1"))[0].intentionId).toBeNull();
+    });
+  });
+
+  it("untags the item when its intention is deleted, keeping the item", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Walk" });
+      const health = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      await setDopamineMenuItemIntention(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        intentionId: health.id,
+      });
+
+      await deleteIntention(tx, { userId: "test-user-1", intentionId: health.id });
+
+      const [kept] = await listDopamineMenuItems(tx, "test-user-1");
+      expect(kept).toMatchObject({ id: item.id, intentionId: null });
     });
   });
 });

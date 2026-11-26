@@ -70,7 +70,8 @@ export async function deleteIntentionAction(intentionId: string) {
   const userId = await getCurrentUserId();
   await deleteIntention(db, { userId, intentionId });
 
-  forgetStoredAfterSave(userId, ["intentions","events","projects"]);
+  // Dopamine-menu items tagged with it lose their tag.
+  forgetStoredAfterSave(userId, ["intentions","events","projects","dopamineMenu"]);
   // Back to the intentions list: deleting from the list keeps you there, and
   // deleting from an intention's own screen returns to the list.
   redirect(dashboardRoutes.intentions());
