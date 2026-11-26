@@ -73,15 +73,15 @@ export type PanelArt = {
   scale?: number;
 };
 
-/** Body text is this share of a ruled line's height (15px on a 48px line). */
-const PAPER_TEXT_PER_LINE = 0.3125;
+/** Body text is this share of a ruled line's height (18px on a 48px line). */
+const PAPER_TEXT_PER_LINE = 0.375;
 
 /**
  * The --paper-line and --paper-text variables for lined art. The paper area
  * is a size container, so 100cqh is its height, which is a known share of
  * the photo's. (Its children use them: an element's own cqh would measure
  * the container around it, not itself.) On a small screen the text stops
- * shrinking at 12px so it stays readable.
+ * shrinking at 14px so it stays readable.
  */
 function paperLineStyle(art: PanelArt): React.CSSProperties {
   if (!art.ruledLines) return {};
@@ -90,7 +90,7 @@ function paperLineStyle(art: PanelArt): React.CSSProperties {
     containerType: "size",
     paddingBlock: 0,
     ["--paper-line" as string]: `calc(100cqh * ${art.ruledLines.spacing / paperHeight})`,
-    ["--paper-text" as string]: `max(12px, calc(var(--paper-line) * ${PAPER_TEXT_PER_LINE}))`,
+    ["--paper-text" as string]: `max(14px, calc(var(--paper-line) * ${PAPER_TEXT_PER_LINE}))`,
   };
 }
 
