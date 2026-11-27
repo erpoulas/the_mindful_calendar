@@ -15,7 +15,6 @@ import { findIntentionColor } from "@/lib/intention-colors";
 import { storedDopamineMenuItems, storedIntentions } from "@/lib/stored-reads";
 import { DopamineMenuList, RollAgainButton } from "./dopamine-menu-list";
 import { CopyToPostItButton, ScheduleIconLink, StartNowButton } from "./item-actions";
-import { pageHeadingClassName } from "./photo-page-styles";
 
 export async function DopamineMenuView() {
   const userId = await getCurrentUserId();
@@ -30,10 +29,10 @@ export async function DopamineMenuView() {
       {/* Today's random pick, big, with quiet icons beside it. */}
       {pick ? (
         <section className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">Need a lift? Try this:</p>
-          <div className="flex items-start justify-between gap-3">
-            <h2 className={`${pageHeadingClassName} wrap-anywhere`}>{pick.text}</h2>
-            <div className="flex shrink-0 items-center gap-0.5 pt-1">
+          <p className="text-xl text-muted-foreground">Need a lift? Try this:</p>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-3xl leading-tight font-semibold wrap-anywhere">{pick.text}</h2>
+            <div className="-ml-1 flex items-center gap-0.5">
               <RollAgainButton rollAction={pickDopamineMenuItemAction} />
               <ScheduleIconLink
                 href={dashboardRoutes.newEvent({
@@ -47,13 +46,13 @@ export async function DopamineMenuView() {
           </div>
         </section>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xl text-muted-foreground">
           Little things that feel good. Jot a few down, then roll for one.
         </p>
       )}
 
       <section>
-        <h3 className="text-sm font-medium text-muted-foreground">Your menu</h3>
+        <h3 className="text-xl font-semibold text-muted-foreground">Your menu</h3>
         <DopamineMenuList
           items={items.map(({ id, text, intentionId }) => ({ id, text, intentionId }))}
           intentions={intentions.map(({ id, name, color }) => ({
