@@ -55,6 +55,37 @@ export function describeDueDate(dueDate: Date, today: Date) {
   return { label: `${plural(-daysLeft, "day")} past due`, soon };
 }
 
+function startOfDay(date: Date | number) {
+  const time = typeof date === "number" ? date : date.getTime();
+  return time - (time % DAY);
+}
+
+/**
+ * A gentle nudge for a project that's gone quiet: "Last worked on 5 days
+ * ago", from its latest past calendar session or ticked-off task. Null once
+ * there's been work this week (the time put in already shows that), or
+ * before there's been any. All dates are wall-clock: convert task
+ * completedAt moments with toWallClockDate first.
+ */
+export function describeLastWorked(
+  sessions: Session[],
+  taskTicks: Date[],
+  { now, weekStart }: { now: Date; weekStart: Date },
+) {
+  let last: number | null = null;
+  const consider = (time: number) => {
+    if (time <= now.getTime() && (last === null || time > last)) last = time;
+  };
+  for (const { startAt, endAt } of sessions) {
+    if (startAt <= now) consider(Math.min(endAt.getTime(), now.getTime()));
+  }
+  for (const tick of taskTicks) consider(tick.getTime());
+  if (last === null || last >= weekStart.getTime()) return null;
+
+  const daysAgo = Math.round((startOfDay(now) - startOfDay(last)) / DAY);
+  return `Last worked on ${daysAgo === 1 ? "yesterday" : `${plural(daysAgo, "day")} ago`}`;
+}
+
 /** How many days a project ran, counting any started day (at least 1). */
 export function wholeDaysBetween(start: Date, end: Date) {
   return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / DAY));

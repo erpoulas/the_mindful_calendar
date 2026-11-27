@@ -22,7 +22,12 @@ import { getWeekRange } from "@/lib/calendar-week";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { findIntentionColor } from "@/lib/intention-colors";
 import { dueDateInputValue, formatDueDate } from "@/lib/project-due-date";
-import { formatDuration, summarizeProjectTime, wholeDaysBetween } from "@/lib/project-progress";
+import {
+  describeLastWorked,
+  formatDuration,
+  summarizeProjectTime,
+  wholeDaysBetween,
+} from "@/lib/project-progress";
 import {
   storedIntentions,
   storedProjectDetail,
@@ -153,7 +158,7 @@ export async function ProjectsView({
             summary: finishedSummary(
               finished,
               timeFor(finished.id, sessions, clock).totalMinutes,
-              finished._count.tasks,
+              finished.tasksDone,
               timeZone,
             ),
           }))}
@@ -179,6 +184,12 @@ export async function ProjectsView({
           project={project}
           intentionChoices={intentionChoices}
           time={timeFor(project.id, sessions, clock)}
+          lastWorked={describeLastWorked(
+            sessions.filter((session) => session.projectId === project.id),
+            // Ticks are real moments; make them wall-clock like the sessions.
+            project.tasks.flatMap((task) => (task.completedAt ? [toWallClockDate(task.completedAt, timeZone)] : [])),
+            clock,
+          )}
           today={now.toISOString().slice(0, 10)}
           timeZone={timeZone}
         />
@@ -193,12 +204,15 @@ function ProjectPage({
   project,
   intentionChoices,
   time,
+  lastWorked,
   today,
   timeZone,
 }: {
   project: ProjectDetail;
   intentionChoices: IntentionChoice[];
   time: { weekMinutes: number; totalMinutes: number };
+  /** "Last worked on 5 days ago", or null when there's been work this week. */
+  lastWorked: string | null;
   /** The user's today, e.g. "2026-11-26", for the due-date countdown. */
   today: string;
   timeZone: string;
@@ -264,7 +278,7 @@ function ProjectPage({
           {project.dueDate && ` · was due ${formatDueDate(project.dueDate)}`}
         </p>
       ) : (
-        <ProgressStrip tasksDone={tasksDone} taskCount={project.tasks.length} time={time} />
+        <ProgressStrip tasksDone={tasksDone} taskCount={project.tasks.length} time={time} lastWorked={lastWorked} />
       )}
 
       {!finished && nextTask && (
@@ -299,21 +313,29 @@ function ProjectPage({
   );
 }
 
-/** "▓▓▓▓░░ 6 of 10 tasks · 4h this week · 23h total", one quiet line. */
+/**
+ * "▓▓▓▓░░ 6 of 10 tasks · 4h this week · 23h total", one quiet line. A
+ * project gone quiet says when it was last worked on instead of "0m this
+ * week".
+ */
 function ProgressStrip({
   tasksDone,
   taskCount,
   time,
+  lastWorked,
 }: {
   tasksDone: number;
   taskCount: number;
   time: { weekMinutes: number; totalMinutes: number };
+  lastWorked: string | null;
 }) {
   const parts = [];
   if (taskCount > 0) parts.push(`${tasksDone} of ${taskCount} tasks`);
-  if (time.totalMinutes > 0) {
-    parts.push(`${formatDuration(time.weekMinutes)} this week`, `${formatDuration(time.totalMinutes)} total`);
+  if (time.weekMinutes > 0 || (time.totalMinutes > 0 && !lastWorked)) {
+    parts.push(`${formatDuration(time.weekMinutes)} this week`);
   }
+  if (time.totalMinutes > 0) parts.push(`${formatDuration(time.totalMinutes)} total`);
+  if (lastWorked) parts.push(lastWorked);
   if (parts.length === 0) return null;
 
   return (

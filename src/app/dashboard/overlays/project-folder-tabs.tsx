@@ -15,6 +15,31 @@ function folderTabClassName(open: boolean) {
   }`;
 }
 
+/**
+ * A tiny ring that fills as a project's tasks get ticked off. Decorative:
+ * the tab's hover text says the same in words.
+ */
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const percent = Math.round((done / total) * 100);
+  return (
+    <svg viewBox="0 0 16 16" className="size-3.5 shrink-0 -rotate-90" aria-hidden data-progress-ring={percent}>
+      <circle cx="8" cy="8" r="6" fill="none" strokeWidth="2.5" className="stroke-amber-900/15" />
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        // pathLength makes the dash lengths percentages of the circle.
+        pathLength={100}
+        strokeDasharray={`${percent} 100`}
+        className={percent > 0 ? "stroke-amber-500" : "stroke-transparent"}
+      />
+    </svg>
+  );
+}
+
 export type FolderTabsOpen = { kind: "project"; id: string } | { kind: "new" } | { kind: "finished" } | null;
 
 /**
@@ -28,7 +53,7 @@ export function ProjectFolderTabs({
   finishedCount,
   open,
 }: {
-  activeProjects: { id: string; title: string }[];
+  activeProjects: { id: string; title: string; tasksDone: number; tasksTotal: number }[];
   finishedCount: number;
   open: FolderTabsOpen;
 }) {
@@ -42,10 +67,15 @@ export function ProjectFolderTabs({
             href={dashboardRoutes.projects(project.id)}
             // Loads each tab while the popup is open, so switching is instant.
             prefetch
-            title={project.title}
+            title={
+              project.tasksTotal > 0
+                ? `${project.title} · ${project.tasksDone} of ${project.tasksTotal} tasks done`
+                : project.title
+            }
             aria-current={isOpen ? "page" : undefined}
             className={folderTabClassName(isOpen)}
           >
+            {project.tasksTotal > 0 && <ProgressRing done={project.tasksDone} total={project.tasksTotal} />}
             {/* Long names end in "…"; hovering shows the whole name. */}
             <span className="max-w-[9rem] truncate">{project.title}</span>
           </Link>

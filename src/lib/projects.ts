@@ -32,13 +32,24 @@ export async function createProject(
   });
 }
 
-/** Each project with `_count.tasks`: how many of its tasks are ticked off. */
+/**
+ * Each project with how many tasks it has (`tasksTotal`) and how many are
+ * ticked off (`tasksDone`), for the tabs' progress rings and the Finished
+ * shelf.
+ */
 export async function listProjects(client: DbClient, userId: string) {
-  return client.project.findMany({
+  const projects = await client.project.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
-    include: { _count: { select: { tasks: { where: { done: true } } } } },
+    // Prisma can't count all tasks and done tasks in one go, so read just
+    // each task's done flag and count here.
+    include: { tasks: { select: { done: true } } },
   });
+  return projects.map(({ tasks, ...project }) => ({
+    ...project,
+    tasksDone: tasks.filter((task) => task.done).length,
+    tasksTotal: tasks.length,
+  }));
 }
 
 /**

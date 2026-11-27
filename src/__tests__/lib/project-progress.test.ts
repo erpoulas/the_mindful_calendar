@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   describeDueDate,
+  describeLastWorked,
   formatDuration,
   summarizeProjectTime,
   wholeDaysBetween,
@@ -70,5 +71,41 @@ describe("wholeDaysBetween", () => {
   it("counts started days, never less than one", () => {
     expect(wholeDaysBetween(new Date("2026-10-10T08:00:00Z"), new Date("2026-11-26T20:00:00Z"))).toBe(48);
     expect(wholeDaysBetween(new Date("2026-11-26T08:00:00Z"), new Date("2026-11-26T09:00:00Z"))).toBe(1);
+  });
+});
+
+describe("describeLastWorked", () => {
+  const clock = { now: new Date("2026-11-26T15:00:00Z"), weekStart: week.weekStart };
+
+  it("says how long ago the last session or ticked-off task was", () => {
+    const sessions = [
+      session("2026-11-10T09:00:00Z", "2026-11-10T10:00:00Z"),
+      session("2026-11-21T18:00:00Z", "2026-11-21T19:00:00Z"), // last Saturday
+    ];
+    const taskTicks = [new Date("2026-11-15T12:00:00Z")];
+
+    expect(describeLastWorked(sessions, taskTicks, clock)).toBe("Last worked on 5 days ago");
+    expect(describeLastWorked([], [new Date("2026-11-22T23:00:00Z")], clock)).toBe("Last worked on 4 days ago");
+  });
+
+  it("stays quiet once there's been work this week, or before there's been any", () => {
+    expect(describeLastWorked([session("2026-11-24T09:00:00Z", "2026-11-24T10:00:00Z")], [], clock)).toBeNull();
+    expect(describeLastWorked([], [new Date("2026-11-23T08:00:00Z")], clock)).toBeNull();
+    expect(describeLastWorked([], [], clock)).toBeNull();
+  });
+
+  it("doesn't count sessions that haven't happened yet", () => {
+    const sessions = [
+      session("2026-11-19T09:00:00Z", "2026-11-19T10:00:00Z"),
+      session("2026-11-28T09:00:00Z", "2026-11-28T10:00:00Z"), // planned for Saturday
+    ];
+
+    expect(describeLastWorked(sessions, [], clock)).toBe("Last worked on 7 days ago");
+  });
+
+  it("says yesterday rather than 1 day ago", () => {
+    const monday = { now: new Date("2026-11-30T10:00:00Z"), weekStart: new Date("2026-11-30T00:00:00Z") };
+
+    expect(describeLastWorked([], [new Date("2026-11-29T20:00:00Z")], monday)).toBe("Last worked on yesterday");
   });
 });

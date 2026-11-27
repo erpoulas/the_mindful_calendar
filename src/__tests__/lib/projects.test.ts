@@ -162,8 +162,8 @@ describe("listProjects", () => {
   });
 });
 
-describe("listProjects: finished task counts", () => {
-  it("counts each project's ticked-off tasks, for the Finished shelf", async () => {
+describe("listProjects: task counts", () => {
+  it("counts each project's tasks and how many are ticked off, for the tab rings and the Finished shelf", async () => {
     await withRollback(async (tx) => {
       const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
       const project = await createProject(tx, {
@@ -178,7 +178,7 @@ describe("listProjects: finished task counts", () => {
 
       const [listed] = await listProjects(tx, "test-user-1");
 
-      expect(listed._count.tasks).toBe(2);
+      expect(listed).toMatchObject({ tasksDone: 2, tasksTotal: 3 });
     });
   });
 });
