@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, League_Gothic, Finger_Paint } from "next/font/google";
+import { Geist_Mono, League_Gothic, Beth_Ellen } from "next/font/google";
 import "@fontsource/open-sauce-sans/500.css";
 import "@fontsource/open-sauce-sans/600.css";
 import "@fontsource/open-sauce-sans/700.css";
@@ -15,8 +15,8 @@ const leagueGothic = League_Gothic({
   subsets: ["latin"],
 });
 
-const fingerPaint = Finger_Paint({
-  variable: "--font-finger-paint",
+const bethEllen = Beth_Ellen({
+  variable: "--font-beth-ellen",
   weight: "400",
   subsets: ["latin"],
 });
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistMono.variable} ${leagueGothic.variable} ${fingerPaint.variable} h-full antialiased`}
+      className={`${geistMono.variable} ${leagueGothic.variable} ${bethEllen.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
