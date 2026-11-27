@@ -277,12 +277,24 @@ model DopamineMenuItem {
   // Events made from this item (Schedule or Start now) count toward this
   // intention. Deleting the intention just untags the item.
   intentionId String?
+  // Where it sits on the menu, by how much time and energy it takes;
+  // null leaves it under "Anytime".
+  course      DopamineCourse?
   createdAt   DateTime @default(now())
 
   intention Intention? @relation(fields: [intentionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([intentionId])
+}
+
+// The dopamine menu's courses (from How to ADHD's dopamine menu).
+enum DopamineCourse {
+  APPETIZER // a quick boost, a few minutes
+  ENTREE // longer and more rewarding
+  SIDE // something to pair with a boring task
+  DESSERT // fun but easy to overdo
+  SPECIAL // a bigger treat to plan for
 }
 
 model Affirmation {

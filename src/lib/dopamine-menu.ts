@@ -1,8 +1,9 @@
 import type { DbClient } from "./db";
+import type { DopamineCourse } from "./dopamine-courses";
 
 export async function addDopamineMenuItem(
   client: DbClient,
-  data: { userId: string; text: string },
+  data: { userId: string; text: string; course?: DopamineCourse | null },
 ) {
   return client.dopamineMenuItem.create({ data });
 }
@@ -74,5 +75,24 @@ export async function updateDopamineMenuItemText(
   return client.dopamineMenuItem.update({
     where: { id: item.id },
     data: { text: params.text },
+  });
+}
+
+/**
+ * Puts an item under a course on the menu (null takes it off, to "Anytime").
+ * Returns null, changing nothing, unless it's this user's.
+ */
+export async function setDopamineMenuItemCourse(
+  client: DbClient,
+  params: { userId: string; itemId: string; course: DopamineCourse | null },
+) {
+  const item = await client.dopamineMenuItem.findFirst({
+    where: { id: params.itemId, userId: params.userId },
+  });
+  if (!item) return null;
+
+  return client.dopamineMenuItem.update({
+    where: { id: item.id },
+    data: { course: params.course },
   });
 }

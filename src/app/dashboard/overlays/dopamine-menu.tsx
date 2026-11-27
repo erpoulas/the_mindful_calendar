@@ -1,6 +1,7 @@
 import {
   addDopamineMenuItemAction,
   deleteDopamineMenuItemAction,
+  setDopamineMenuItemCourseAction,
   setDopamineMenuItemIntentionAction,
   updateDopamineMenuItemTextAction,
 } from "@/app/actions/dopamine-menu";
@@ -21,7 +22,7 @@ export async function DopamineMenuView() {
     storedIntentions(userId),
   ]);
 
-  const menuItems = items.map(({ id, text, intentionId }) => ({ id, text, intentionId }));
+  const menuItems = items.map(({ id, text, intentionId, course }) => ({ id, text, intentionId, course }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -34,23 +35,21 @@ export async function DopamineMenuView() {
         createPostItAction={createPostItAction}
       />
 
-      <section>
-        <h3 className="font-handwritten text-lg">Your menu</h3>
-        <DopamineMenuList
-          items={menuItems}
-          intentions={intentions.map(({ id, name, color }) => ({
-            id,
-            name,
-            colorHex: findIntentionColor(color)?.hex ?? null,
-          }))}
-          addAction={addDopamineMenuItemAction}
-          editTextAction={updateDopamineMenuItemTextAction}
-          deleteAction={deleteDopamineMenuItemAction}
-          startNowAction={scheduleDopamineItemNowAction}
-          createPostItAction={createPostItAction}
-          setIntentionAction={setDopamineMenuItemIntentionAction}
-        />
-      </section>
+      <DopamineMenuList
+        items={menuItems}
+        intentions={intentions.map(({ id, name, color }) => ({
+          id,
+          name,
+          colorHex: findIntentionColor(color)?.hex ?? null,
+        }))}
+        addAction={addDopamineMenuItemAction}
+        editTextAction={updateDopamineMenuItemTextAction}
+        deleteAction={deleteDopamineMenuItemAction}
+        startNowAction={scheduleDopamineItemNowAction}
+        createPostItAction={createPostItAction}
+        setIntentionAction={setDopamineMenuItemIntentionAction}
+        setCourseAction={setDopamineMenuItemCourseAction}
+      />
     </div>
   );
 }

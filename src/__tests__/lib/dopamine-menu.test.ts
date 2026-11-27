@@ -5,6 +5,7 @@ import {
   deleteDopamineMenuItem,
   getRandomDopamineMenuItem,
   listDopamineMenuItems,
+  setDopamineMenuItemCourse,
   setDopamineMenuItemIntention,
   updateDopamineMenuItemText,
 } from "@/lib/dopamine-menu";
@@ -20,6 +21,19 @@ describe("addDopamineMenuItem", () => {
 
       expect(item.text).toBe("Take a 10 minute walk");
       expect(item.userId).toBe("test-user-1");
+      expect(item.course).toBeNull();
+    });
+  });
+
+  it("adds an item under a course", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, {
+        userId: "test-user-1",
+        text: "Make a coffee",
+        course: "APPETIZER",
+      });
+
+      expect(item.course).toBe("APPETIZER");
     });
   });
 });
@@ -192,6 +206,44 @@ describe("updateDopamineMenuItemText", () => {
 
       expect(result).toBeNull();
       expect((await listDopamineMenuItems(tx, "test-user-2"))[0].text).toBe("Theirs");
+    });
+  });
+});
+
+describe("setDopamineMenuItemCourse", () => {
+  it("moves the item to a course, and off it again with null", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-1", text: "Walk" });
+
+      const moved = await setDopamineMenuItemCourse(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        course: "ENTREE",
+      });
+      expect(moved?.course).toBe("ENTREE");
+      expect((await listDopamineMenuItems(tx, "test-user-1"))[0].course).toBe("ENTREE");
+
+      const cleared = await setDopamineMenuItemCourse(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        course: null,
+      });
+      expect(cleared?.course).toBeNull();
+    });
+  });
+
+  it("returns null and changes nothing for another user's item", async () => {
+    await withRollback(async (tx) => {
+      const item = await addDopamineMenuItem(tx, { userId: "test-user-2", text: "Theirs" });
+
+      const result = await setDopamineMenuItemCourse(tx, {
+        userId: "test-user-1",
+        itemId: item.id,
+        course: "DESSERT",
+      });
+
+      expect(result).toBeNull();
+      expect((await listDopamineMenuItems(tx, "test-user-2"))[0].course).toBeNull();
     });
   });
 });

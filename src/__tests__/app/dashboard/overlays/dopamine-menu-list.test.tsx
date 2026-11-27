@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { DopamineMenuList, DopaminePick, pickAnother } from "@/app/dashboard/overlays/dopamine-menu-list";
 
 const never = () => new Promise<void>(() => {});
@@ -17,12 +17,13 @@ function renderMenu() {
     startNowAction: vi.fn<(itemId: string) => Promise<void>>(async () => {}),
     createPostItAction: vi.fn<(formData: FormData) => Promise<void>>(async () => {}),
     setIntentionAction: vi.fn(never),
+    setCourseAction: vi.fn(never),
   };
   render(
     <DopamineMenuList
       items={[
-        { id: "a", text: "Take a walk", intentionId: "i1" },
-        { id: "b", text: "Call a friend", intentionId: null },
+        { id: "a", text: "Take a walk", intentionId: "i1", course: "APPETIZER" },
+        { id: "b", text: "Call a friend", intentionId: null, course: null },
       ]}
       intentions={intentions}
       {...actions}
@@ -36,28 +37,51 @@ afterEach(() => {
 });
 
 describe("DopamineMenuList", () => {
-  it("has no tick circles, since menu items are meant to be reused", () => {
+  it("has no tick circles or bullets, since menu items are meant to be reused", () => {
     renderMenu();
 
     expect(screen.queryByRole("button", { name: "Mark done" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("shows a tagged item's intention as its bullet", () => {
+  it("lists items under their course, like a menu, with the rest under Anytime", () => {
     renderMenu();
 
-    expect(screen.getByRole("img", { name: "Counts toward Health" })).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: /Family/ })).not.toBeInTheDocument();
+    const appetizers = screen.getByRole("region", { name: "Appetizers" });
+    expect(within(appetizers).getByText("Take a walk")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Anytime" })).getByText("Call a friend")).toBeInTheDocument();
+    for (const heading of ["Entrées", "Sides", "Desserts", "Specials"]) {
+      expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+    }
   });
 
-  it("adds an item from the blank line with Enter", async () => {
+  it("shows a tagged item's intention under it", () => {
+    renderMenu();
+
+    expect(screen.getByTitle("Counts toward Health")).toHaveTextContent("Health");
+    expect(screen.queryByTitle(/Family/)).not.toBeInTheDocument();
+  });
+
+  it("adds an item to the course whose blank line it was typed on", async () => {
     const { addAction } = renderMenu();
 
-    const blankLine = screen.getByRole("textbox", { name: "Something that lifts you up" });
+    const blankLine = screen.getByRole("textbox", { name: "Add a dessert" });
     fireEvent.change(blankLine, { target: { value: "Dance" } });
     fireEvent.submit(blankLine.closest("form")!);
 
-    expect(await screen.findByText("Dance")).toBeInTheDocument();
+    expect(await within(screen.getByRole("region", { name: "Desserts" })).findByText("Dance")).toBeInTheDocument();
     expect(addAction.mock.calls[0][0].get("text")).toBe("Dance");
+    expect(addAction.mock.calls[0][0].get("course")).toBe("DESSERT");
+  });
+
+  it("moves an item to another course from its picker", () => {
+    const { setCourseAction } = renderMenu();
+
+    const picker = screen.getByRole("combobox", { name: "Course for Take a walk" });
+    expect(picker).toHaveValue("APPETIZER");
+    fireEvent.change(picker, { target: { value: "ENTREE" } });
+
+    expect(setCourseAction).toHaveBeenCalledWith("a", "ENTREE");
   });
 
   it("edits an item's text in place", async () => {
@@ -138,8 +162,8 @@ describe("pickAnother", () => {
 
 describe("DopaminePick", () => {
   const pickItems = [
-    { id: "a", text: "Take a walk", intentionId: "i1" },
-    { id: "b", text: "Call a friend", intentionId: null },
+    { id: "a", text: "Take a walk", intentionId: "i1", course: "APPETIZER" as const },
+    { id: "b", text: "Call a friend", intentionId: null, course: null },
   ];
   const actions = {
     startNowAction: async () => {},
@@ -170,5 +194,31 @@ describe("DopaminePick", () => {
     const { rerender } = render(<DopaminePick items={pickItems} initialPickId="a" {...actions} />);
     rerender(<DopaminePick items={[pickItems[1]]} initialPickId="a" {...actions} />);
     expect(screen.getByText("Call a friend")).toBeInTheDocument();
+  });
+
+  it("rolls from just one course, and the dice keeps to it", () => {
+    const items = [
+      ...pickItems,
+      { id: "c", text: "Stretch", intentionId: null, course: "APPETIZER" as const },
+    ];
+    render(<DopaminePick items={items} initialPickId="b" {...actions} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Appetizers" }));
+    expect(screen.getByRole("button", { name: "Appetizers" })).toHaveAttribute("aria-pressed", "true");
+    const first = screen.queryByText("Take a walk") ? "Take a walk" : "Stretch";
+    expect(screen.queryByText("Call a friend")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick something else" }));
+    expect(screen.getByText(first === "Take a walk" ? "Stretch" : "Take a walk")).toBeInTheDocument();
+  });
+
+  it("offers only the courses that have items", () => {
+    render(<DopaminePick items={pickItems} initialPickId="a" {...actions} />);
+
+    const group = screen.getByRole("group", { name: "Roll from" });
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual([
+      "Anything",
+      "Appetizers",
+    ]);
   });
 });

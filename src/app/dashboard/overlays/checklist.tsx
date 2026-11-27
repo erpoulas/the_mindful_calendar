@@ -29,7 +29,9 @@ const CIRCLE_SLOT_CLASSES = "flex h-[var(--paper-line,2.25rem)] shrink-0 items-c
  * backspacing all its text away deletes the item and moves up to the end of
  * the one above, so holding Backspace can clear the whole list, like Notes.
  * Without `toggleAction` (the dopamine menu), items can't be ticked off, and
- * `renderBullet` draws what sits in the circle's place instead.
+ * `renderBullet` draws what sits in the circle's place instead. The "menu"
+ * look has no circles or bullets at all and centres each item, like the
+ * dishes on a restaurant menu, with `renderNote` as a small line under it.
  */
 export function Checklist<Item extends ChecklistItem>({
   listId,
@@ -45,6 +47,8 @@ export function Checklist<Item extends ChecklistItem>({
   scheduleHref,
   renderBullet,
   renderExtraActions,
+  renderNote,
+  look = "checklist",
   focusNewItem = false,
 }: {
   listId: string;
@@ -70,6 +74,10 @@ export function Checklist<Item extends ChecklistItem>({
   renderBullet?: (item: Item) => React.ReactNode;
   /** More icons at the end of a saved item's hover icons. */
   renderExtraActions?: (item: Item) => React.ReactNode;
+  /** A small line under a saved item's text, like a dish's description. */
+  renderNote?: (item: Item) => React.ReactNode;
+  /** "menu": no circles or bullets, and each item centred. */
+  look?: "checklist" | "menu";
   /** Puts the cursor on the blank line, e.g. in a list that was just made. */
   focusNewItem?: boolean;
 }) {
@@ -83,6 +91,8 @@ export function Checklist<Item extends ChecklistItem>({
   const deletedByBackspaceRef = useRef<string | null>(null);
   const [, startTransition] = useTransition();
   const canBackspaceAway = Boolean(deleteAction && editTextAction);
+  const menu = look === "menu";
+  const textAlign = menu ? "text-center" : "text-left";
 
   function startEditing(itemId: string | null, { cursorAtEnd = false } = {}) {
     cursorAtEndRef.current = cursorAtEnd;
@@ -144,7 +154,7 @@ export function Checklist<Item extends ChecklistItem>({
           const saved = !isPendingItem(item.id);
           return (
             <li key={item.id} className="group relative flex items-start gap-3">
-              {toggleAction ? (
+              {menu ? null : toggleAction ? (
                 <form
                   className={CIRCLE_SLOT_CLASSES}
                   action={async () => {
@@ -174,7 +184,7 @@ export function Checklist<Item extends ChecklistItem>({
                     event.preventDefault();
                     saveText(item, new FormData(event.currentTarget));
                   }}
-                  className="flex-1"
+                  className="min-w-0 flex-1"
                 >
                   <textarea
                     name="text"
@@ -206,25 +216,28 @@ export function Checklist<Item extends ChecklistItem>({
                         event.currentTarget.blur();
                       }
                     }}
-                    className={`${ITEM_TEXT_CLASSES} field-sizing-content block w-full resize-none rounded-sm bg-primary/5 outline-none`}
+                    className={`${ITEM_TEXT_CLASSES} ${textAlign} field-sizing-content block w-full resize-none rounded-sm bg-primary/5 outline-none`}
                   />
                 </form>
-              ) : editTextAction && saved ? (
-                <button
-                  type="button"
-                  onClick={() => startEditing(item.id)}
-                  className={`${ITEM_TEXT_CLASSES} flex-1 cursor-text text-left ${
-                    item.done ? "text-muted-foreground line-through" : ""
-                  }`}
-                >
-                  {item.text}
-                </button>
               ) : (
-                <span
-                  className={`${ITEM_TEXT_CLASSES} flex-1 ${item.done ? "text-muted-foreground line-through" : ""}`}
-                >
-                  {item.text}
-                </span>
+                <div className={`flex min-w-0 flex-1 flex-col ${textAlign}`}>
+                  {editTextAction && saved ? (
+                    <button
+                      type="button"
+                      onClick={() => startEditing(item.id)}
+                      className={`${ITEM_TEXT_CLASSES} cursor-text ${textAlign} ${
+                        item.done ? "text-muted-foreground line-through" : ""
+                      }`}
+                    >
+                      {item.text}
+                    </button>
+                  ) : (
+                    <span className={`${ITEM_TEXT_CLASSES} ${item.done ? "text-muted-foreground line-through" : ""}`}>
+                      {item.text}
+                    </span>
+                  )}
+                  {saved && renderNote?.(item)}
+                </div>
               )}
               {/* With a mouse, the icons float over the end of the row on
                   hover, so the text gets the full width; touch screens
@@ -260,12 +273,14 @@ export function Checklist<Item extends ChecklistItem>({
         {/* The blank line: type and press Enter to add. The box keeps focus
             and empties, so you can type the next item straight away. */}
         <li className="flex items-start gap-3">
-          <span className={CIRCLE_SLOT_CLASSES}>
-            <span
-              aria-hidden
-              className="size-5 rounded-full border-2 border-dashed border-muted-foreground/30"
-            />
-          </span>
+          {!menu && (
+            <span className={CIRCLE_SLOT_CLASSES}>
+              <span
+                aria-hidden
+                className="size-5 rounded-full border-2 border-dashed border-muted-foreground/30"
+              />
+            </span>
+          )}
           <form ref={addFormRef} action={add} className="flex-1">
             <input
               name="text"
@@ -281,7 +296,7 @@ export function Checklist<Item extends ChecklistItem>({
                 event.preventDefault();
                 startEditing(last.id, { cursorAtEnd: true });
               }}
-              className={`${ITEM_TEXT_CLASSES} block h-[var(--paper-line,2.25rem)] w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
+              className={`${ITEM_TEXT_CLASSES} ${textAlign} block h-[var(--paper-line,2.25rem)] w-full bg-transparent outline-none placeholder:text-muted-foreground/70`}
             />
           </form>
         </li>
