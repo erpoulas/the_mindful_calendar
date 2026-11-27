@@ -47,7 +47,7 @@ Sections follow the build order in [project-summary.md](./project-summary.md).
 - [x] Popup header back button always there: it only appeared after your first click inside a popup, pushing the page down when it did. Always show it (and keep forward's space), and on a popup's first screen have Back return to the calendar, and drop the ✕ close buttons since Back now closes (requested 2026-11-26) (done: 9f746b2)
 - [x] Dopamine Menu header: no Forward button (it has only one screen), and put Back in the card's top-left corner instead of mid-card where the writing area starts (requested 2026-11-26) (done: d0b23cf)
 - [x] Project Tracker: drop the handwritten font on the end goal, use the normal text font (requested 2026-11-26) (done: 094e007)
-- [ ] Swap the handwritten font (post-its, Dopamine menu headings, empty states) from Finger Paint to Beth Ellen, resizing where it gets hard to read (requested 2026-11-26) (claimed: agent-4, 2026-11-26)
+- [x] Swap the handwritten font (post-its, Dopamine menu headings, empty states) from Finger Paint to Beth Ellen, resizing where it gets hard to read (requested 2026-11-26) (done: ba22c38)
 
 ## Dashboard and calendar polish (uncommitted work found 2026-11-18)
 - [x] Dashboard customization context and layout spacing; fixes the build broken by 14f9e51 (done: 03f85a2)
