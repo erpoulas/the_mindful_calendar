@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Dices, Tag } from "lucide-react";
 import { dashboardRoutes } from "@/lib/dashboard-routes";
 import { Checklist } from "./checklist";
 import type { IntentionChoice } from "./intention-chips";
-import { CopyToPostItButton, iconButtonClass } from "./item-actions";
+import { CopyToPostItButton, iconButtonClass, ScheduleIconLink, StartNowButton } from "./item-actions";
 import { saveInBackground } from "./use-optimistic-list";
 
 type MenuItem = { id: string; text: string; done: boolean; intentionId: string | null };
@@ -120,13 +121,63 @@ function IntentionPicker({
   );
 }
 
-/** Rolls the dice: shows a different random pick. */
-export function RollAgainButton({ rollAction }: { rollAction: () => Promise<void> }) {
+type PickItem = { id: string; text: string; intentionId: string | null };
+
+/** A random item, never the one with `excludeId` unless it's the only one. */
+export function pickAnother<T extends { id: string }>(items: T[], excludeId: string | null) {
+  const others = items.filter((item) => item.id !== excludeId);
+  const pool = others.length > 0 ? others : items;
+  return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+
+/**
+ * Today's random pick, big, with quiet icons under it. The dice picks again
+ * on the spot, always a different item (when there's more than one).
+ */
+export function DopaminePick({
+  items,
+  initialPickId,
+  startNowAction,
+  createPostItAction,
+}: {
+  items: PickItem[];
+  initialPickId: string | null;
+  startNowAction: (itemId: string) => Promise<void>;
+  createPostItAction: (formData: FormData) => Promise<void>;
+}) {
+  const [pickId, setPickId] = useState(initialPickId);
+  // The shown item; if it was deleted, any other one.
+  const pick = items.find((item) => item.id === pickId) ?? items[0];
+
+  if (!pick) {
+    return (
+      <p className="text-center text-sm opacity-80">
+        Little things that feel good. Jot a few down, then roll for one.
+      </p>
+    );
+  }
+
   return (
-    <form action={rollAction}>
-      <button type="submit" aria-label="Pick something else" title="Pick something else" className={iconButtonClass}>
-        <Dices className="size-4" aria-hidden />
-      </button>
-    </form>
+    <section className="flex flex-col gap-1">
+      <h3 className="font-handwritten text-lg">Need a lift? Try this:</h3>
+      <p className="text-xl leading-snug font-semibold wrap-anywhere">{pick.text}</p>
+      <div className="-ml-1 flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => setPickId(pickAnother(items, pick.id)?.id ?? null)}
+          disabled={items.length < 2}
+          aria-label="Pick something else"
+          title="Pick something else"
+          className={`${iconButtonClass} disabled:opacity-40`}
+        >
+          <Dices className="size-4" aria-hidden />
+        </button>
+        <ScheduleIconLink
+          href={dashboardRoutes.newEvent({ title: pick.text, intentionId: pick.intentionId ?? undefined })}
+        />
+        <StartNowButton itemId={pick.id} startNowAction={startNowAction} />
+        <CopyToPostItButton text={pick.text} createPostItAction={createPostItAction} />
+      </div>
+    </section>
   );
 }

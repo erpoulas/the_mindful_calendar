@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { DopamineMenuList } from "@/app/dashboard/overlays/dopamine-menu-list";
+import { DopamineMenuList, DopaminePick, pickAnother } from "@/app/dashboard/overlays/dopamine-menu-list";
 
 const never = () => new Promise<void>(() => {});
 
@@ -120,5 +120,55 @@ describe("DopamineMenuList", () => {
     });
 
     expect(setIntentionAction).toHaveBeenCalledWith("b", "i2");
+  });
+});
+
+describe("pickAnother", () => {
+  const items = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+  it("never picks the item already shown", () => {
+    for (let i = 0; i < 50; i++) expect(pickAnother(items, "b")?.id).not.toBe("b");
+  });
+
+  it("picks the only item when there's just one, and nothing from an empty list", () => {
+    expect(pickAnother([{ id: "a" }], "a")?.id).toBe("a");
+    expect(pickAnother([], null)).toBeNull();
+  });
+});
+
+describe("DopaminePick", () => {
+  const pickItems = [
+    { id: "a", text: "Take a walk", intentionId: "i1" },
+    { id: "b", text: "Call a friend", intentionId: null },
+  ];
+  const actions = {
+    startNowAction: async () => {},
+    createPostItAction: async () => {},
+  };
+
+  it("shows a different item each time the dice is rolled", () => {
+    render(<DopaminePick items={pickItems} initialPickId="a" {...actions} />);
+    expect(screen.getByText("Take a walk")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick something else" }));
+    expect(screen.getByText("Call a friend")).toBeInTheDocument();
+    expect(screen.queryByText("Take a walk")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick something else" }));
+    expect(screen.getByText("Take a walk")).toBeInTheDocument();
+  });
+
+  it("can't roll with only one item, and invites adding some when there are none", () => {
+    const { rerender } = render(<DopaminePick items={[pickItems[0]]} initialPickId="a" {...actions} />);
+    expect(screen.getByRole("button", { name: "Pick something else" })).toBeDisabled();
+
+    rerender(<DopaminePick items={[]} initialPickId={null} {...actions} />);
+    expect(screen.getByText(/Jot a few down/)).toBeInTheDocument();
+  });
+
+  it("shows another item when the picked one is deleted", () => {
+    const { rerender } = render(<DopaminePick items={pickItems} initialPickId="a" {...actions} />);
+    rerender(<DopaminePick items={[pickItems[1]]} initialPickId="a" {...actions} />);
+    expect(screen.getByText("Call a friend")).toBeInTheDocument();
   });
 });

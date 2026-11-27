@@ -1,6 +1,5 @@
 "use server";
 
-import { refresh } from "next/cache";
 import { AddDopamineMenuItemSchema } from "@/lib/dopamine-menu-schemas";
 import {
   addDopamineMenuItem,
@@ -46,8 +45,4 @@ export async function setDopamineMenuItemIntentionAction(itemId: string, intenti
   await setDopamineMenuItemIntention(db, { userId, itemId, intentionId: intentionId || null });
 
   forgetStoredAfterSave(userId, ["dopamineMenu"]);
-}
-
-export async function pickDopamineMenuItemAction() {
-  refresh();
 }
