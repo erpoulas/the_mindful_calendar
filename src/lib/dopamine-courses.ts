@@ -7,12 +7,14 @@ export const DOPAMINE_COURSES = ["APPETIZER", "ENTREE", "SIDE", "DESSERT", "SPEC
 
 export type DopamineCourse = (typeof DOPAMINE_COURSES)[number];
 
+// The hints follow How to ADHD's own wording, as quoted and paraphrased in
+// ADDitude's "Your ADHD Dopamenu" article.
 export const COURSE_INFO: Record<DopamineCourse, { heading: string; one: string; hint: string }> = {
-  APPETIZER: { heading: "Appetizers", one: "an appetizer", hint: "quick boosts, a few minutes" },
-  ENTREE: { heading: "Entrées", one: "an entrée", hint: "longer and more rewarding" },
-  SIDE: { heading: "Sides", one: "a side", hint: "to pair with a boring task" },
-  DESSERT: { heading: "Desserts", one: "a dessert", hint: "lovely, but easy to overdo" },
-  SPECIAL: { heading: "Specials", one: "a special", hint: "bigger treats to plan for" },
+  APPETIZER: { heading: "Appetizers", one: "an appetizer", hint: "quick boosts that don't suck you in" },
+  ENTREE: { heading: "Entrées", one: "an entrée", hint: "things that excite you and make you feel alive" },
+  SIDE: { heading: "Sides", one: "a side", hint: "to make boring tasks more stimulating" },
+  DESSERT: { heading: "Desserts", one: "a dessert", hint: "fine sometimes, but easy to overdo" },
+  SPECIAL: { heading: "Specials", one: "a special", hint: "now and then: they take planning or cost more" },
 };
 
 export function isDopamineCourse(value: unknown): value is DopamineCourse {
