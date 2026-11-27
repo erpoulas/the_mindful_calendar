@@ -11,6 +11,8 @@ const DOPAMINE_MENU_ART: PanelArt = {
   paperArea: { top: 28, right: 15, bottom: 27, left: 15 },
   contentWidth: 100,
   alignTop: true,
+  // Back sits in the cream corner outside the frame, top left.
+  headerAt: { top: 3, left: 5 },
   scale: 0.62,
 };
 
@@ -19,7 +21,7 @@ const DOPAMINE_MENU_ART: PanelArt = {
 // is in the drawings' steel blue.
 export default function DopamineMenuLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PanelSheet open size="center" title="Dopamine Menu" backgroundImage={DOPAMINE_MENU_ART}>
+    <PanelSheet open size="center" singleScreen title="Dopamine Menu" backgroundImage={DOPAMINE_MENU_ART}>
       <div className="text-[#3b7399]">{children}</div>
     </PanelSheet>
   );

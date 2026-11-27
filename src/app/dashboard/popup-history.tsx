@@ -48,9 +48,16 @@ export function PopupHistoryProvider({ children }: { children: React.ReactNode }
  * Back and forward buttons for the popup header, like a browser's. Always
  * drawn, so the header never shifts when you first move inside the popup.
  * On the popup's first screen Back closes it (there's no separate ✕), and
- * Forward stays greyed out until you've gone back.
+ * Forward stays greyed out until you've gone back. A popup with only one
+ * screen (`singleScreen`) gets no Forward at all.
  */
-export function PopupHistoryButtons({ onClose }: { onClose: () => void }) {
+export function PopupHistoryButtons({
+  onClose,
+  singleScreen = false,
+}: {
+  onClose: () => void;
+  singleScreen?: boolean;
+}) {
   const history = useContext(PopupHistoryContext);
   const router = useRouter();
   const hasBack = canGoBack(history);
@@ -69,15 +76,17 @@ export function PopupHistoryButtons({ onClose }: { onClose: () => void }) {
       >
         <ChevronLeft className="size-5" />
       </button>
-      <button
-        type="button"
-        aria-label="Forward"
-        disabled={!hasForward}
-        onClick={() => router.push(history.entries[history.index + 1])}
-        className={buttonClass}
-      >
-        <ChevronRight className="size-5" />
-      </button>
+      {!singleScreen && (
+        <button
+          type="button"
+          aria-label="Forward"
+          disabled={!hasForward}
+          onClick={() => router.push(history.entries[history.index + 1])}
+          className={buttonClass}
+        >
+          <ChevronRight className="size-5" />
+        </button>
+      )}
     </div>
   );
 }

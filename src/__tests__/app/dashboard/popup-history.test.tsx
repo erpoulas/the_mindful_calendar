@@ -60,6 +60,19 @@ describe("PopupHistoryButtons", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("leave out Forward on a popup with only one screen", () => {
+    setUrl("/dashboard/dopamine-menu");
+    render(
+      <PopupHistoryProvider>
+        <PopupHistoryButtons onClose={close} singleScreen />
+      </PopupHistoryProvider>,
+    );
+
+    expect(forward()).toBeNull();
+    fireEvent.click(back()!);
+    expect(close).toHaveBeenCalled();
+  });
+
   it("go back to the previous screen", () => {
     visit("/dashboard/projects", "/dashboard/projects?view=detail&id=p1");
 

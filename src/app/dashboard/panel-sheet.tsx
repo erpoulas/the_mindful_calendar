@@ -20,6 +20,7 @@ export function PanelSheet({
   hideVisibleTitle,
   size,
   backgroundImage,
+  singleScreen,
   children,
 }: {
   open: boolean;
@@ -30,6 +31,8 @@ export function PanelSheet({
   hideVisibleTitle?: boolean;
   size?: "side" | "wide" | "center";
   backgroundImage?: PanelArt;
+  /** A popup with no other screens: the header shows Back (to close) but no Forward. */
+  singleScreen?: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -60,7 +63,7 @@ export function PanelSheet({
       hideVisibleTitle={hideVisibleTitle}
       size={size}
       backgroundImage={backgroundImage}
-      headerStart={<PopupHistoryButtons onClose={close} />}
+      headerStart={<PopupHistoryButtons onClose={close} singleScreen={singleScreen} />}
     >
       {children}
     </Sheet>

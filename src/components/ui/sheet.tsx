@@ -83,6 +83,12 @@ export type PanelArt = {
   scale?: number;
   contentWidth?: number;
   alignTop?: boolean;
+  /**
+   * Where the header (back button) sits on the photo, in % from its top
+   * left, when the writing area starts too far down for it (e.g. below
+   * drawings). Without it the header tops the writing area.
+   */
+  headerAt?: { top: number; left: number };
 };
 
 /** Body text is this share of a ruled line's height (18px on a 48px line). */
@@ -192,6 +198,14 @@ export function Sheet({
                 className={cn("pointer-events-none", IMAGE_CLASSES[size])}
                 style={{ width: imageWidth(backgroundImage, size) }}
               />
+              {backgroundImage.headerAt && (
+                <div
+                  className="absolute z-20"
+                  style={{ top: `${backgroundImage.headerAt.top}%`, left: `${backgroundImage.headerAt.left}%` }}
+                >
+                  {titleRow}
+                </div>
+              )}
               {/* The popup is exactly the photo's size, so percentages
                   here line up with the photo's pixels at any screen size. */}
               <div
@@ -208,7 +222,7 @@ export function Sheet({
                   ...paperLineStyle(backgroundImage),
                 }}
               >
-                {titleRow}
+                {!backgroundImage.headerAt && titleRow}
                 <div
                   className={cn(
                     "flex w-full min-w-0 flex-1 flex-col",
