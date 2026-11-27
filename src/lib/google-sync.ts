@@ -20,14 +20,15 @@ import {
 } from "./google-connections";
 import { withIntentionColors } from "./calendar-events";
 import { eventColor } from "./intention-colors";
-import { toGoogleRecurringBody, toJournalTimeSchedule } from "./journal-time";
+import { fromGoogleRecurringEvent, toGoogleRecurringBody, toJournalTimeSchedule } from "./journal-time";
 import { fromWallClockDate, toWallClockDate } from "./wall-clock";
 
 // Two-way Google Calendar sync, run each time the calendar loads ("polling
 // on app open", see project-summary.md). Each run:
 //   1. deletes in Google the events deleted in the app since last time,
-//      then sends new or changed journal schedules, each as one repeating
-//      event (one way: the app's schedule is what counts),
+//      then syncs journal schedules, each as one repeating event: new or
+//      changed ones are sent, and the rest are read back from Google, so
+//      an edit there changes the schedule and a deletion turns it off,
 //   2. reconciles the range on screen: Google's new events come in, and
 //      events changed on one side are copied to the other (the times of a
 //      journal schedule's repeating event are skipped: the app has them),
@@ -67,6 +68,15 @@ type SyncedRow = {
   intentions: { intention: { color: string | null; createdAt: Date } }[];
 };
 
+/** The fields of a stored journal schedule that pullJournalSchedule checks. */
+type JournalScheduleRow = {
+  id: string;
+  googleEventId: string | null;
+  weekdays: number[];
+  startMinutes: number;
+  durationMinutes: number;
+};
+
 type GoogleCall = <T>(request: (accessToken: string) => Promise<T>) => Promise<T>;
 
 /**
@@ -91,7 +101,7 @@ export async function syncGoogleCalendar(
   const sync = new GoogleSync(client, userId, timeZone, now, createGoogleCall(client, connection, now));
   try {
     await sync.pushDeletions();
-    await sync.pushJournalSchedules();
+    await sync.syncJournalSchedules();
     await sync.reconcileRange(params.start, params.end);
     await sync.pushChangedEvents();
     // "From today on": events from the day the user connected onwards, plus
@@ -168,7 +178,7 @@ function createGoogleCall(
 class GoogleSync {
   /** Set once an app event is created, changed or deleted from Google's side. */
   changedAppEvents = false;
-  /** The Google ids of the journal schedules' repeating events (see pushJournalSchedules). */
+  /** The Google ids of the journal schedules' repeating events (see syncJournalSchedules). */
   private scheduleEventIds = new Set<string>();
 
   constructor(
@@ -191,10 +201,13 @@ class GoogleSync {
   }
 
   /**
-   * Step 1, continued: journal schedules that are new, or changed since
-   * they were last sent. One deleted in Google is made again, under a new id.
+   * Step 1, continued: journal schedules. One that is new, or changed in
+   * the app since it was last sent, is sent to Google; the app's version
+   * wins even if Google's changed too, and one deleted in Google is made
+   * again, under a new id. The others are read back from Google (see
+   * pullJournalSchedule).
    */
-  async pushJournalSchedules() {
+  async syncJournalSchedules() {
     // All of them in one read: step 2 needs every one's Google id too.
     const schedules = await this.client.journalSchedule.findMany({
       where: { userId: this.userId },
@@ -205,6 +218,7 @@ class GoogleSync {
         !schedule.googleEventId || !schedule.lastSyncedAt || schedule.updatedAt > schedule.lastSyncedAt;
       if (!changed) {
         this.scheduleEventIds.add(schedule.googleEventId!);
+        await this.pullJournalSchedule(schedule);
         continue;
       }
       const body = toGoogleRecurringBody(toJournalTimeSchedule(schedule, this.timeZone), this.timeZone);
@@ -223,6 +237,37 @@ class GoogleSync {
       });
       this.scheduleEventIds.add(saved.id);
     }
+  }
+
+  /**
+   * A schedule unchanged in the app since its last sync, checked against
+   * its repeating event in Google. Deleted there: the schedule is turned
+   * off (with no note to delete it in Google, which already has). Edited
+   * there: the new days, time and length are copied in, unless Google's
+   * version is a repeat a schedule can't hold, which is left as it is.
+   */
+  private async pullJournalSchedule(schedule: JournalScheduleRow) {
+    const googleEvent = await this.google((token) => getGoogleEvent(token, schedule.googleEventId!));
+    if (!googleEvent || googleEvent.status === "cancelled") {
+      await this.client.journalSchedule.delete({ where: { id: schedule.id } });
+      this.changedAppEvents = true;
+      return;
+    }
+
+    const fromGoogle = fromGoogleRecurringEvent(googleEvent, this.timeZone);
+    if (!fromGoogle) return;
+    const unchanged =
+      fromGoogle.weekdays.join() === [...schedule.weekdays].sort((a, b) => a - b).join() &&
+      fromGoogle.startMinutes === schedule.startMinutes &&
+      fromGoogle.durationMinutes === schedule.durationMinutes;
+    if (unchanged) return;
+
+    // updatedAt moves with lastSyncedAt, so it isn't sent back as an app edit.
+    await this.client.journalSchedule.update({
+      where: { id: schedule.id },
+      data: { ...fromGoogle, lastSyncedAt: this.now, updatedAt: this.now },
+    });
+    this.changedAppEvents = true;
   }
 
   /** Step 2. */

@@ -1,5 +1,6 @@
 import type { GoogleApiEvent } from "./google-calendar";
-import { toWallClockDate } from "./wall-clock";
+import { JournalScheduleSchema } from "./journal-schemas";
+import { fromWallClockDate, toWallClockDate } from "./wall-clock";
 
 // A journal's repeating writing time ("Gratitude journal time"), worked out
 // from its schedule rather than stored as one event per day. Times are wall
@@ -151,4 +152,67 @@ export function toGoogleRecurringBody(
     end: { dateTime: toGoogleDateTime(endAt), timeZone },
     recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${days.join(",")}`],
   };
+}
+
+/** The parts of a schedule that Google can change: days, start time and length. */
+export type JournalScheduleTimes = Pick<JournalTimeSchedule, "weekdays" | "startMinutes" | "durationMinutes">;
+
+type GoogleTime = NonNullable<GoogleApiEvent["start"]>;
+
+/**
+ * A Google time as a real moment. Google answers with an offset
+ * ("21:00:00-05:00"); a time without one (as toGoogleRecurringBody sends
+ * it) is a wall-clock time in its own zone.
+ */
+function googleMoment(time: GoogleTime, fallbackTimeZone: string) {
+  const text = time.dateTime!;
+  if (/(Z|[+-]\d\d:\d\d)$/.test(text)) return new Date(text);
+  return fromWallClockDate(new Date(`${text}Z`), time.timeZone ?? fallbackTimeZone);
+}
+
+/**
+ * The reverse of toGoogleRecurringBody: reads a schedule's repeating event,
+ * as edited in Google, back into days, start time and length on the user's
+ * clock. Gives null when Google's version is something a schedule can't
+ * hold (all day, every other week, monthly, ending on a date...) or breaks
+ * the app's limits, so the app keeps its own schedule.
+ */
+export function fromGoogleRecurringEvent(event: GoogleApiEvent, timeZone: string): JournalScheduleTimes | null {
+  if (!event.start?.dateTime || !event.end?.dateTime) return null;
+  const rule = event.recurrence?.find((line) => line.startsWith("RRULE:"));
+  if (!rule) return null;
+
+  const parts = new Map(rule.slice("RRULE:".length).split(";").map((part) => part.split("=") as [string, string]));
+  if (parts.has("COUNT") || parts.has("UNTIL") || (parts.get("INTERVAL") ?? "1") !== "1") return null;
+
+  const start = googleMoment(event.start, timeZone);
+  const end = googleMoment(event.end, timeZone);
+  const startOnEventClock = toWallClockDate(start, event.start.timeZone ?? timeZone);
+  const startOnUserClock = toWallClockDate(start, timeZone);
+
+  // Google's days are on the event's own clock. If the user's clock puts
+  // the start on another day (9pm Monday in Los Angeles is Tuesday in New
+  // York), every day moves by the same amount.
+  let eventDays: number[];
+  const frequency = parts.get("FREQ");
+  if (frequency === "DAILY") {
+    eventDays = [1, 2, 3, 4, 5, 6, 7];
+  } else if (frequency === "WEEKLY") {
+    const byDay = parts.get("BYDAY");
+    eventDays = byDay
+      ? byDay.split(",").map((code) => GOOGLE_DAY_CODES.indexOf(code) + 1)
+      : [weekdayOf(startOnEventClock)];
+  } else {
+    return null;
+  }
+  if (eventDays.includes(0)) return null;
+  const dayShift = weekdayOf(startOnUserClock) - weekdayOf(startOnEventClock);
+
+  // The same rules as a schedule set in the app (5 min to 12 hours...).
+  const parsed = JournalScheduleSchema.safeParse({
+    weekdays: [...new Set(eventDays.map((day) => ((day - 1 + dayShift + 7) % 7) + 1))].sort((a, b) => a - b),
+    startMinutes: startOnUserClock.getUTCHours() * 60 + startOnUserClock.getUTCMinutes(),
+    durationMinutes: Math.round((end.getTime() - start.getTime()) / MINUTE_MS),
+  });
+  return parsed.success ? parsed.data : null;
 }

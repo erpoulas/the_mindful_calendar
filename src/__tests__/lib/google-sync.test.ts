@@ -762,6 +762,110 @@ describe("syncGoogleCalendar: journal schedules", () => {
       expect(google.events.get(saved.googleEventId!)?.status).toBe("confirmed");
     });
   });
+
+  /** Syncs the schedule once, so Google has its repeating event, and returns that event's id. */
+  async function sentSchedule(tx: DbClient) {
+    const { journal, schedule } = await scheduledJournal(tx);
+    await sync(tx);
+    const { googleEventId } = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+    return { journal, schedule, googleEventId: googleEventId! };
+  }
+
+  /** Edits the repeating event in Google, the way Google sends it back (times with an offset). */
+  function editInGoogle(googleEventId: string, rule: string, start: string, end: string) {
+    google.put({
+      ...google.events.get(googleEventId)!,
+      start: { dateTime: start, timeZone: TIME_ZONE },
+      end: { dateTime: end, timeZone: TIME_ZONE },
+      recurrence: [rule],
+    });
+  }
+
+  it("copies days, time and length edited in Google into the schedule, without sending them back", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { schedule, googleEventId } = await sentSchedule(tx);
+      editInGoogle(
+        googleEventId,
+        "RRULE:FREQ=WEEKLY;BYDAY=TU,TH",
+        "2026-11-17T07:30:00-05:00",
+        "2026-11-17T08:15:00-05:00",
+      );
+
+      expect(await sync(tx)).toBe(true);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(saved).toMatchObject({ weekdays: [2, 4], startMinutes: 7 * 60 + 30, durationMinutes: 45, googleEventId });
+      const requestsBefore = google.requests.length;
+      expect(await sync(tx)).toBe(false);
+      expect(google.requests.slice(requestsBefore).some((request) => request.startsWith("PATCH"))).toBe(false);
+    });
+  });
+
+  it("turns the schedule off when its repeating event was deleted in Google, without recreating it", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { schedule, googleEventId } = await sentSchedule(tx);
+      google.put({ ...google.events.get(googleEventId)!, status: "cancelled" });
+
+      expect(await sync(tx)).toBe(true);
+
+      expect(await tx.journalSchedule.findUnique({ where: { id: schedule.id } })).toBeNull();
+      expect(await tx.googleEventDeletion.count({ where: { userId: USER } })).toBe(0);
+      expect(await tx.calendarEvent.count({ where: { userId: USER } })).toBe(0);
+      expect(google.requests.some((request) => request.startsWith("POST"))).toBe(true);
+      const postsBefore = google.requests.filter((request) => request.startsWith("POST")).length;
+      await sync(tx);
+      expect(google.requests.filter((request) => request.startsWith("POST")).length).toBe(postsBefore);
+    });
+  });
+
+  it("keeps the app's schedule when Google's version is a repeat it can't hold", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { schedule, googleEventId } = await sentSchedule(tx);
+      editInGoogle(
+        googleEventId,
+        "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TU",
+        "2026-11-17T07:30:00-05:00",
+        "2026-11-17T08:15:00-05:00",
+      );
+
+      expect(await sync(tx)).toBe(false);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(saved).toMatchObject(EVENING);
+    });
+  });
+
+  it("when the schedule changed in the app too, sends the app's version to Google", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      const { journal, schedule, googleEventId } = await sentSchedule(tx);
+      editInGoogle(
+        googleEventId,
+        "RRULE:FREQ=WEEKLY;BYDAY=TU,TH",
+        "2026-11-17T07:30:00-05:00",
+        "2026-11-17T08:15:00-05:00",
+      );
+      await setJournalSchedule(tx, { userId: USER, journalId: journal.id, ...EVENING, weekdays: [6] });
+
+      await sync(tx);
+
+      const saved = await tx.journalSchedule.findUniqueOrThrow({ where: { id: schedule.id } });
+      expect(saved.weekdays).toEqual([6]);
+      expect(google.events.get(googleEventId)?.recurrence).toEqual(["RRULE:FREQ=WEEKLY;BYDAY=SA"]);
+    });
+  });
+
+  it("reports no change when neither side changed the schedule", async () => {
+    await withRollback(async (tx) => {
+      await connect(tx);
+      await sentSchedule(tx);
+
+      expect(await sync(tx)).toBe(false);
+    });
+  });
 });
 
 describe("markGoogleEventsForReread", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   describeJournalSchedule,
+  fromGoogleRecurringEvent,
   journalTimeOccurrences,
   journalTimeTitle,
   toGoogleRecurringBody,
@@ -120,5 +121,96 @@ describe("toJournalTimeSchedule", () => {
     );
 
     expect(schedule).toMatchObject({ journalName: "Gratitude", startsOn: new Date("2026-11-19T00:00:00Z") });
+  });
+});
+
+describe("fromGoogleRecurringEvent", () => {
+  const NEW_YORK = "America/New_York";
+  /** A repeating event as Google sends it back: times with an offset. */
+  function recurring(
+    rule: string,
+    start = "2026-11-16T21:00:00-05:00",
+    end = "2026-11-16T21:20:00-05:00",
+    timeZone = NEW_YORK,
+  ) {
+    return {
+      id: "g1",
+      status: "confirmed",
+      start: { dateTime: start, timeZone },
+      end: { dateTime: end, timeZone },
+      recurrence: [rule],
+    };
+  }
+
+  it("reads back what toGoogleRecurringBody sent", () => {
+    const sent = toGoogleRecurringBody(GRATITUDE, NEW_YORK);
+    expect(fromGoogleRecurringEvent({ id: "g1", ...sent }, NEW_YORK)).toEqual({
+      weekdays: [1, 3, 5],
+      startMinutes: 21 * 60,
+      durationMinutes: 20,
+    });
+  });
+
+  it("reads the days, start time and length of an event edited in Google", () => {
+    const event = recurring(
+      "RRULE:FREQ=WEEKLY;WKST=SU;BYDAY=TU,TH",
+      "2026-11-17T07:30:00-05:00",
+      "2026-11-17T08:15:00-05:00",
+    );
+    expect(fromGoogleRecurringEvent(event, NEW_YORK)).toEqual({
+      weekdays: [2, 4],
+      startMinutes: 7 * 60 + 30,
+      durationMinutes: 45,
+    });
+  });
+
+  it("reads a daily event as every day", () => {
+    expect(fromGoogleRecurringEvent(recurring("RRULE:FREQ=DAILY"), NEW_YORK)?.weekdays).toEqual([
+      1, 2, 3, 4, 5, 6, 7,
+    ]);
+  });
+
+  it("reads a weekly event with no days listed as the day it starts on", () => {
+    expect(fromGoogleRecurringEvent(recurring("RRULE:FREQ=WEEKLY"), NEW_YORK)?.weekdays).toEqual([1]);
+  });
+
+  it("gives the time on the user's clock when the event is in another zone", () => {
+    // 9pm Monday in Los Angeles is midnight Tuesday in New York.
+    const event = recurring(
+      "RRULE:FREQ=WEEKLY;BYDAY=MO,SU",
+      "2026-11-16T21:00:00-08:00",
+      "2026-11-16T21:30:00-08:00",
+      "America/Los_Angeles",
+    );
+    expect(fromGoogleRecurringEvent(event, NEW_YORK)).toEqual({
+      weekdays: [1, 2],
+      startMinutes: 0,
+      durationMinutes: 30,
+    });
+  });
+
+  it.each([
+    ["every other week", "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO"],
+    ["ending on a date", "RRULE:FREQ=WEEKLY;UNTIL=20261231T000000Z;BYDAY=MO"],
+    ["ending after a count", "RRULE:FREQ=WEEKLY;COUNT=5;BYDAY=MO"],
+    ["monthly", "RRULE:FREQ=MONTHLY;BYDAY=1MO"],
+  ])("gives null for a repeat the app can't hold (%s)", (_, rule) => {
+    expect(fromGoogleRecurringEvent(recurring(rule), NEW_YORK)).toBeNull();
+  });
+
+  it("gives null for an all-day event, one with no repeat, or a length outside the app's limits", () => {
+    expect(
+      fromGoogleRecurringEvent(
+        { id: "g1", start: { date: "2026-11-16" }, end: { date: "2026-11-17" }, recurrence: ["RRULE:FREQ=DAILY"] },
+        NEW_YORK,
+      ),
+    ).toBeNull();
+    expect(fromGoogleRecurringEvent({ ...recurring("RRULE:FREQ=DAILY"), recurrence: undefined }, NEW_YORK)).toBeNull();
+    expect(
+      fromGoogleRecurringEvent(
+        recurring("RRULE:FREQ=DAILY", "2026-11-16T09:00:00-05:00", "2026-11-16T23:00:00-05:00"),
+        NEW_YORK,
+      ),
+    ).toBeNull();
   });
 });
