@@ -230,7 +230,7 @@ function ProjectPage({
 
       {/* The end goal leads the page: it's what makes this a project. */}
       <div className="flex items-start gap-2.5">
-        <Flag className="mt-1.5 size-5 shrink-0 text-amber-600" aria-label="End goal" />
+        <Flag className="mt-1 size-5 shrink-0 text-amber-600" aria-label="End goal" />
         <EditableName
           id={project.id}
           name={project.endGoal}
@@ -238,7 +238,7 @@ function ProjectPage({
           fieldName="endGoal"
           as="p"
           renameAction={updateProjectEndGoalAction}
-          className="font-handwritten text-xl leading-snug wrap-anywhere"
+          className="text-lg font-medium leading-snug wrap-anywhere"
         />
       </div>
 
