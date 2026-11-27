@@ -45,15 +45,16 @@ export function PopupHistoryProvider({ children }: { children: React.ReactNode }
 }
 
 /**
- * Back and forward buttons for the popup header, like a browser's. Hidden
- * on the first screen, where there's nowhere to go yet.
+ * Back and forward buttons for the popup header, like a browser's. Always
+ * drawn, so the header never shifts when you first move inside the popup.
+ * On the popup's first screen Back closes it (there's no separate ✕), and
+ * Forward stays greyed out until you've gone back.
  */
-export function PopupHistoryButtons() {
+export function PopupHistoryButtons({ onClose }: { onClose: () => void }) {
   const history = useContext(PopupHistoryContext);
   const router = useRouter();
   const hasBack = canGoBack(history);
   const hasForward = canGoForward(history);
-  if (!hasBack && !hasForward) return null;
 
   const buttonClass =
     "rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground";
@@ -63,8 +64,7 @@ export function PopupHistoryButtons() {
       <button
         type="button"
         aria-label="Back"
-        disabled={!hasBack}
-        onClick={() => router.push(history.entries[history.index - 1])}
+        onClick={() => (hasBack ? router.push(history.entries[history.index - 1]) : onClose())}
         className={buttonClass}
       >
         <ChevronLeft className="size-5" />

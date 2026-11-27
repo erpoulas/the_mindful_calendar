@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PopupHistoryButtons, PopupHistoryProvider } from "@/app/dashboard/popup-history";
 
-const { location, push } = vi.hoisted(() => ({
+const { location, push, close } = vi.hoisted(() => ({
   location: { pathname: "/dashboard", search: "" },
   push: vi.fn(),
+  close: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -16,7 +17,7 @@ vi.mock("next/navigation", () => ({
 function tree() {
   return (
     <PopupHistoryProvider>
-      <PopupHistoryButtons />
+      <PopupHistoryButtons onClose={close} />
     </PopupHistoryProvider>
   );
 }
@@ -44,14 +45,19 @@ const forward = () => screen.queryByRole("button", { name: "Forward" });
 
 beforeEach(() => {
   push.mockReset();
+  close.mockReset();
 });
 
 describe("PopupHistoryButtons", () => {
-  it("are hidden on the popup's first screen", () => {
+  it("are there from the popup's first screen, where Back closes it", () => {
     visit("/dashboard/projects");
 
-    expect(back()).toBeNull();
-    expect(forward()).toBeNull();
+    // Always drawn, so the header never shifts when you first click inside.
+    expect(forward()).toBeDisabled();
+    fireEvent.click(back()!);
+
+    expect(close).toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("go back to the previous screen", () => {
@@ -70,7 +76,6 @@ describe("PopupHistoryButtons", () => {
       "/dashboard/projects",
     );
 
-    expect(back()).toBeDisabled();
     fireEvent.click(forward()!);
 
     expect(push).toHaveBeenCalledWith("/dashboard/projects?view=detail&id=p1");
@@ -92,6 +97,8 @@ describe("PopupHistoryButtons", () => {
       "/dashboard/journals",
     );
 
-    expect(back()).toBeNull();
+    expect(forward()).toBeDisabled();
+    fireEvent.click(back()!);
+    expect(close).toHaveBeenCalled();
   });
 });

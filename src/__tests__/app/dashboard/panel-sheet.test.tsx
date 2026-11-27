@@ -38,14 +38,16 @@ afterEach(() => {
 });
 
 describe("PanelSheet", () => {
-  it("closes onto the week that was on screen, and hides at once", async () => {
+  it("Back on the first screen closes onto the week that was on screen, and hides at once", async () => {
     setUrl("/dashboard?start=2026-12-07");
     const view = render(tree());
     setUrl("/dashboard/journals");
     view.rerender(tree());
     expect(await screen.findByText("Journal list")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    // Back does the closing: there's no separate ✕.
+    expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
     expect(push).toHaveBeenCalledWith("/dashboard?start=2026-12-07");
     await waitFor(() => expect(screen.queryByText("Journal list")).not.toBeInTheDocument());

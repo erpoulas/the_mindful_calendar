@@ -129,11 +129,8 @@ export function Sheet({
   const imageBacked =
     (size === "side" || size === "center") && backgroundImage;
 
-  // The projects/journal side popups are just a photo of a folder/notebook —
-  // a "✕" floating on top of the art looked out of place, and the drawer can
-  // already be dismissed via the backdrop, swipe, or Escape. Other popups
-  // (including the quick-lists center popup) keep the visible close button.
-  const showCloseButton = !(imageBacked && size === "side");
+  // No ✕: the header's Back button closes the popup from its first screen,
+  // and the backdrop, a swipe or Escape still do too.
   const lined = Boolean(imageBacked && backgroundImage.ruledLines);
 
   // The photo already carries its own visual identity (folder, notebook,
@@ -162,14 +159,6 @@ export function Sheet({
           {title}
         </Drawer.Title>
       </div>
-      {showCloseButton && (
-        <Drawer.Close
-          aria-label="Close"
-          className="text-lg text-muted-foreground hover:text-foreground"
-        >
-          ✕
-        </Drawer.Close>
-      )}
     </div>
   );
 

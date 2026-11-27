@@ -7,7 +7,8 @@ import { getCalendarReturnUrl } from "./calendar-location";
 import { PopupHistoryButtons } from "./popup-history";
 
 /**
- * The frame of a popup: its sheet, art, title and close button. Each popup
+ * The frame of a popup: its sheet, art, title and back/forward buttons
+ * (Back on the first screen closes it). Each popup
  * route renders it in its layout.tsx, so the frame stays on screen while you
  * move between that popup's screens, and Next can prefetch it before the
  * click (the content streams in behind the route's loading.tsx).
@@ -43,20 +44,23 @@ export function PanelSheet({
   const [closedAtUrl, setClosedAtUrl] = useState<string | null>(null);
   const closing = closedAtUrl === currentUrl;
 
+  function close() {
+    setClosedAtUrl(currentUrl);
+    // Back to the week or month that was on screen, not always today.
+    router.push(getCalendarReturnUrl());
+  }
+
   return (
     <Sheet
       open={open && !closing}
       onOpenChange={(next) => {
-        if (next) return;
-        setClosedAtUrl(currentUrl);
-        // Back to the week or month that was on screen, not always today.
-        router.push(getCalendarReturnUrl());
+        if (!next) close();
       }}
       title={shownTitle}
       hideVisibleTitle={hideVisibleTitle}
       size={size}
       backgroundImage={backgroundImage}
-      headerStart={<PopupHistoryButtons />}
+      headerStart={<PopupHistoryButtons onClose={close} />}
     >
       {children}
     </Sheet>
