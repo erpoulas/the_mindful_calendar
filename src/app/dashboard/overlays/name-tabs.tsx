@@ -3,9 +3,8 @@ import { Plus } from "lucide-react";
 import { NewNameButton } from "./new-name-button";
 import { pillTabClassName, pillTabsClassName } from "./photo-page-styles";
 
-// One pill per named thing (a quick list, a journal, a project), plus a "+"
-// pill at the end that turns into a name box right there to start a new one
-// (or, with `newHref`, opens a blank page for one that needs more than a name). Switching
+// One pill per named thing (a quick list, a journal), plus a "+" pill at the
+// end that turns into a name box right there to start a new one. Switching
 // is one click, with no separate "all lists" screen in between.
 // On ruled paper the tabs are sized from its line spacing (--paper-line) so
 // they never spill onto the name below, and the text grows with the paper
@@ -25,8 +24,6 @@ export function NameTabs({
   activeId,
   hrefFor,
   createAction,
-  newHref,
-  creating = false,
 }: {
   /** The tab bar's label for screen readers, e.g. "Lists". */
   label: string;
@@ -35,12 +32,7 @@ export function NameTabs({
   items: { id: string; name: string }[];
   activeId?: string;
   hrefFor: (id: string) => string;
-  /** Makes a new one from just a name typed into the "+" pill. */
-  createAction?: (formData: FormData) => Promise<void>;
-  /** Or: the "+" pill links here, a blank page to fill in. */
-  newHref?: string;
-  /** Whether that blank page is the one showing (lights up the "+"). */
-  creating?: boolean;
+  createAction: (formData: FormData) => Promise<void>;
 }) {
   if (items.length === 0) return null;
 
@@ -60,28 +52,13 @@ export function NameTabs({
           <span className="max-w-[10rem] truncate">{item.name}</span>
         </Link>
       ))}
-      {newHref ? (
-        <Link
-          href={newHref}
-          prefetch
-          aria-label={`New ${noun}`}
-          title={`New ${noun}`}
-          aria-current={creating ? "page" : undefined}
-          className={`${pillTabClassName(creating)} ${FIT_TAB_CLASSES}`}
-        >
-          <Plus className="size-4" aria-hidden />
-        </Link>
-      ) : (
-        createAction && (
-          <NewNameButton
-            noun={noun}
-            createAction={createAction}
-            className={`${pillTabClassName(false)} ${FIT_TAB_CLASSES}`}
-          >
-            <Plus className="size-4" aria-hidden />
-          </NewNameButton>
-        )
-      )}
+      <NewNameButton
+        noun={noun}
+        createAction={createAction}
+        className={`${pillTabClassName(false)} ${FIT_TAB_CLASSES}`}
+      >
+        <Plus className="size-4" aria-hidden />
+      </NewNameButton>
     </nav>
   );
 }

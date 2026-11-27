@@ -32,11 +32,39 @@ export async function createProject(
   });
 }
 
+/** Each project with `_count.tasks`: how many of its tasks are ticked off. */
 export async function listProjects(client: DbClient, userId: string) {
   return client.project.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
+    include: { _count: { select: { tasks: { where: { done: true } } } } },
   });
+}
+
+/**
+ * The timed calendar events linked to the user's projects: the sessions of
+ * work that add up to a project's "time put in". All-day and untimed events
+ * have no length, so they're left out. Times are wall-clock, like all event
+ * times (see AGENTS.md).
+ */
+export async function listProjectSessions(client: DbClient, userId: string) {
+  const events = await client.calendarEvent.findMany({
+    where: {
+      userId,
+      projectId: { not: null },
+      isAllDay: false,
+      startAt: { not: null },
+      endAt: { not: null },
+    },
+    select: { projectId: true, startAt: true, endAt: true },
+    orderBy: { startAt: "asc" },
+  });
+  // The filter above rules out the nulls; this tells TypeScript so.
+  return events.map((event) => ({
+    projectId: event.projectId!,
+    startAt: event.startAt!,
+    endAt: event.endAt!,
+  }));
 }
 
 export async function getProjectDetail(

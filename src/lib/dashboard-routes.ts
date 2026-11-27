@@ -40,9 +40,11 @@ export const dashboardRoutes = {
   quickLists: (activeId?: string) => withQuery("/dashboard/quick-lists", { id: activeId }),
 
   // One screen like Quick Lists: a tab per project, opening the chosen one
-  // (or the first). A new project is a blank page under the tabs.
+  // (or the first). A new project is a blank page under the tabs, and
+  // finished projects sit on their own "Finished" shelf tab.
   projects: (activeId?: string) => withQuery("/dashboard/projects", { id: activeId }),
   newProject: () => withQuery("/dashboard/projects", { view: "new" }),
+  finishedProjects: () => withQuery("/dashboard/projects", { view: "finished" }),
 
   intentions: () => "/dashboard/intentions",
   intention: (id: string) => withQuery("/dashboard/intentions", { view: "detail", id }),

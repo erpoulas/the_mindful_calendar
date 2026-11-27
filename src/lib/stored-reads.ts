@@ -8,7 +8,7 @@ import { listIntentions } from "./intentions";
 import { listJournalSchedules } from "./journal-schedules";
 import { getJournalDetail, listJournals } from "./journals";
 import { listPostIts } from "./post-its";
-import { getProjectDetail, listProjects } from "./projects";
+import { getProjectDetail, listProjectSessions, listProjects } from "./projects";
 import { getQuickListDetail, listQuickLists } from "./quick-lists";
 import { storedRead } from "./stored-results";
 import { getUserSettings, getUserTimezoneWithFallback } from "./user-settings";
@@ -61,6 +61,11 @@ export const storedIntentions = storedRead("intentions", ["intentions"], (userId
 );
 
 export const storedProjects = storedRead("projects", ["projects"], (userId) => listProjects(db, userId));
+
+// Calendar sessions linked to projects, for each project's time put in.
+export const storedProjectSessions = storedRead("projectSessions", ["events", "projects"], (userId) =>
+  listProjectSessions(db, userId),
+);
 
 export const storedProjectDetail = storedRead(
   "projectDetail",

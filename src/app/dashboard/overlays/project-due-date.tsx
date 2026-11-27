@@ -3,20 +3,25 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { CalendarDays, X } from "lucide-react";
 import { dueDateFromInput, formatDueDate } from "@/lib/project-due-date";
+import { describeDueDate } from "@/lib/project-progress";
 import { saveInBackground } from "./use-optimistic-list";
 
 /**
- * A project's optional due date: "Due Mon, Oct 12, 2026" (or "Add a due
- * date"). Clicking it turns it into a date box; picking a day and clicking
+ * A project's optional due date as a countdown: "9 days to go", tinted amber
+ * in the last few days (hover for the date itself), or "Add a due date".
+ * Clicking it turns it into a date box; picking a day and clicking
  * away saves it, and the ✕ clears it. Each change shows at once and saves in
  * the background.
  */
 export function ProjectDueDate({
   dueDate,
+  today,
   saveAction,
 }: {
   /** The date box's value, e.g. "2026-10-12", or "" for none. */
   dueDate: string;
+  /** The user's today in their time zone, the same way ("2026-11-26"). */
+  today: string;
   /** Saves a date box value; "" clears the due date. */
   saveAction: (value: string) => Promise<void>;
 }) {
@@ -24,6 +29,8 @@ export function ProjectDueDate({
   const [shownDate, showDate] = useOptimistic(dueDate);
   const [, startTransition] = useTransition();
   const shownDay = dueDateFromInput(shownDate);
+  const todayDay = dueDateFromInput(today);
+  const countdown = shownDay && todayDay ? describeDueDate(shownDay, todayDay) : null;
 
   function save(value: string) {
     setEditing(false);
@@ -63,10 +70,13 @@ export function ProjectDueDate({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground hover:text-foreground"
+        title={shownDay ? `Due ${formatDueDate(shownDay)}` : undefined}
+        className={`inline-flex items-center gap-1.5 rounded-sm text-sm hover:text-foreground ${
+          countdown?.soon ? "text-amber-700" : "text-muted-foreground"
+        }`}
       >
         <CalendarDays className="size-4" aria-hidden />
-        {shownDay ? `Due ${formatDueDate(shownDay)}` : "Add a due date"}
+        {countdown ? countdown.label : "Add a due date"}
       </button>
       {shownDay && (
         <button

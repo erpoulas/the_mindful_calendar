@@ -10,6 +10,7 @@ import {
   deleteProjectTask,
   getProjectDetail,
   listProjects,
+  listProjectSessions,
   pauseProject,
   resumeProject,
   toggleProjectTask,
@@ -157,6 +158,88 @@ describe("listProjects", () => {
       const result = await listProjects(tx, "test-user-1");
 
       expect(result.map((p) => p.title)).toEqual(["Mine"]);
+    });
+  });
+});
+
+describe("listProjects: finished task counts", () => {
+  it("counts each project's ticked-off tasks, for the Finished shelf", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Garden",
+        endGoal: "Grow tomatoes",
+        intentionIds: [intention.id],
+        starterTasks: ["Buy seeds", "Plant", "Water"],
+      });
+      await toggleProjectTask(tx, { userId: "test-user-1", taskId: project.tasks[0].id });
+      await toggleProjectTask(tx, { userId: "test-user-1", taskId: project.tasks[1].id });
+
+      const [listed] = await listProjects(tx, "test-user-1");
+
+      expect(listed._count.tasks).toBe(2);
+    });
+  });
+});
+
+describe("listProjectSessions", () => {
+  it("returns the timed events linked to the user's projects", async () => {
+    await withRollback(async (tx) => {
+      const intention = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Garden",
+        endGoal: "Grow tomatoes",
+        intentionIds: [intention.id],
+      });
+      const startAt = new Date("2026-11-24T09:00:00Z");
+      const endAt = new Date("2026-11-24T11:00:00Z");
+      await createCalendarEvent(tx, { userId: "test-user-1", title: "Dig beds", startAt, endAt, projectId: project.id });
+
+      const sessions = await listProjectSessions(tx, "test-user-1");
+
+      expect(sessions).toEqual([{ projectId: project.id, startAt, endAt }]);
+    });
+  });
+
+  it("leaves out all-day and untimed events, events with no project, and other users' events", async () => {
+    await withRollback(async (tx) => {
+      const mine = await createIntention(tx, { userId: "test-user-1", name: "Health" });
+      const theirs = await createIntention(tx, { userId: "test-user-2", name: "Health" });
+      const project = await createProject(tx, {
+        userId: "test-user-1",
+        title: "Garden",
+        endGoal: "Grow tomatoes",
+        intentionIds: [mine.id],
+      });
+      const otherProject = await createProject(tx, {
+        userId: "test-user-2",
+        title: "Theirs",
+        endGoal: "n/a",
+        intentionIds: [theirs.id],
+      });
+      const startAt = new Date("2026-11-24T09:00:00Z");
+      const endAt = new Date("2026-11-24T11:00:00Z");
+      await createCalendarEvent(tx, {
+        userId: "test-user-1",
+        title: "Garden day",
+        startAt,
+        endAt,
+        isAllDay: true,
+        projectId: project.id,
+      });
+      await createCalendarEvent(tx, { userId: "test-user-1", title: "Someday", projectId: project.id });
+      await createCalendarEvent(tx, { userId: "test-user-1", title: "Dentist", startAt, endAt });
+      await createCalendarEvent(tx, {
+        userId: "test-user-2",
+        title: "Their session",
+        startAt,
+        endAt,
+        projectId: otherProject.id,
+      });
+
+      expect(await listProjectSessions(tx, "test-user-1")).toEqual([]);
     });
   });
 });

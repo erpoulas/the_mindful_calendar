@@ -64,6 +64,7 @@ describe("dashboardRoutes", () => {
     expect(dashboardRoutes.projects()).toBe("/dashboard/projects");
     expect(dashboardRoutes.projects("p1")).toBe("/dashboard/projects?id=p1");
     expect(dashboardRoutes.newProject()).toBe("/dashboard/projects?view=new");
+    expect(dashboardRoutes.finishedProjects()).toBe("/dashboard/projects?view=finished");
   });
 
   it("gives each intention screen its own address", () => {
