@@ -7,8 +7,8 @@ const caveat = Caveat({ subsets: ["latin"] });
 
 const DOPAMINE_MENU_ART: PanelArt = {
   // A silver tray (cut out of its photo) with a carved-frame paper menu
-  // laid on it.
-  src: "/panel-art/dopamine-menu-tray.png",
+  // laid on it, and a ribbon bow drawn in red outline on its corner.
+  src: "/panel-art/dopamine-menu-bow.png",
   width: 598,
   height: 774,
   // The plain cream panel inside the paper's carved frame.
