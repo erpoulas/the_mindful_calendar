@@ -25,13 +25,15 @@ export async function DopamineMenuView() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      <h2 className="text-center font-handwritten text-3xl">Dopamine Menu</h2>
+
       {/* Today's random pick, big, with quiet icons beside it. */}
       {pick ? (
         <section className="flex flex-col gap-1">
-          <p className="text-xl text-muted-foreground">Need a lift? Try this:</p>
+          <h3 className="font-handwritten text-lg">Need a lift? Try this:</h3>
           <div className="flex flex-col gap-1">
-            <h2 className="text-3xl leading-tight font-semibold wrap-anywhere">{pick.text}</h2>
+            <p className="text-xl leading-snug font-semibold wrap-anywhere">{pick.text}</p>
             <div className="-ml-1 flex items-center gap-0.5">
               <RollAgainButton rollAction={pickDopamineMenuItemAction} />
               <ScheduleIconLink
@@ -46,13 +48,13 @@ export async function DopamineMenuView() {
           </div>
         </section>
       ) : (
-        <p className="text-xl text-muted-foreground">
+        <p className="text-center text-sm opacity-80">
           Little things that feel good. Jot a few down, then roll for one.
         </p>
       )}
 
       <section>
-        <h3 className="text-xl font-semibold text-muted-foreground">Your menu</h3>
+        <h3 className="font-handwritten text-lg">Your menu</h3>
         <DopamineMenuList
           items={items.map(({ id, text, intentionId }) => ({ id, text, intentionId }))}
           intentions={intentions.map(({ id, name, color }) => ({
